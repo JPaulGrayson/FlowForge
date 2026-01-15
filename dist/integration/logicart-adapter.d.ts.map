@@ -1,0 +1,1 @@
+{"version":3,"file":"logicart-adapter.d.ts","sourceRoot":"","sources":["../../src/integration/logicart-adapter.ts"],"names":[],"mappings":"AAAA,qBAAa,eAAe;IAAe,OAAO,CAAC,MAAM;gBAAN,MAAM,EAAE;QAAC,SAAS,EAAE,MAAM,CAAA;KAAC;IAAW,aAAa,CAAC,QAAQ,EAAE,GAAG;CAAkN;AAAC,wBAAgB,qBAAqB,CAAC,MAAM,EAAE,GAAG,mBAAyC;AAAC,wBAAgB,kBAAkB,CAAC,CAAC,EAAE,GAAG;;;EAAgD"}
