@@ -1,26 +1,33 @@
 import { v4 as uuidv4 } from "uuid";
+import Anthropic from "@anthropic-ai/sdk";
+const anthropic = process.env.ANTHROPIC_API_KEY ? new Anthropic() : null;
 export class WorkflowGenerator {
     async generate(req) {
-        const id = uuidv4();
-        const workflow = {
-            id, name: this.extractName(req.prompt), description: req.prompt, version: "1.0.0", sourcePrompt: req.prompt,
-            config: { timeout: 300000 }, inputs: [{ name: "input", label: "Input", type: "string", required: true }],
-            outputs: [{ name: "result", label: "Result", type: "string", sourceNodeId: "process" }],
-            nodes: [
-                { id: "start", type: "start", label: "Start", config: {} },
-                { id: "process", type: "tool", label: "Process", config: { toolName: "process", parameters: {} } },
-                { id: "end", type: "end", label: "End", config: {} }
-            ],
-            edges: [
-                { id: "e1", sourceNodeId: "start", targetNodeId: "process" },
-                { id: "e2", sourceNodeId: "process", targetNodeId: "end" }
-            ],
-            startNodeId: "start",
-            metadata: { createdAt: new Date().toISOString(), updatedAt: new Date().toISOString(), visibility: "private" }
-        };
-        return { workflow, confidence: 0.8 };
+        if (anthropic) {
+            try {
+                const msg = await anthropic.messages.create({
+                    model: "claude-sonnet-4-20250514", max_tokens: 2000,
+                    messages: [{ role: "user", content: "Generate workflow JSON for: " + req.prompt + ". Return ONLY valid JSON." }]
+                });
+                const text = msg.content[0].type === "text" ? msg.content[0].text : "";
+                const json = text.match(/\{[\s\S]*\}/)?.[0];
+                if (json)
+                    return { workflow: JSON.parse(json), confidence: 0.95 };
+            }
+            catch (e) {
+                console.error("Claude API error:", e);
+            }
+        }
+        return { workflow: this.fallback(req.prompt), confidence: 0.7 };
     }
-    extractName(prompt) { return prompt.split(" ").slice(0, 4).join(" "); }
+    fallback(p) {
+        const id = uuidv4();
+        return { id, name: p.slice(0, 30), description: p, version: "1.0.0", config: {},
+            inputs: [], outputs: [], startNodeId: "start",
+            nodes: [{ id: "start", type: "start", label: "Start", config: {} }, { id: "end", type: "end", label: "End", config: {} }],
+            edges: [{ id: "e1", sourceNodeId: "start", targetNodeId: "end" }],
+            metadata: { createdAt: new Date().toISOString(), updatedAt: new Date().toISOString(), visibility: "private" } };
+    }
 }
 export const generator = new WorkflowGenerator();
 //# sourceMappingURL=workflow-generator.js.map

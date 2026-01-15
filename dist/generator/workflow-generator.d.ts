@@ -6,7 +6,7 @@ export declare class WorkflowGenerator {
         workflow: Workflow;
         confidence: number;
     }>;
-    private extractName;
+    private fallback;
 }
 export declare const generator: WorkflowGenerator;
 //# sourceMappingURL=workflow-generator.d.ts.map
