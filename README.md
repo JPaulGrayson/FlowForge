@@ -1,16 +1,38 @@
-# React + Vite
+# FlowForge
 
-This template provides a minimal setup to get React working in Vite with HMR and some ESLint rules.
+Visual workflow orchestration powered by AI. Design workflows in natural language, execute with Claude tools, visualize with LogicArt.
 
-Currently, two official plugins are available:
+## Quick Start
 
-- [@vitejs/plugin-react](https://github.com/vitejs/vite-plugin-react/blob/main/packages/plugin-react) uses [Babel](https://babeljs.io/) (or [oxc](https://oxc.rs) when used in [rolldown-vite](https://vite.dev/guide/rolldown)) for Fast Refresh
-- [@vitejs/plugin-react-swc](https://github.com/vitejs/vite-plugin-react/blob/main/packages/plugin-react-swc) uses [SWC](https://swc.rs/) for Fast Refresh
+npm install
+npm run build
+npm run server
 
-## React Compiler
+## Claude Desktop Integration
 
-The React Compiler is not enabled on this template because of its impact on dev & build performances. To add it, see [this documentation](https://react.dev/learn/react-compiler/installation).
+Add to Claude Desktop config:
 
-## Expanding the ESLint configuration
+{
+  "mcpServers": {
+    "flowforge": {
+      "transport": "http",
+      "url": "http://localhost:5001/api/mcp"
+    }
+  }
+}
 
-If you are developing a production application, we recommend using TypeScript with type-aware lint rules enabled. Check out the [TS template](https://github.com/vitejs/vite/tree/main/packages/create-vite/template-react-ts) for information on how to integrate TypeScript and [`typescript-eslint`](https://typescript-eslint.io) in your project.
+## MCP Tools
+
+- generate_workflow - Create workflow from natural language
+- execute_workflow - Run a workflow  
+- visualize_workflow - Get LogicArt visualization URL
+
+## API Endpoints
+
+- GET /api/mcp/tools - List available tools
+- POST /api/mcp/call - Execute a tool
+- GET /api/mcp/events/:id - SSE stream for real-time updates
+
+## License
+
+MIT
