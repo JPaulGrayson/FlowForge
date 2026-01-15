@@ -1,6 +1,7 @@
 export interface CouncilModel {
     id: string;
     name: string;
+    role?: string;
 }
 export interface CouncilRequest {
     prompt: string;
@@ -13,9 +14,11 @@ export interface CouncilResponse {
 }
 export interface CouncilResult {
     responses: CouncilResponse[];
+    synthesis?: string;
+    winner?: string;
 }
 export declare class Council {
-    query(r: CouncilRequest): Promise<CouncilResult>;
+    query(req: CouncilRequest): Promise<CouncilResult>;
 }
 export declare const council: Council;
 //# sourceMappingURL=council.d.ts.map

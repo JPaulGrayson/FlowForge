@@ -25,7 +25,19 @@ async function ask(id, p) {
     return "N/A";
 }
 export class Council {
-    async query(r) { return { responses: await Promise.all(r.models.map(async (m) => ({ modelId: m.id, response: await ask(m.id, r.prompt) }))) }; }
+    async query(req) {
+        const responses = await Promise.all(req.models.map(async (m) => ({ modelId: m.id, response: await ask(m.id, req.prompt) })));
+        if (req.pattern === "debate") {
+            const debatePrompt = "Here are responses to: " + req.prompt + "\n\n" + responses.map(r => r.modelId + ": " + r.response).join("\n\n") + "\n\nSynthesize the best answer from these perspectives.";
+            const synthesis = await ask("claude", debatePrompt);
+            return { responses, synthesis };
+        }
+        if (req.pattern === "specialist") {
+            const tasks = req.models.map((m, i) => ({ ...m, response: responses[i].response }));
+            return { responses, synthesis: "Specialist responses collected for roles: " + req.models.map(m => m.role || m.name).join(", ") };
+        }
+        return { responses, winner: responses[0]?.modelId };
+    }
 }
 export const council = new Council();
 //# sourceMappingURL=council.js.map
