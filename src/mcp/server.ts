@@ -33,4 +33,4 @@ app.post("/api/mcp/call", async (req, res) => {
     else res.status(400).json({ error: "Unknown tool" });
   } catch (e: any) { res.status(500).json({ error: e.message }); }
 });
-app.listen(5001, () => console.log("FlowForge MCP on port 5001"));
+app.listen(3000, "0.0.0.0", () => console.log("FlowForge MCP on port 3000"));
