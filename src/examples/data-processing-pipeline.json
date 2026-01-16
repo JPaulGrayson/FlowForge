@@ -1,0 +1,40 @@
+{
+  "id": "data-processing",
+  "name": "Data Processing Pipeline",
+  "description": "Search for data, process it, and generate a summary report",
+  "version": "1.0.0",
+  "config": {
+    "timeout": 120000,
+    "continueOnError": false
+  },
+  "inputs": [
+    {"name": "searchQuery", "label": "Search Query", "type": "string", "required": true},
+    {"name": "outputFormat", "label": "Output Format", "type": "string", "required": false, "defaultValue": "markdown"}
+  ],
+  "outputs": [
+    {"name": "summary", "label": "Processed Summary", "type": "string", "sourceNodeId": "summarize"}
+  ],
+  "nodes": [
+    {"id": "start", "type": "start", "label": "Start", "config": {}, "position": {"x": 100, "y": 100}},
+    {"id": "search", "type": "tool", "label": "Web Search", "description": "Search the web for relevant data", "config": {"toolName": "web_search"}, "position": {"x": 100, "y": 200}},
+    {"id": "check-results", "type": "decision", "label": "Has Results?", "config": {"condition": "results.length > 0"}, "position": {"x": 100, "y": 300}},
+    {"id": "summarize", "type": "tool", "label": "Summarize Data", "config": {"toolName": "summarize"}, "position": {"x": 200, "y": 400}},
+    {"id": "no-data", "type": "end", "label": "No Data Found", "config": {}, "position": {"x": 0, "y": 400}},
+    {"id": "end", "type": "end", "label": "End", "config": {}, "position": {"x": 100, "y": 500}}
+  ],
+  "edges": [
+    {"id": "e1", "sourceNodeId": "start", "targetNodeId": "search"},
+    {"id": "e2", "sourceNodeId": "search", "targetNodeId": "check-results"},
+    {"id": "e3", "sourceNodeId": "check-results", "targetNodeId": "summarize", "label": "Yes", "condition": {"operator": "isNotEmpty"}},
+    {"id": "e4", "sourceNodeId": "check-results", "targetNodeId": "no-data", "label": "No", "condition": {"operator": "isEmpty"}},
+    {"id": "e5", "sourceNodeId": "summarize", "targetNodeId": "end"},
+    {"id": "e6", "sourceNodeId": "no-data", "targetNodeId": "end"}
+  ],
+  "startNodeId": "start",
+  "metadata": {
+    "createdAt": "2026-01-16",
+    "updatedAt": "2026-01-16",
+    "visibility": "public",
+    "tags": ["data", "processing", "search", "summary"]
+  }
+}

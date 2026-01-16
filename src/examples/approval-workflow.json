@@ -1,0 +1,44 @@
+{
+  "id": "approval-workflow",
+  "name": "Document Approval Workflow",
+  "description": "A human-in-the-loop workflow for document review and approval",
+  "version": "1.0.0",
+  "config": {
+    "timeout": 86400000,
+    "maxParallelism": 1
+  },
+  "inputs": [
+    {"name": "documentId", "label": "Document ID", "type": "string", "required": true},
+    {"name": "reviewerEmail", "label": "Reviewer Email", "type": "string", "required": true}
+  ],
+  "outputs": [
+    {"name": "approved", "label": "Approval Status", "type": "boolean", "sourceNodeId": "approval-decision"}
+  ],
+  "nodes": [
+    {"id": "start", "type": "start", "label": "Start", "config": {}, "position": {"x": 200, "y": 50}},
+    {"id": "load-doc", "type": "tool", "label": "Fetch Document", "config": {"toolName": "web_search"}, "position": {"x": 200, "y": 150}},
+    {"id": "summarize-doc", "type": "tool", "label": "Summarize for Review", "config": {"toolName": "summarize"}, "position": {"x": 200, "y": 250}},
+    {"id": "human-review", "type": "human", "label": "Human Review", "description": "Reviewer examines the document", "config": {"prompt": "Please review the document and provide feedback"}, "position": {"x": 200, "y": 350}},
+    {"id": "approval-decision", "type": "decision", "label": "Approved?", "config": {}, "position": {"x": 200, "y": 450}},
+    {"id": "notify-approved", "type": "end", "label": "Approved", "config": {}, "position": {"x": 350, "y": 550}},
+    {"id": "notify-rejected", "type": "end", "label": "Rejected", "config": {}, "position": {"x": 50, "y": 550}},
+    {"id": "end", "type": "end", "label": "End", "config": {}, "position": {"x": 200, "y": 650}}
+  ],
+  "edges": [
+    {"id": "e1", "sourceNodeId": "start", "targetNodeId": "load-doc"},
+    {"id": "e2", "sourceNodeId": "load-doc", "targetNodeId": "summarize-doc"},
+    {"id": "e3", "sourceNodeId": "summarize-doc", "targetNodeId": "human-review"},
+    {"id": "e4", "sourceNodeId": "human-review", "targetNodeId": "approval-decision"},
+    {"id": "e5", "sourceNodeId": "approval-decision", "targetNodeId": "notify-approved", "label": "Approved", "condition": {"operator": "isTrue"}},
+    {"id": "e6", "sourceNodeId": "approval-decision", "targetNodeId": "notify-rejected", "label": "Rejected", "condition": {"operator": "isFalse"}},
+    {"id": "e7", "sourceNodeId": "notify-approved", "targetNodeId": "end"},
+    {"id": "e8", "sourceNodeId": "notify-rejected", "targetNodeId": "end"}
+  ],
+  "startNodeId": "start",
+  "metadata": {
+    "createdAt": "2026-01-16",
+    "updatedAt": "2026-01-16",
+    "visibility": "public",
+    "tags": ["approval", "human-in-the-loop", "review"]
+  }
+}

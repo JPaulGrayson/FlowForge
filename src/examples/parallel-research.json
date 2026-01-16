@@ -1,0 +1,48 @@
+{
+  "id": "parallel-research",
+  "name": "Parallel Research Workflow",
+  "description": "Search multiple topics in parallel and combine results",
+  "version": "1.0.0",
+  "config": {
+    "timeout": 60000,
+    "maxParallelism": 3
+  },
+  "inputs": [
+    {"name": "topic1", "label": "Topic 1", "type": "string", "required": true},
+    {"name": "topic2", "label": "Topic 2", "type": "string", "required": true},
+    {"name": "topic3", "label": "Topic 3", "type": "string", "required": true}
+  ],
+  "outputs": [
+    {"name": "combinedReport", "label": "Combined Report", "type": "string", "sourceNodeId": "combine"}
+  ],
+  "nodes": [
+    {"id": "start", "type": "start", "label": "Start", "config": {}, "position": {"x": 200, "y": 50}},
+    {"id": "parallel-split", "type": "parallel", "label": "Split", "config": {}, "position": {"x": 200, "y": 150}},
+    {"id": "search1", "type": "tool", "label": "Search Topic 1", "config": {"toolName": "web_search"}, "position": {"x": 50, "y": 250}},
+    {"id": "search2", "type": "tool", "label": "Search Topic 2", "config": {"toolName": "web_search"}, "position": {"x": 200, "y": 250}},
+    {"id": "search3", "type": "tool", "label": "Search Topic 3", "config": {"toolName": "web_search"}, "position": {"x": 350, "y": 250}},
+    {"id": "join", "type": "join", "label": "Join Results", "config": {}, "position": {"x": 200, "y": 350}},
+    {"id": "combine", "type": "tool", "label": "Combine & Summarize", "config": {"toolName": "summarize"}, "position": {"x": 200, "y": 450}},
+    {"id": "visualize", "type": "tool", "label": "Create Visualization", "config": {"toolName": "visualize_workflow"}, "position": {"x": 200, "y": 550}},
+    {"id": "end", "type": "end", "label": "End", "config": {}, "position": {"x": 200, "y": 650}}
+  ],
+  "edges": [
+    {"id": "e1", "sourceNodeId": "start", "targetNodeId": "parallel-split"},
+    {"id": "e2", "sourceNodeId": "parallel-split", "targetNodeId": "search1"},
+    {"id": "e3", "sourceNodeId": "parallel-split", "targetNodeId": "search2"},
+    {"id": "e4", "sourceNodeId": "parallel-split", "targetNodeId": "search3"},
+    {"id": "e5", "sourceNodeId": "search1", "targetNodeId": "join"},
+    {"id": "e6", "sourceNodeId": "search2", "targetNodeId": "join"},
+    {"id": "e7", "sourceNodeId": "search3", "targetNodeId": "join"},
+    {"id": "e8", "sourceNodeId": "join", "targetNodeId": "combine"},
+    {"id": "e9", "sourceNodeId": "combine", "targetNodeId": "visualize"},
+    {"id": "e10", "sourceNodeId": "visualize", "targetNodeId": "end"}
+  ],
+  "startNodeId": "start",
+  "metadata": {
+    "createdAt": "2026-01-16",
+    "updatedAt": "2026-01-16",
+    "visibility": "public",
+    "tags": ["parallel", "research", "multi-topic"]
+  }
+}

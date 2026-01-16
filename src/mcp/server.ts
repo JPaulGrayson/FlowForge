@@ -1,4 +1,6 @@
 import express from "express";
+import path from "path";
+import { fileURLToPath } from "url";
 import { generator } from "../generator/workflow-generator.js";
 import { createExecutor } from "../executor/workflow-executor.js";
 import { createLogicArtAdapter } from "../integration/logicart-adapter.js";
@@ -6,8 +8,13 @@ import { council } from "../council/council.js";
 import { toolHandlers } from "../tools/handlers.js";
 import { saveWorkflow, loadWorkflow, listWorkflows } from "../tools/persistence.js";
 
+const __filename = fileURLToPath(import.meta.url);
+const __dirname = path.dirname(__filename);
+
 const app = express();
 app.use(express.json());
+
+app.use(express.static(path.join(__dirname, "../../public")));
 
 const MCP_TOOLS = [
   {

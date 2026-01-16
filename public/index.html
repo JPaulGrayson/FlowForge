@@ -1,0 +1,129 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>FlowForge Dashboard</title>
+  <link rel="stylesheet" href="/styles.css">
+</head>
+<body>
+  <div class="app">
+    <header class="header">
+      <div class="logo">
+        <span class="logo-icon">&#9881;</span>
+        <h1>FlowForge</h1>
+      </div>
+      <p class="tagline">Visual workflow orchestration powered by AI</p>
+    </header>
+
+    <nav class="nav">
+      <button class="nav-btn active" data-tab="workflows">Workflows</button>
+      <button class="nav-btn" data-tab="tools">Tools</button>
+      <button class="nav-btn" data-tab="examples">Examples</button>
+      <button class="nav-btn" data-tab="docs">Documentation</button>
+    </nav>
+
+    <main class="main">
+      <section id="workflows" class="tab-content active">
+        <div class="section-header">
+          <h2>Saved Workflows</h2>
+          <button class="btn-primary" onclick="refreshWorkflows()">Refresh</button>
+        </div>
+        <div id="workflows-list" class="card-grid">
+          <p class="loading">Loading workflows...</p>
+        </div>
+      </section>
+
+      <section id="tools" class="tab-content">
+        <div class="section-header">
+          <h2>Available Tools</h2>
+        </div>
+        <div id="tools-list" class="card-grid">
+          <p class="loading">Loading tools...</p>
+        </div>
+      </section>
+
+      <section id="examples" class="tab-content">
+        <div class="section-header">
+          <h2>Example Workflows</h2>
+        </div>
+        <div class="example-cards">
+          <div class="example-card">
+            <h3>Data Processing Pipeline</h3>
+            <p>Search, process, and summarize data with conditional branching.</p>
+            <span class="tag">data</span>
+            <span class="tag">processing</span>
+          </div>
+          <div class="example-card">
+            <h3>Approval Workflow</h3>
+            <p>Human-in-the-loop document review and approval process.</p>
+            <span class="tag">approval</span>
+            <span class="tag">human-in-the-loop</span>
+          </div>
+          <div class="example-card">
+            <h3>Parallel Research</h3>
+            <p>Search multiple topics simultaneously and combine results.</p>
+            <span class="tag">parallel</span>
+            <span class="tag">research</span>
+          </div>
+          <div class="example-card">
+            <h3>AI Code Review</h3>
+            <p>Use AI Council for comprehensive code review across security, performance, and style.</p>
+            <span class="tag">code-review</span>
+            <span class="tag">council</span>
+          </div>
+          <div class="example-card">
+            <h3>Multi-AI Research</h3>
+            <p>Query Claude, GPT-4, and Gemini for research synthesis.</p>
+            <span class="tag">council</span>
+            <span class="tag">research</span>
+          </div>
+        </div>
+      </section>
+
+      <section id="docs" class="tab-content">
+        <div class="section-header">
+          <h2>Quick Start</h2>
+        </div>
+        <div class="docs-content">
+          <h3>Connect via Claude Desktop or Cowork</h3>
+          <p>Add FlowForge to your MCP configuration:</p>
+          <pre><code>{
+  "mcpServers": {
+    "flowforge": {
+      "command": "npx",
+      "args": ["-y", "mcp-remote", "https://flow-forge--jpaulgrayson.replit.app/api/mcp/sse"]
+    }
+  }
+}</code></pre>
+          
+          <h3>Example Commands</h3>
+          <ul>
+            <li>"Generate a workflow for processing customer feedback"</li>
+            <li>"Visualize this workflow in LogicArt"</li>
+            <li>"Ask the AI council about API design best practices"</li>
+            <li>"Save this workflow for later"</li>
+          </ul>
+
+          <h3>API Endpoints</h3>
+          <table>
+            <tr><th>Endpoint</th><th>Method</th><th>Description</th></tr>
+            <tr><td><code>/api/mcp/sse</code></td><td>GET</td><td>SSE connection</td></tr>
+            <tr><td><code>/api/mcp/sse</code></td><td>POST</td><td>JSON-RPC requests</td></tr>
+            <tr><td><code>/api/mcp/tools</code></td><td>GET</td><td>List tools</td></tr>
+            <tr><td><code>/api/mcp/call</code></td><td>POST</td><td>Execute tool</td></tr>
+          </table>
+
+          <p><a href="https://github.com/your-repo/flowforge/docs" target="_blank">Full Documentation</a></p>
+        </div>
+      </section>
+    </main>
+
+    <footer class="footer">
+      <p>FlowForge v0.1.0 | Integrated with LogicArt, Claude Desktop, and Cowork</p>
+    </footer>
+  </div>
+
+  <script src="/app.js"></script>
+</body>
+</html>

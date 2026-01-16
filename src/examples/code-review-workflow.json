@@ -1,0 +1,40 @@
+{
+  "id": "code-review",
+  "name": "AI Code Review Workflow",
+  "description": "Use AI Council to review code from multiple perspectives",
+  "version": "1.0.0",
+  "config": {
+    "timeout": 180000
+  },
+  "inputs": [
+    {"name": "codeSnippet", "label": "Code to Review", "type": "string", "required": true},
+    {"name": "language", "label": "Programming Language", "type": "string", "required": true}
+  ],
+  "outputs": [
+    {"name": "reviewReport", "label": "Review Report", "type": "string", "sourceNodeId": "generate-report"}
+  ],
+  "nodes": [
+    {"id": "start", "type": "start", "label": "Start", "config": {}, "position": {"x": 200, "y": 50}},
+    {"id": "security-review", "type": "council", "label": "Security Review", "description": "Check for security vulnerabilities", "config": {"pattern": "consensus", "prompt": "Review this code for security vulnerabilities"}, "position": {"x": 200, "y": 150}},
+    {"id": "performance-review", "type": "council", "label": "Performance Review", "description": "Check for performance issues", "config": {"pattern": "consensus", "prompt": "Review this code for performance issues"}, "position": {"x": 200, "y": 250}},
+    {"id": "style-review", "type": "council", "label": "Style Review", "description": "Check for style and best practices", "config": {"pattern": "consensus", "prompt": "Review this code for style and best practices"}, "position": {"x": 200, "y": 350}},
+    {"id": "generate-report", "type": "tool", "label": "Generate Report", "config": {"toolName": "summarize"}, "position": {"x": 200, "y": 450}},
+    {"id": "save-report", "type": "end", "label": "Complete", "config": {}, "position": {"x": 200, "y": 550}},
+    {"id": "end", "type": "end", "label": "End", "config": {}, "position": {"x": 200, "y": 650}}
+  ],
+  "edges": [
+    {"id": "e1", "sourceNodeId": "start", "targetNodeId": "security-review"},
+    {"id": "e2", "sourceNodeId": "security-review", "targetNodeId": "performance-review"},
+    {"id": "e3", "sourceNodeId": "performance-review", "targetNodeId": "style-review"},
+    {"id": "e4", "sourceNodeId": "style-review", "targetNodeId": "generate-report"},
+    {"id": "e5", "sourceNodeId": "generate-report", "targetNodeId": "save-report"},
+    {"id": "e6", "sourceNodeId": "save-report", "targetNodeId": "end"}
+  ],
+  "startNodeId": "start",
+  "metadata": {
+    "createdAt": "2026-01-16",
+    "updatedAt": "2026-01-16",
+    "visibility": "public",
+    "tags": ["code-review", "council", "security", "performance"]
+  }
+}
