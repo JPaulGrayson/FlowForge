@@ -5,22 +5,157 @@ import { createLogicArtAdapter } from "../integration/logicart-adapter.js";
 import { council } from "../council/council.js";
 import { toolHandlers } from "../tools/handlers.js";
 import { saveWorkflow, loadWorkflow, listWorkflows } from "../tools/persistence.js";
+
 const app = express();
 app.use(express.json());
-const tools = [
-  { name: "generate_workflow", description: "Generate workflow from natural language" },
-  { name: "execute_workflow", description: "Execute a workflow" },
-  { name: "visualize_workflow", description: "Get LogicArt URL" },
-  { name: "council_query", description: "Query multiple AI models" },
-  { name: "save_workflow", description: "Save workflow" },
-  { name: "load_workflow", description: "Load workflow" },
-  { name: "list_workflows", description: "List workflows" },
-  { name: "web_search", description: "Search web" },
-  { name: "summarize", description: "Summarize text" }
-];
-app.get("/api/mcp/tools", (_, res) => res.json({ tools }));
 
-const sseClients: Map<string, express.Response> = new Map();
+const MCP_TOOLS = [
+  {
+    name: "generate_workflow",
+    description: "Generate workflow from natural language prompt",
+    inputSchema: {
+      type: "object",
+      properties: { prompt: { type: "string", description: "Natural language description of the workflow" } },
+      required: ["prompt"]
+    }
+  },
+  {
+    name: "visualize_workflow",
+    description: "Get LogicArt visualization URL for a workflow",
+    inputSchema: {
+      type: "object",
+      properties: { workflow: { type: "object", description: "Workflow object with nodes and edges" } },
+      required: ["workflow"]
+    }
+  },
+  {
+    name: "council_query",
+    description: "Query multiple AI models for consensus",
+    inputSchema: {
+      type: "object",
+      properties: { query: { type: "string" }, models: { type: "array", items: { type: "string" } } },
+      required: ["query"]
+    }
+  },
+  {
+    name: "save_workflow",
+    description: "Save a workflow to storage",
+    inputSchema: {
+      type: "object",
+      properties: { workflow: { type: "object" } },
+      required: ["workflow"]
+    }
+  },
+  {
+    name: "load_workflow",
+    description: "Load a workflow by ID",
+    inputSchema: {
+      type: "object",
+      properties: { id: { type: "string" } },
+      required: ["id"]
+    }
+  },
+  {
+    name: "list_workflows",
+    description: "List all saved workflows",
+    inputSchema: { type: "object", properties: {} }
+  },
+  {
+    name: "web_search",
+    description: "Search the web",
+    inputSchema: {
+      type: "object",
+      properties: { query: { type: "string" } },
+      required: ["query"]
+    }
+  },
+  {
+    name: "summarize",
+    description: "Summarize text",
+    inputSchema: {
+      type: "object",
+      properties: { text: { type: "string" } },
+      required: ["text"]
+    }
+  }
+];
+
+const SERVER_INFO = {
+  name: "flowforge",
+  version: "0.1.0"
+};
+
+const SERVER_CAPABILITIES = {
+  tools: {}
+};
+
+async function executeTool(name: string, args: any): Promise<any> {
+  switch (name) {
+    case "generate_workflow":
+      return await generator.generate({ prompt: args.prompt });
+    case "visualize_workflow":
+      return { url: await createLogicArtAdapter({ serverUrl: "https://logic.art" }).visualize(args.workflow) };
+    case "council_query":
+      return await council.query(args);
+    case "save_workflow":
+      return await saveWorkflow(args.workflow);
+    case "load_workflow":
+      return await loadWorkflow(args.id);
+    case "list_workflows":
+      return await listWorkflows();
+    case "web_search":
+      return await toolHandlers.web_search(args);
+    case "summarize":
+      return await toolHandlers.summarize(args);
+    default:
+      throw new Error(`Unknown tool: ${name}`);
+  }
+}
+
+function createJsonRpcResponse(id: string | number, result: any) {
+  return { jsonrpc: "2.0", id, result };
+}
+
+function createJsonRpcError(id: string | number | null, code: number, message: string) {
+  return { jsonrpc: "2.0", id, error: { code, message } };
+}
+
+async function handleJsonRpcRequest(request: any): Promise<any> {
+  const { id, method, params } = request;
+
+  switch (method) {
+    case "initialize":
+      return createJsonRpcResponse(id, {
+        protocolVersion: "2024-11-05",
+        serverInfo: SERVER_INFO,
+        capabilities: SERVER_CAPABILITIES
+      });
+
+    case "initialized":
+      return null;
+
+    case "tools/list":
+      return createJsonRpcResponse(id, { tools: MCP_TOOLS });
+
+    case "tools/call":
+      try {
+        const result = await executeTool(params.name, params.arguments || {});
+        return createJsonRpcResponse(id, {
+          content: [{ type: "text", text: JSON.stringify(result, null, 2) }]
+        });
+      } catch (e: any) {
+        return createJsonRpcError(id, -32000, e.message);
+      }
+
+    case "ping":
+      return createJsonRpcResponse(id, {});
+
+    default:
+      return createJsonRpcError(id, -32601, `Method not found: ${method}`);
+  }
+}
+
+const sseClients: Map<string, { res: express.Response; messageEndpoint: string }> = new Map();
 
 app.get("/api/mcp/sse", (req, res) => {
   res.setHeader("Content-Type", "text/event-stream");
@@ -30,9 +165,11 @@ app.get("/api/mcp/sse", (req, res) => {
   res.flushHeaders();
 
   const clientId = Date.now().toString();
-  sseClients.set(clientId, res);
+  const messageEndpoint = `/api/mcp/message?sessionId=${clientId}`;
+  
+  sseClients.set(clientId, { res, messageEndpoint });
 
-  res.write(`data: ${JSON.stringify({ type: "connected", clientId, tools })}\n\n`);
+  res.write(`event: endpoint\ndata: ${messageEndpoint}\n\n`);
 
   const keepAlive = setInterval(() => {
     res.write(`: keepalive\n\n`);
@@ -44,23 +181,47 @@ app.get("/api/mcp/sse", (req, res) => {
   });
 });
 
-function broadcastSSE(event: string, data: any) {
-  const message = `event: ${event}\ndata: ${JSON.stringify(data)}\n\n`;
-  sseClients.forEach((client) => client.write(message));
-}
+app.post("/api/mcp/message", async (req, res) => {
+  const sessionId = req.query.sessionId as string;
+  const client = sseClients.get(sessionId);
+  
+  if (!client) {
+    return res.status(404).json(createJsonRpcError(null, -32000, "Session not found"));
+  }
+
+  const request = req.body;
+  const response = await handleJsonRpcRequest(request);
+
+  if (response) {
+    client.res.write(`event: message\ndata: ${JSON.stringify(response)}\n\n`);
+  }
+
+  res.status(202).json({ status: "accepted" });
+});
+
+app.post("/api/mcp/sse", async (req, res) => {
+  res.setHeader("Access-Control-Allow-Origin", "*");
+  const request = req.body;
+  const response = await handleJsonRpcRequest(request);
+  
+  if (response) {
+    res.json(response);
+  } else {
+    res.status(204).send();
+  }
+});
+
+app.get("/api/mcp/tools", (_, res) => res.json({ tools: MCP_TOOLS }));
+
 app.post("/api/mcp/call", async (req, res) => {
   const { tool, params } = req.body;
   try {
-    if (tool === "generate_workflow") res.json({ result: await generator.generate({ prompt: params.prompt }) });
-    else if (tool === "visualize_workflow") res.json({ result: { url: await createLogicArtAdapter({ serverUrl: "https://logic.art" }).visualize(params.workflow) } });
-    else if (tool === "council_query") res.json({ result: await council.query(params) });
-    else if (tool === "save_workflow") res.json({ result: await saveWorkflow(params.workflow) });
-    else if (tool === "load_workflow") res.json({ result: await loadWorkflow(params.id) });
-    else if (tool === "list_workflows") res.json({ result: await listWorkflows() });
-    else if (tool === "web_search") res.json({ result: await toolHandlers.web_search(params) });
-    else if (tool === "summarize") res.json({ result: await toolHandlers.summarize(params) });
-    else res.status(400).json({ error: "Unknown tool" });
-  } catch (e: any) { res.status(500).json({ error: e.message }); }
+    const result = await executeTool(tool, params);
+    res.json({ result });
+  } catch (e: any) {
+    res.status(500).json({ error: e.message });
+  }
 });
+
 const PORT = parseInt(process.env.PORT || "5000", 10);
 app.listen(PORT, "0.0.0.0", () => console.log(`FlowForge MCP on port ${PORT}`));
