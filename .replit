@@ -43,7 +43,6 @@ outputType = "console"
 [[workflows.workflow.tasks]]
 task = "shell.exec"
 args = "npm run server"
-waitForPort = 3000
 
 [[ports]]
 localPort = 3000

@@ -19,6 +19,35 @@ const tools = [
   { name: "summarize", description: "Summarize text" }
 ];
 app.get("/api/mcp/tools", (_, res) => res.json({ tools }));
+
+const sseClients: Map<string, express.Response> = new Map();
+
+app.get("/api/mcp/sse", (req, res) => {
+  res.setHeader("Content-Type", "text/event-stream");
+  res.setHeader("Cache-Control", "no-cache");
+  res.setHeader("Connection", "keep-alive");
+  res.setHeader("Access-Control-Allow-Origin", "*");
+  res.flushHeaders();
+
+  const clientId = Date.now().toString();
+  sseClients.set(clientId, res);
+
+  res.write(`data: ${JSON.stringify({ type: "connected", clientId, tools })}\n\n`);
+
+  const keepAlive = setInterval(() => {
+    res.write(`: keepalive\n\n`);
+  }, 30000);
+
+  req.on("close", () => {
+    clearInterval(keepAlive);
+    sseClients.delete(clientId);
+  });
+});
+
+function broadcastSSE(event: string, data: any) {
+  const message = `event: ${event}\ndata: ${JSON.stringify(data)}\n\n`;
+  sseClients.forEach((client) => client.write(message));
+}
 app.post("/api/mcp/call", async (req, res) => {
   const { tool, params } = req.body;
   try {
