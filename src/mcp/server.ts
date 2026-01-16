@@ -33,5 +33,5 @@ app.post("/api/mcp/call", async (req, res) => {
     else res.status(400).json({ error: "Unknown tool" });
   } catch (e: any) { res.status(500).json({ error: e.message }); }
 });
-const PORT = process.env.PORT || 5000;
+const PORT = parseInt(process.env.PORT || "5000", 10);
 app.listen(PORT, "0.0.0.0", () => console.log(`FlowForge MCP on port ${PORT}`));
