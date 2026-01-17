@@ -1,0 +1,496 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Orchestrate - Documentation</title>
+  <link rel="stylesheet" href="/styles.css">
+  <style>
+    .docs-page {
+      max-width: 900px;
+      margin: 0 auto;
+    }
+    .docs-nav {
+      position: sticky;
+      top: 20px;
+      background: rgba(255, 255, 255, 0.03);
+      border-radius: 12px;
+      padding: 20px;
+      margin-bottom: 30px;
+    }
+    .docs-nav h3 {
+      color: #a855f7;
+      margin-bottom: 12px;
+      font-size: 14px;
+      text-transform: uppercase;
+      letter-spacing: 1px;
+    }
+    .docs-nav ul {
+      list-style: none;
+      margin: 0;
+      padding: 0;
+    }
+    .docs-nav li {
+      margin-bottom: 8px;
+    }
+    .docs-nav a {
+      color: #888;
+      text-decoration: none;
+      font-size: 14px;
+      transition: color 0.2s;
+    }
+    .docs-nav a:hover {
+      color: #00d9ff;
+    }
+    .doc-section {
+      background: rgba(255, 255, 255, 0.03);
+      border-radius: 16px;
+      padding: 30px;
+      margin-bottom: 24px;
+      border: 1px solid rgba(255, 255, 255, 0.05);
+    }
+    .doc-section h2 {
+      color: #00d9ff;
+      font-size: 24px;
+      margin-bottom: 20px;
+      padding-bottom: 12px;
+      border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+    }
+    .doc-section h3 {
+      color: #a855f7;
+      font-size: 18px;
+      margin: 24px 0 12px 0;
+    }
+    .doc-section h3:first-of-type {
+      margin-top: 0;
+    }
+    .doc-section p {
+      color: #ccc;
+      line-height: 1.7;
+      margin-bottom: 16px;
+    }
+    .doc-section ul {
+      color: #ccc;
+      margin-left: 20px;
+      margin-bottom: 16px;
+      line-height: 1.8;
+    }
+    .doc-section code {
+      background: rgba(0, 217, 255, 0.1);
+      color: #00d9ff;
+      padding: 2px 8px;
+      border-radius: 4px;
+      font-family: 'Monaco', 'Menlo', monospace;
+      font-size: 13px;
+    }
+    .doc-section pre {
+      background: rgba(0, 0, 0, 0.4);
+      border-radius: 8px;
+      padding: 20px;
+      overflow-x: auto;
+      margin: 16px 0;
+    }
+    .doc-section pre code {
+      background: none;
+      padding: 0;
+      color: #e0e0e0;
+    }
+    .doc-table {
+      width: 100%;
+      border-collapse: collapse;
+      margin: 16px 0;
+    }
+    .doc-table th, .doc-table td {
+      text-align: left;
+      padding: 12px 16px;
+      border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+    }
+    .doc-table th {
+      color: #a855f7;
+      font-weight: 600;
+      background: rgba(168, 85, 247, 0.1);
+    }
+    .doc-table td {
+      color: #ccc;
+    }
+    .doc-table td code {
+      background: rgba(0, 217, 255, 0.1);
+      color: #00d9ff;
+    }
+    .back-link {
+      display: inline-flex;
+      align-items: center;
+      gap: 8px;
+      color: #888;
+      text-decoration: none;
+      margin-bottom: 20px;
+      font-size: 14px;
+    }
+    .back-link:hover {
+      color: #00d9ff;
+    }
+    .tool-card {
+      background: rgba(0, 0, 0, 0.2);
+      border-radius: 12px;
+      padding: 20px;
+      margin-bottom: 16px;
+      border: 1px solid rgba(255, 255, 255, 0.05);
+    }
+    .tool-card h4 {
+      color: #00d9ff;
+      margin-bottom: 8px;
+      font-size: 16px;
+    }
+    .tool-card p {
+      margin-bottom: 12px;
+      font-size: 14px;
+    }
+  </style>
+</head>
+<body>
+  <div class="app docs-page">
+    <a href="/" class="back-link">&larr; Back to Dashboard</a>
+    
+    <header class="header" style="padding: 20px 0;">
+      <div class="logo">
+        <span class="logo-icon">&#9881;</span>
+        <h1>Orchestrate</h1>
+      </div>
+      <p class="tagline">Documentation</p>
+    </header>
+
+    <nav class="docs-nav">
+      <h3>Contents</h3>
+      <ul>
+        <li><a href="#quick-start">Quick Start</a></li>
+        <li><a href="#features">Features</a></li>
+        <li><a href="#setup">Claude Desktop / Cowork Setup</a></li>
+        <li><a href="#tools">Available Tools</a></li>
+        <li><a href="#api">API Reference</a></li>
+        <li><a href="#workflow-schema">Workflow Schema</a></li>
+        <li><a href="#examples">Examples</a></li>
+        <li><a href="#use-cases">Use Cases</a></li>
+      </ul>
+    </nav>
+
+    <section id="quick-start" class="doc-section">
+      <h2>Quick Start</h2>
+      <p>Get Orchestrate connected to Claude Desktop or Cowork in under a minute.</p>
+      
+      <h3>1. Add to MCP Configuration</h3>
+      <p>Add Orchestrate to your MCP servers configuration:</p>
+      <pre><code>{
+  "mcpServers": {
+    "orchestrate": {
+      "command": "npx",
+      "args": ["-y", "mcp-remote", "https://orchestrate.us.com/api/mcp/sse"]
+    }
+  }
+}</code></pre>
+
+      <h3>2. Start Using Orchestrate</h3>
+      <p>In Claude, you can now say things like:</p>
+      <ul>
+        <li>"Generate a workflow for processing customer feedback"</li>
+        <li>"Visualize this workflow in LogicArt"</li>
+        <li>"Ask the AI council about best practices for API design"</li>
+        <li>"Save this workflow for later"</li>
+      </ul>
+    </section>
+
+    <section id="features" class="doc-section">
+      <h2>Features</h2>
+      
+      <h3>Workflow Generation</h3>
+      <p>Create workflows from natural language descriptions. Orchestrate uses AI to design node-based workflows automatically.</p>
+      
+      <h3>LogicArt Visualization</h3>
+      <p>Every workflow can be visualized as an interactive flowchart via LogicArt. Get shareable URLs instantly.</p>
+      
+      <h3>AI Council</h3>
+      <p>Query multiple AI models (Claude, GPT-4, Gemini) simultaneously and get consensus or comparative responses.</p>
+      
+      <h3>Persistence</h3>
+      <p>Save and load workflows for later use. Build up a library of reusable automation templates.</p>
+      
+      <h3>Web Search & Summarization</h3>
+      <p>Built-in tools for searching the web and summarizing content within your workflows.</p>
+    </section>
+
+    <section id="setup" class="doc-section">
+      <h2>Claude Desktop / Cowork Setup</h2>
+      
+      <h3>For Claude Desktop</h3>
+      <ol style="color: #ccc; margin-left: 20px; line-height: 2;">
+        <li>Open Claude Desktop settings</li>
+        <li>Navigate to MCP Servers configuration</li>
+        <li>Add the Orchestrate server configuration (see Quick Start)</li>
+        <li>Restart Claude Desktop</li>
+      </ol>
+
+      <h3>For Cowork</h3>
+      <p>Cowork uses the same MCP protocol. Add Orchestrate to your <code>.mcp.json</code> file:</p>
+      <pre><code>{
+  "mcpServers": {
+    "orchestrate": {
+      "type": "sse",
+      "url": "https://orchestrate.us.com/api/mcp/sse"
+    }
+  }
+}</code></pre>
+    </section>
+
+    <section id="tools" class="doc-section">
+      <h2>Available Tools</h2>
+      
+      <div class="tool-card">
+        <h4>generate_workflow</h4>
+        <p>Generate a workflow from natural language description.</p>
+        <pre><code>{
+  "name": "generate_workflow",
+  "arguments": {
+    "prompt": "Create a workflow that searches for news and summarizes it"
+  }
+}</code></pre>
+      </div>
+
+      <div class="tool-card">
+        <h4>visualize_workflow</h4>
+        <p>Get a LogicArt visualization URL for a workflow.</p>
+        <pre><code>{
+  "name": "visualize_workflow",
+  "arguments": {
+    "workflow": { ... }
+  }
+}</code></pre>
+      </div>
+
+      <div class="tool-card">
+        <h4>council_query</h4>
+        <p>Query multiple AI models (Claude, GPT-4, Gemini) for consensus.</p>
+        <pre><code>{
+  "name": "council_query",
+  "arguments": {
+    "query": "What are the best practices for REST API design?",
+    "models": ["claude", "gpt4", "gemini"]
+  }
+}</code></pre>
+      </div>
+
+      <div class="tool-card">
+        <h4>save_workflow</h4>
+        <p>Save a workflow to storage for later use.</p>
+        <pre><code>{
+  "name": "save_workflow",
+  "arguments": {
+    "workflow": { ... }
+  }
+}</code></pre>
+      </div>
+
+      <div class="tool-card">
+        <h4>load_workflow</h4>
+        <p>Load a saved workflow by its ID.</p>
+        <pre><code>{
+  "name": "load_workflow",
+  "arguments": {
+    "id": "workflow-id"
+  }
+}</code></pre>
+      </div>
+
+      <div class="tool-card">
+        <h4>list_workflows</h4>
+        <p>List all saved workflows.</p>
+        <pre><code>{
+  "name": "list_workflows",
+  "arguments": {}
+}</code></pre>
+      </div>
+
+      <div class="tool-card">
+        <h4>web_search</h4>
+        <p>Search the web for information.</p>
+        <pre><code>{
+  "name": "web_search",
+  "arguments": {
+    "query": "latest AI news"
+  }
+}</code></pre>
+      </div>
+
+      <div class="tool-card">
+        <h4>summarize</h4>
+        <p>Summarize text content.</p>
+        <pre><code>{
+  "name": "summarize",
+  "arguments": {
+    "text": "Long text to summarize..."
+  }
+}</code></pre>
+      </div>
+    </section>
+
+    <section id="api" class="doc-section">
+      <h2>API Reference</h2>
+      
+      <h3>MCP Endpoints</h3>
+      <table class="doc-table">
+        <tr>
+          <th>Endpoint</th>
+          <th>Method</th>
+          <th>Description</th>
+        </tr>
+        <tr>
+          <td><code>/api/mcp/sse</code></td>
+          <td>GET</td>
+          <td>SSE connection for real-time communication</td>
+        </tr>
+        <tr>
+          <td><code>/api/mcp/sse</code></td>
+          <td>POST</td>
+          <td>Direct JSON-RPC requests</td>
+        </tr>
+        <tr>
+          <td><code>/api/mcp/tools</code></td>
+          <td>GET</td>
+          <td>List available tools</td>
+        </tr>
+        <tr>
+          <td><code>/api/mcp/call</code></td>
+          <td>POST</td>
+          <td>Execute a tool directly</td>
+        </tr>
+      </table>
+    </section>
+
+    <section id="workflow-schema" class="doc-section">
+      <h2>Workflow Schema</h2>
+      <p>Workflows follow this TypeScript structure:</p>
+      <pre><code>interface Workflow {
+  id: string;
+  name: string;
+  description: string;
+  version: string;
+  config: {
+    timeout?: number;
+    maxParallelism?: number;
+    continueOnError?: boolean;
+  };
+  nodes: Array&lt;{
+    id: string;
+    type: 'start' | 'end' | 'tool' | 'decision' | 
+          'loop' | 'parallel' | 'join' | 'human' | 'council';
+    label: string;
+    description?: string;
+    config: any;
+  }&gt;;
+  edges: Array&lt;{
+    id: string;
+    sourceNodeId: string;
+    targetNodeId: string;
+    label?: string;
+    condition?: object;
+  }&gt;;
+  startNodeId: string;
+  metadata: {
+    author?: string;
+    createdAt: string;
+    updatedAt: string;
+    tags?: string[];
+    visibility: 'private' | 'team' | 'public';
+  };
+}</code></pre>
+
+      <h3>Node Types</h3>
+      <table class="doc-table">
+        <tr>
+          <th>Type</th>
+          <th>Description</th>
+        </tr>
+        <tr><td><code>start</code></td><td>Entry point of the workflow</td></tr>
+        <tr><td><code>end</code></td><td>Exit point of the workflow</td></tr>
+        <tr><td><code>tool</code></td><td>Executes a tool (web_search, summarize, etc.)</td></tr>
+        <tr><td><code>decision</code></td><td>Conditional branching based on data</td></tr>
+        <tr><td><code>loop</code></td><td>Iterate over items</td></tr>
+        <tr><td><code>parallel</code></td><td>Split into parallel branches</td></tr>
+        <tr><td><code>join</code></td><td>Merge parallel branches</td></tr>
+        <tr><td><code>human</code></td><td>Wait for human input</td></tr>
+        <tr><td><code>council</code></td><td>Query AI council for consensus</td></tr>
+      </table>
+    </section>
+
+    <section id="examples" class="doc-section">
+      <h2>Examples</h2>
+      <p>Orchestrate comes with several example workflows:</p>
+      
+      <table class="doc-table">
+        <tr>
+          <th>Workflow</th>
+          <th>Description</th>
+        </tr>
+        <tr>
+          <td>Data Processing Pipeline</td>
+          <td>Search, process, and summarize data with conditional branching</td>
+        </tr>
+        <tr>
+          <td>Approval Workflow</td>
+          <td>Human-in-the-loop document review and approval</td>
+        </tr>
+        <tr>
+          <td>Parallel Research</td>
+          <td>Search multiple topics simultaneously and combine results</td>
+        </tr>
+        <tr>
+          <td>Code Review Workflow</td>
+          <td>Use AI Council for comprehensive code review</td>
+        </tr>
+        <tr>
+          <td>Council Research</td>
+          <td>Query Claude, GPT-4, and Gemini for research synthesis</td>
+        </tr>
+        <tr>
+          <td>Research Workflow</td>
+          <td>Basic research workflow template</td>
+        </tr>
+      </table>
+    </section>
+
+    <section id="use-cases" class="doc-section">
+      <h2>Use Cases</h2>
+      
+      <h3>For Developers</h3>
+      <ul>
+        <li>Automate code review processes</li>
+        <li>Generate documentation workflows</li>
+        <li>Create CI/CD integration templates</li>
+      </ul>
+
+      <h3>For Researchers</h3>
+      <ul>
+        <li>Multi-source research synthesis</li>
+        <li>Parallel data gathering</li>
+        <li>AI-assisted literature review</li>
+      </ul>
+
+      <h3>For Teams</h3>
+      <ul>
+        <li>Approval and review workflows</li>
+        <li>Knowledge base automation</li>
+        <li>Report generation pipelines</li>
+      </ul>
+
+      <h3>For Content Creators</h3>
+      <ul>
+        <li>Content research and summarization</li>
+        <li>Multi-platform publishing workflows</li>
+        <li>SEO analysis automation</li>
+      </ul>
+    </section>
+
+    <footer class="footer">
+      <p>Orchestrate v0.1.0 | Integrated with LogicArt, Claude Desktop, and Cowork</p>
+    </footer>
+  </div>
+</body>
+</html>
