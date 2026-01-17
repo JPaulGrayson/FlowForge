@@ -21,7 +21,6 @@
       <button class="nav-btn active" data-tab="workflows">Workflows</button>
       <button class="nav-btn" data-tab="tools">Tools</button>
       <button class="nav-btn" data-tab="examples">Examples</button>
-      <button class="nav-btn" data-tab="docs">Documentation</button>
     </nav>
 
     <main class="main">
@@ -82,42 +81,6 @@
         </div>
       </section>
 
-      <section id="docs" class="tab-content">
-        <div class="section-header">
-          <h2>Quick Start</h2>
-        </div>
-        <div class="docs-content">
-          <h3>Connect via Claude Desktop or Cowork</h3>
-          <p>Add Orchestrate to your MCP configuration:</p>
-          <pre><code>{
-  "mcpServers": {
-    "orchestrate": {
-      "command": "npx",
-      "args": ["-y", "mcp-remote", "https://orchestrate.us.com/api/mcp/sse"]
-    }
-  }
-}</code></pre>
-          
-          <h3>Example Commands</h3>
-          <ul>
-            <li>"Generate a workflow for processing customer feedback"</li>
-            <li>"Visualize this workflow in LogicArt"</li>
-            <li>"Ask the AI council about API design best practices"</li>
-            <li>"Save this workflow for later"</li>
-          </ul>
-
-          <h3>API Endpoints</h3>
-          <table>
-            <tr><th>Endpoint</th><th>Method</th><th>Description</th></tr>
-            <tr><td><code>/api/mcp/sse</code></td><td>GET</td><td>SSE connection</td></tr>
-            <tr><td><code>/api/mcp/sse</code></td><td>POST</td><td>JSON-RPC requests</td></tr>
-            <tr><td><code>/api/mcp/tools</code></td><td>GET</td><td>List tools</td></tr>
-            <tr><td><code>/api/mcp/call</code></td><td>POST</td><td>Execute tool</td></tr>
-          </table>
-
-          <p><a href="https://github.com/your-repo/orchestrate/docs" target="_blank">Full Documentation</a></p>
-        </div>
-      </section>
     </main>
 
     <footer class="footer">
