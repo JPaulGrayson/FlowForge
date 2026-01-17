@@ -208,15 +208,47 @@ function openHelpModal() {
         <button class="help-close-btn" onclick="closeHelpModal()">&times;</button>
       </div>
       
-      <div class="help-section">
-        <h3>What is Orchestrate?</h3>
-        <p>Orchestrate is a visual workflow orchestration platform powered by AI. Design workflows in natural language, execute them with Claude tools, and visualize them with LogicArt.</p>
+      <div class="help-nav">
+        <button class="help-nav-btn active" data-section="overview">Overview</button>
+        <button class="help-nav-btn" data-section="setup">Setup</button>
+        <button class="help-nav-btn" data-section="tools">Tools</button>
+        <button class="help-nav-btn" data-section="api">API</button>
+        <button class="help-nav-btn" data-section="schema">Schema</button>
+        <button class="help-nav-btn" data-section="examples">Examples</button>
       </div>
       
-      <div class="help-section">
-        <h3>Getting Started</h3>
-        <p>Connect Orchestrate to Claude Desktop or Cowork by adding this to your MCP configuration:</p>
-        <pre><code>{
+      <div class="help-content">
+        <div class="help-panel active" id="help-overview">
+          <h3>What is Orchestrate?</h3>
+          <p>Orchestrate is a visual workflow orchestration platform powered by AI. Design workflows in natural language, execute them with Claude tools, and visualize them with LogicArt.</p>
+          
+          <h3>Key Features</h3>
+          <ul>
+            <li><strong>Workflow Generation</strong> - Create workflows from natural language descriptions</li>
+            <li><strong>LogicArt Visualization</strong> - Get interactive flowchart URLs instantly</li>
+            <li><strong>AI Council</strong> - Query Claude, GPT-4, and Gemini simultaneously</li>
+            <li><strong>Persistence</strong> - Save and load workflows for reuse</li>
+            <li><strong>Web Search & Summarization</strong> - Built-in research tools</li>
+          </ul>
+          
+          <h3>Example Commands</h3>
+          <p>Try saying these to Claude:</p>
+          <ul>
+            <li>"Generate a workflow for processing customer feedback"</li>
+            <li>"Visualize this workflow in LogicArt"</li>
+            <li>"Ask the AI council about API design best practices"</li>
+            <li>"Save this workflow for later"</li>
+          </ul>
+        </div>
+        
+        <div class="help-panel" id="help-setup">
+          <h3>Claude Desktop Setup</h3>
+          <ol>
+            <li>Open Claude Desktop settings</li>
+            <li>Navigate to MCP Servers configuration</li>
+            <li>Add this configuration:</li>
+          </ol>
+          <pre><code>{
   "mcpServers": {
     "orchestrate": {
       "command": "npx",
@@ -224,53 +256,146 @@ function openHelpModal() {
     }
   }
 }</code></pre>
-      </div>
-      
-      <div class="help-section">
-        <h3>Available Tools</h3>
-        <ul>
-          <li><code>generate_workflow</code> - Create workflows from natural language</li>
-          <li><code>visualize_workflow</code> - Get LogicArt visualization URL</li>
-          <li><code>council_query</code> - Query multiple AI models (Claude, GPT-4, Gemini)</li>
-          <li><code>save_workflow</code> - Save a workflow for later use</li>
-          <li><code>load_workflow</code> - Load a saved workflow by ID</li>
-          <li><code>list_workflows</code> - List all saved workflows</li>
-          <li><code>web_search</code> - Search the web</li>
-          <li><code>summarize</code> - Summarize text content</li>
-        </ul>
-      </div>
-      
-      <div class="help-section">
-        <h3>Example Commands</h3>
-        <p>Try saying these to Claude:</p>
-        <ul>
-          <li>"Generate a workflow for processing customer feedback"</li>
-          <li>"Visualize this workflow in LogicArt"</li>
-          <li>"Ask the AI council about API design best practices"</li>
-          <li>"Save this workflow for later"</li>
-          <li>"List my saved workflows"</li>
-        </ul>
-      </div>
-      
-      <div class="help-section">
-        <h3>API Endpoints</h3>
-        <ul>
-          <li><code>GET /api/mcp/sse</code> - SSE connection for MCP</li>
-          <li><code>POST /api/mcp/sse</code> - JSON-RPC requests</li>
-          <li><code>GET /api/mcp/tools</code> - List available tools</li>
-          <li><code>POST /api/mcp/call</code> - Execute a tool directly</li>
-        </ul>
-      </div>
-      
-      <div class="help-section">
-        <h3>Need More Help?</h3>
-        <div class="help-links">
-          <a href="/docs.html" target="_blank" class="help-link">Full Documentation</a>
-          <a href="https://logic.art" target="_blank" class="help-link">LogicArt Editor</a>
+          <ol start="4">
+            <li>Restart Claude Desktop</li>
+          </ol>
+          
+          <h3>Cowork Setup</h3>
+          <p>Add to your <code>.mcp.json</code> file:</p>
+          <pre><code>{
+  "mcpServers": {
+    "orchestrate": {
+      "type": "sse",
+      "url": "https://orchestrate.us.com/api/mcp/sse"
+    }
+  }
+}</code></pre>
+        </div>
+        
+        <div class="help-panel" id="help-tools">
+          <h3>Available Tools</h3>
+          
+          <div class="tool-item">
+            <h4>generate_workflow</h4>
+            <p>Create workflows from natural language descriptions.</p>
+            <pre><code>{ "prompt": "Create a workflow that searches for news" }</code></pre>
+          </div>
+          
+          <div class="tool-item">
+            <h4>visualize_workflow</h4>
+            <p>Get a LogicArt visualization URL for a workflow.</p>
+            <pre><code>{ "workflow": { ... } }</code></pre>
+          </div>
+          
+          <div class="tool-item">
+            <h4>council_query</h4>
+            <p>Query multiple AI models for consensus.</p>
+            <pre><code>{ "query": "Best API design practices", "models": ["claude", "gpt4", "gemini"] }</code></pre>
+          </div>
+          
+          <div class="tool-item">
+            <h4>save_workflow / load_workflow / list_workflows</h4>
+            <p>Manage saved workflows.</p>
+          </div>
+          
+          <div class="tool-item">
+            <h4>web_search / summarize</h4>
+            <p>Search the web and summarize content.</p>
+          </div>
+        </div>
+        
+        <div class="help-panel" id="help-api">
+          <h3>MCP Endpoints</h3>
+          <table class="help-table">
+            <tr><th>Endpoint</th><th>Method</th><th>Description</th></tr>
+            <tr><td><code>/api/mcp/sse</code></td><td>GET</td><td>SSE connection</td></tr>
+            <tr><td><code>/api/mcp/sse</code></td><td>POST</td><td>JSON-RPC requests</td></tr>
+            <tr><td><code>/api/mcp/tools</code></td><td>GET</td><td>List tools</td></tr>
+            <tr><td><code>/api/mcp/call</code></td><td>POST</td><td>Execute tool</td></tr>
+          </table>
+          
+          <h3>Direct API Usage</h3>
+          <p>Execute tools directly via POST:</p>
+          <pre><code>curl -X POST https://orchestrate.us.com/api/mcp/call \\
+  -H "Content-Type: application/json" \\
+  -d '{"tool": "list_workflows", "params": {}}'</code></pre>
+        </div>
+        
+        <div class="help-panel" id="help-schema">
+          <h3>Workflow Schema</h3>
+          <pre><code>interface Workflow {
+  id: string;
+  name: string;
+  description: string;
+  nodes: Array<{
+    id: string;
+    type: 'start' | 'end' | 'tool' | 
+          'decision' | 'loop' | 'parallel' | 
+          'join' | 'human' | 'council';
+    label: string;
+    config: object;
+  }>;
+  edges: Array<{
+    sourceNodeId: string;
+    targetNodeId: string;
+    condition?: object;
+  }>;
+  startNodeId: string;
+  metadata: {
+    tags?: string[];
+    visibility: 'private' | 'team' | 'public';
+  };
+}</code></pre>
+          
+          <h3>Node Types</h3>
+          <table class="help-table">
+            <tr><td><code>start</code></td><td>Entry point</td></tr>
+            <tr><td><code>end</code></td><td>Exit point</td></tr>
+            <tr><td><code>tool</code></td><td>Execute a tool</td></tr>
+            <tr><td><code>decision</code></td><td>Conditional branching</td></tr>
+            <tr><td><code>parallel</code></td><td>Split into branches</td></tr>
+            <tr><td><code>join</code></td><td>Merge branches</td></tr>
+            <tr><td><code>human</code></td><td>Wait for input</td></tr>
+            <tr><td><code>council</code></td><td>AI consensus</td></tr>
+          </table>
+        </div>
+        
+        <div class="help-panel" id="help-examples">
+          <h3>Example Workflows</h3>
+          <table class="help-table">
+            <tr><th>Workflow</th><th>Description</th></tr>
+            <tr><td>Data Processing Pipeline</td><td>Search, process, and summarize with branching</td></tr>
+            <tr><td>Approval Workflow</td><td>Human-in-the-loop document review</td></tr>
+            <tr><td>Parallel Research</td><td>Search multiple topics simultaneously</td></tr>
+            <tr><td>Code Review</td><td>AI Council for comprehensive review</td></tr>
+            <tr><td>Council Research</td><td>Multi-model research synthesis</td></tr>
+          </table>
+          
+          <h3>Use Cases</h3>
+          <ul>
+            <li><strong>Developers:</strong> Code review, documentation, CI/CD templates</li>
+            <li><strong>Researchers:</strong> Multi-source synthesis, parallel gathering</li>
+            <li><strong>Teams:</strong> Approval workflows, knowledge automation</li>
+            <li><strong>Content Creators:</strong> Research, summarization, SEO</li>
+          </ul>
+          
+          <div class="help-links" style="margin-top: 20px;">
+            <a href="/docs.html" target="_blank" class="help-link">Full Documentation</a>
+            <a href="https://logic.art" target="_blank" class="help-link">LogicArt Editor</a>
+          </div>
         </div>
       </div>
     </div>
   `;
+  
+  modal.querySelectorAll('.help-nav-btn').forEach(btn => {
+    btn.addEventListener('click', () => {
+      modal.querySelectorAll('.help-nav-btn').forEach(b => b.classList.remove('active'));
+      modal.querySelectorAll('.help-panel').forEach(p => p.classList.remove('active'));
+      btn.classList.add('active');
+      modal.querySelector('#help-' + btn.dataset.section).classList.add('active');
+    });
+  });
   
   modal.addEventListener('click', (e) => {
     if (e.target === modal) closeHelpModal();
