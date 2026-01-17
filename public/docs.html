@@ -1,5 +1,6 @@
 <!DOCTYPE html>
 <html lang="en">
+
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
@@ -10,6 +11,7 @@
       max-width: 900px;
       margin: 0 auto;
     }
+
     .docs-nav {
       position: sticky;
       top: 20px;
@@ -18,6 +20,7 @@
       padding: 20px;
       margin-bottom: 30px;
     }
+
     .docs-nav h3 {
       color: #a855f7;
       margin-bottom: 12px;
@@ -25,23 +28,28 @@
       text-transform: uppercase;
       letter-spacing: 1px;
     }
+
     .docs-nav ul {
       list-style: none;
       margin: 0;
       padding: 0;
     }
+
     .docs-nav li {
       margin-bottom: 8px;
     }
+
     .docs-nav a {
       color: #888;
       text-decoration: none;
       font-size: 14px;
       transition: color 0.2s;
     }
+
     .docs-nav a:hover {
       color: #00d9ff;
     }
+
     .doc-section {
       background: rgba(255, 255, 255, 0.03);
       border-radius: 16px;
@@ -49,6 +57,7 @@
       margin-bottom: 24px;
       border: 1px solid rgba(255, 255, 255, 0.05);
     }
+
     .doc-section h2 {
       color: #00d9ff;
       font-size: 24px;
@@ -56,25 +65,30 @@
       padding-bottom: 12px;
       border-bottom: 1px solid rgba(255, 255, 255, 0.1);
     }
+
     .doc-section h3 {
       color: #a855f7;
       font-size: 18px;
       margin: 24px 0 12px 0;
     }
+
     .doc-section h3:first-of-type {
       margin-top: 0;
     }
+
     .doc-section p {
       color: #ccc;
       line-height: 1.7;
       margin-bottom: 16px;
     }
+
     .doc-section ul {
       color: #ccc;
       margin-left: 20px;
       margin-bottom: 16px;
       line-height: 1.8;
     }
+
     .doc-section code {
       background: rgba(0, 217, 255, 0.1);
       color: #00d9ff;
@@ -83,6 +97,7 @@
       font-family: 'Monaco', 'Menlo', monospace;
       font-size: 13px;
     }
+
     .doc-section pre {
       background: rgba(0, 0, 0, 0.4);
       border-radius: 8px;
@@ -90,33 +105,41 @@
       overflow-x: auto;
       margin: 16px 0;
     }
+
     .doc-section pre code {
       background: none;
       padding: 0;
       color: #e0e0e0;
     }
+
     .doc-table {
       width: 100%;
       border-collapse: collapse;
       margin: 16px 0;
     }
-    .doc-table th, .doc-table td {
+
+    .doc-table th,
+    .doc-table td {
       text-align: left;
       padding: 12px 16px;
       border-bottom: 1px solid rgba(255, 255, 255, 0.1);
     }
+
     .doc-table th {
       color: #a855f7;
       font-weight: 600;
       background: rgba(168, 85, 247, 0.1);
     }
+
     .doc-table td {
       color: #ccc;
     }
+
     .doc-table td code {
       background: rgba(0, 217, 255, 0.1);
       color: #00d9ff;
     }
+
     .back-link {
       display: inline-flex;
       align-items: center;
@@ -126,9 +149,11 @@
       margin-bottom: 20px;
       font-size: 14px;
     }
+
     .back-link:hover {
       color: #00d9ff;
     }
+
     .tool-card {
       background: rgba(0, 0, 0, 0.2);
       border-radius: 12px;
@@ -136,21 +161,24 @@
       margin-bottom: 16px;
       border: 1px solid rgba(255, 255, 255, 0.05);
     }
+
     .tool-card h4 {
       color: #00d9ff;
       margin-bottom: 8px;
       font-size: 16px;
     }
+
     .tool-card p {
       margin-bottom: 12px;
       font-size: 14px;
     }
   </style>
 </head>
+
 <body>
   <div class="app docs-page">
     <a href="/" class="back-link">&larr; Back to Dashboard</a>
-    
+
     <header class="header" style="padding: 20px 0;">
       <div class="logo">
         <span class="logo-icon">&#9881;</span>
@@ -175,8 +203,15 @@
 
     <section id="quick-start" class="doc-section">
       <h2>Quick Start</h2>
+
+      <!-- Hero Architecture Image -->
+      <div style="text-align: center; margin-bottom: 2rem;">
+        <img src="/images/architecture.png" alt="Orchestrate Architecture"
+          style="max-width: 100%; border-radius: 16px; box-shadow: 0 8px 32px rgba(168, 85, 247, 0.2);">
+      </div>
+
       <p>Get Orchestrate connected to Claude Desktop or Cowork in under a minute.</p>
-      
+
       <h3>1. Add to MCP Configuration</h3>
       <p>Add Orchestrate to your MCP servers configuration:</p>
       <pre><code>{
@@ -200,26 +235,52 @@
 
     <section id="features" class="doc-section">
       <h2>Features</h2>
-      
-      <h3>Workflow Generation</h3>
-      <p>Create workflows from natural language descriptions. Orchestrate uses AI to design node-based workflows automatically.</p>
-      
-      <h3>LogicArt Visualization</h3>
-      <p>Every workflow can be visualized as an interactive flowchart via LogicArt. Get shareable URLs instantly.</p>
-      
-      <h3>AI Council</h3>
-      <p>Query multiple AI models (Claude, GPT-4, Gemini) simultaneously and get consensus or comparative responses.</p>
-      
-      <h3>Persistence</h3>
-      <p>Save and load workflows for later use. Build up a library of reusable automation templates.</p>
-      
-      <h3>Web Search & Summarization</h3>
-      <p>Built-in tools for searching the web and summarizing content within your workflows.</p>
+
+      <div
+        style="display: grid; grid-template-columns: repeat(auto-fit, minmax(280px, 1fr)); gap: 1.5rem; margin: 1.5rem 0;">
+        <div
+          style="background: linear-gradient(135deg, rgba(0, 217, 255, 0.1) 0%, rgba(0, 150, 200, 0.05) 100%); border: 1px solid rgba(0, 217, 255, 0.3); border-radius: 16px; padding: 1.5rem;">
+          <div style="font-size: 2rem; margin-bottom: 0.75rem;">⚡</div>
+          <h3 style="margin-top: 0;">Workflow Generation</h3>
+          <p>Create workflows from natural language descriptions. Orchestrate uses AI to design node-based workflows
+            automatically.</p>
+        </div>
+
+        <div
+          style="background: linear-gradient(135deg, rgba(168, 85, 247, 0.1) 0%, rgba(120, 60, 180, 0.05) 100%); border: 1px solid rgba(168, 85, 247, 0.3); border-radius: 16px; padding: 1.5rem;">
+          <div style="font-size: 2rem; margin-bottom: 0.75rem;">📊</div>
+          <h3 style="margin-top: 0;">LogicArt Visualization</h3>
+          <p>Every workflow can be visualized as an interactive flowchart via LogicArt. Get shareable URLs instantly.
+          </p>
+        </div>
+
+        <div
+          style="background: linear-gradient(135deg, rgba(255, 193, 7, 0.1) 0%, rgba(200, 150, 0, 0.05) 100%); border: 1px solid rgba(255, 193, 7, 0.3); border-radius: 16px; padding: 1.5rem;">
+          <div style="font-size: 2rem; margin-bottom: 0.75rem;">🧠</div>
+          <h3 style="margin-top: 0;">AI Council</h3>
+          <p>Query multiple AI models (Claude, GPT-4, Gemini) simultaneously and get consensus or comparative responses.
+          </p>
+        </div>
+
+        <div
+          style="background: linear-gradient(135deg, rgba(76, 175, 80, 0.1) 0%, rgba(50, 120, 50, 0.05) 100%); border: 1px solid rgba(76, 175, 80, 0.3); border-radius: 16px; padding: 1.5rem;">
+          <div style="font-size: 2rem; margin-bottom: 0.75rem;">💾</div>
+          <h3 style="margin-top: 0;">Persistence</h3>
+          <p>Save and load workflows for later use. Build up a library of reusable automation templates.</p>
+        </div>
+
+        <div
+          style="background: linear-gradient(135deg, rgba(33, 150, 243, 0.1) 0%, rgba(20, 100, 180, 0.05) 100%); border: 1px solid rgba(33, 150, 243, 0.3); border-radius: 16px; padding: 1.5rem;">
+          <div style="font-size: 2rem; margin-bottom: 0.75rem;">🔍</div>
+          <h3 style="margin-top: 0;">Web Search & Summarization</h3>
+          <p>Built-in tools for searching the web and summarizing content within your workflows.</p>
+        </div>
+      </div>
     </section>
 
     <section id="setup" class="doc-section">
       <h2>Claude Desktop / Cowork Setup</h2>
-      
+
       <h3>For Claude Desktop</h3>
       <ol style="color: #ccc; margin-left: 20px; line-height: 2;">
         <li>Open Claude Desktop settings</li>
@@ -242,7 +303,7 @@
 
     <section id="tools" class="doc-section">
       <h2>Available Tools</h2>
-      
+
       <div class="tool-card">
         <h4>generate_workflow</h4>
         <p>Generate a workflow from natural language description.</p>
@@ -268,6 +329,11 @@
       <div class="tool-card">
         <h4>council_query</h4>
         <p>Query multiple AI models (Claude, GPT-4, Gemini) for consensus.</p>
+        <!-- AI Council Visualization -->
+        <div style="text-align: center; margin: 1rem 0;">
+          <img src="/images/ai-council.png" alt="AI Council: Claude, GPT-4, and Gemini reaching consensus"
+            style="max-width: 300px; border-radius: 12px;">
+        </div>
         <pre><code>{
   "name": "council_query",
   "arguments": {
@@ -333,7 +399,7 @@
 
     <section id="api" class="doc-section">
       <h2>API Reference</h2>
-      
+
       <h3>MCP Endpoints</h3>
       <table class="doc-table">
         <tr>
@@ -403,27 +469,59 @@
 }</code></pre>
 
       <h3>Node Types</h3>
+      <!-- Workflow Nodes Visualization -->
+      <div style="text-align: center; margin: 1.5rem 0;">
+        <img src="/images/workflow-nodes.png" alt="Workflow Node Types"
+          style="max-width: 400px; border-radius: 12px; box-shadow: 0 4px 16px rgba(0, 0, 0, 0.3);">
+      </div>
       <table class="doc-table">
         <tr>
           <th>Type</th>
           <th>Description</th>
         </tr>
-        <tr><td><code>start</code></td><td>Entry point of the workflow</td></tr>
-        <tr><td><code>end</code></td><td>Exit point of the workflow</td></tr>
-        <tr><td><code>tool</code></td><td>Executes a tool (web_search, summarize, etc.)</td></tr>
-        <tr><td><code>decision</code></td><td>Conditional branching based on data</td></tr>
-        <tr><td><code>loop</code></td><td>Iterate over items</td></tr>
-        <tr><td><code>parallel</code></td><td>Split into parallel branches</td></tr>
-        <tr><td><code>join</code></td><td>Merge parallel branches</td></tr>
-        <tr><td><code>human</code></td><td>Wait for human input</td></tr>
-        <tr><td><code>council</code></td><td>Query AI council for consensus</td></tr>
+        <tr>
+          <td><code>start</code></td>
+          <td>Entry point of the workflow</td>
+        </tr>
+        <tr>
+          <td><code>end</code></td>
+          <td>Exit point of the workflow</td>
+        </tr>
+        <tr>
+          <td><code>tool</code></td>
+          <td>Executes a tool (web_search, summarize, etc.)</td>
+        </tr>
+        <tr>
+          <td><code>decision</code></td>
+          <td>Conditional branching based on data</td>
+        </tr>
+        <tr>
+          <td><code>loop</code></td>
+          <td>Iterate over items</td>
+        </tr>
+        <tr>
+          <td><code>parallel</code></td>
+          <td>Split into parallel branches</td>
+        </tr>
+        <tr>
+          <td><code>join</code></td>
+          <td>Merge parallel branches</td>
+        </tr>
+        <tr>
+          <td><code>human</code></td>
+          <td>Wait for human input</td>
+        </tr>
+        <tr>
+          <td><code>council</code></td>
+          <td>Query AI council for consensus</td>
+        </tr>
       </table>
     </section>
 
     <section id="examples" class="doc-section">
       <h2>Examples</h2>
       <p>Orchestrate comes with several example workflows:</p>
-      
+
       <table class="doc-table">
         <tr>
           <th>Workflow</th>
@@ -458,7 +556,7 @@
 
     <section id="use-cases" class="doc-section">
       <h2>Use Cases</h2>
-      
+
       <h3>For Developers</h3>
       <ul>
         <li>Automate code review processes</li>
@@ -493,4 +591,5 @@
     </footer>
   </div>
 </body>
+
 </html>
