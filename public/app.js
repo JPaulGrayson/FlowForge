@@ -265,7 +265,7 @@ function openHelpModal() {
       <div class="help-section">
         <h3>Need More Help?</h3>
         <div class="help-links">
-          <a href="https://orchestrate.us.com/docs/README.md" target="_blank" class="help-link">Full Documentation</a>
+          <a href="/docs/README.md" target="_blank" class="help-link">Full Documentation</a>
           <a href="https://logic.art" target="_blank" class="help-link">LogicArt Editor</a>
         </div>
       </div>
