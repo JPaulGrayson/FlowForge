@@ -22,7 +22,7 @@ Add to your `.mcp.json`:
   "mcpServers": {
     "orchestrate": {
       "type": "sse",
-      "url": "https://flow-forge--jpaulgrayson.replit.app/api/mcp/sse"
+      "url": "https://orchestrate.us.com/api/mcp/sse"
     }
   }
 }

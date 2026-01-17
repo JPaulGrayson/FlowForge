@@ -24,7 +24,7 @@ Add Orchestrate to your MCP configuration:
   "mcpServers": {
     "orchestrate": {
       "command": "npx",
-      "args": ["-y", "mcp-remote", "https://flow-forge--jpaulgrayson.replit.app/api/mcp/sse"]
+      "args": ["-y", "mcp-remote", "https://orchestrate.us.com/api/mcp/sse"]
     }
   }
 }
@@ -72,7 +72,7 @@ Built-in tools for searching the web and summarizing content within your workflo
   "mcpServers": {
     "orchestrate": {
       "command": "npx",
-      "args": ["-y", "mcp-remote", "https://flow-forge--jpaulgrayson.replit.app/api/mcp/sse"]
+      "args": ["-y", "mcp-remote", "https://orchestrate.us.com/api/mcp/sse"]
     }
   }
 }
@@ -89,7 +89,7 @@ Cowork uses the same MCP protocol. Add Orchestrate to your `.mcp.json` file:
   "mcpServers": {
     "orchestrate": {
       "type": "sse",
-      "url": "https://flow-forge--jpaulgrayson.replit.app/api/mcp/sse"
+      "url": "https://orchestrate.us.com/api/mcp/sse"
     }
   }
 }
