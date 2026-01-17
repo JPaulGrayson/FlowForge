@@ -1,10 +1,10 @@
-# FlowForge
+# Orchestrate
 
 Visual workflow orchestration powered by AI. Design workflows in natural language, execute with Claude tools, visualize with LogicArt.
 
 ## Overview
 
-FlowForge is an MCP (Model Context Protocol) server that enables Claude Desktop and Cowork to:
+Orchestrate is an MCP (Model Context Protocol) server that enables Claude Desktop and Cowork to:
 - Generate workflows from natural language
 - Visualize workflows via LogicArt integration
 - Query multiple AI models via Council

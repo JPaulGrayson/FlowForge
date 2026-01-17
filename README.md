@@ -1,4 +1,4 @@
-# FlowForge
+# Orchestrate
 
 Visual workflow orchestration powered by AI. Design workflows in natural language, execute with Claude tools, visualize with LogicArt.
 
@@ -14,7 +14,7 @@ Add to Claude Desktop config:
 
 {
   "mcpServers": {
-    "flowforge": {
+    "orchestrate": {
       "transport": "http",
       "url": "http://localhost:5001/api/mcp"
     }

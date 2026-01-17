@@ -1,6 +1,6 @@
-# FlowForge + Cowork Integration Guide
+# Orchestrate + Cowork Integration Guide
 
-This guide explains how to use FlowForge with Claude's Cowork agentic mode.
+This guide explains how to use Orchestrate with Claude's Cowork agentic mode.
 
 ## What is Cowork?
 
@@ -8,19 +8,19 @@ Cowork is Claude's agentic mode that can execute complex, multi-step tasks auton
 
 - Take on complex tasks and work through them step by step
 - Read, edit, and organize files
-- Use MCP tools like FlowForge to extend capabilities
+- Use MCP tools like Orchestrate to extend capabilities
 - Work autonomously while you step away
 
 ## Setup
 
-### 1. Configure FlowForge in Cowork
+### 1. Configure Orchestrate in Cowork
 
 Add to your `.mcp.json`:
 
 ```json
 {
   "mcpServers": {
-    "flowforge": {
+    "orchestrate": {
       "type": "sse",
       "url": "https://flow-forge--jpaulgrayson.replit.app/api/mcp/sse"
     }
@@ -31,7 +31,7 @@ Add to your `.mcp.json`:
 ### 2. Verify Connection
 
 In Cowork, ask:
-> "What tools do you have access to from FlowForge?"
+> "What tools do you have access to from Orchestrate?"
 
 Claude should list the available tools: generate_workflow, visualize_workflow, council_query, etc.
 
@@ -40,7 +40,7 @@ Claude should list the available tools: generate_workflow, visualize_workflow, c
 ### Session 1: Research Project
 
 **Your prompt:**
-> "Research the latest developments in quantum computing. Use FlowForge to create a workflow, query the AI council for different perspectives, and generate a comprehensive report. Save everything when done."
+> "Research the latest developments in quantum computing. Use Orchestrate to create a workflow, query the AI council for different perspectives, and generate a comprehensive report. Save everything when done."
 
 **What Cowork does:**
 1. Calls `generate_workflow` to create a research workflow
@@ -94,7 +94,7 @@ When you need multiple perspectives:
 Ensure your `.mcp.json` is correctly configured and restart Cowork.
 
 ### Slow Responses
-FlowForge is hosted remotely. Allow a few seconds for responses, especially for council queries.
+Orchestrate is hosted remotely. Allow a few seconds for responses, especially for council queries.
 
 ### Workflow Validation Errors
 If a generated workflow has issues, ask Cowork to validate and fix it:

@@ -88,7 +88,7 @@ const MCP_TOOLS = [
 ];
 
 const SERVER_INFO = {
-  name: "flowforge",
+  name: "orchestrate",
   version: "0.1.0"
 };
 
@@ -231,4 +231,4 @@ app.post("/api/mcp/call", async (req, res) => {
 });
 
 const PORT = parseInt(process.env.PORT || "5000", 10);
-app.listen(PORT, "0.0.0.0", () => console.log(`FlowForge MCP on port ${PORT}`));
+app.listen(PORT, "0.0.0.0", () => console.log(`Orchestrate MCP on port ${PORT}`));

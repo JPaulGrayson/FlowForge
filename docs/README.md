@@ -1,4 +1,4 @@
-# FlowForge Documentation
+# Orchestrate Documentation
 
 Visual workflow orchestration powered by AI. Design workflows in natural language, execute with Claude tools, visualize with LogicArt.
 
@@ -17,12 +17,12 @@ Visual workflow orchestration powered by AI. Design workflows in natural languag
 
 ### 1. Connect via Claude Desktop or Cowork
 
-Add FlowForge to your MCP configuration:
+Add Orchestrate to your MCP configuration:
 
 ```json
 {
   "mcpServers": {
-    "flowforge": {
+    "orchestrate": {
       "command": "npx",
       "args": ["-y", "mcp-remote", "https://flow-forge--jpaulgrayson.replit.app/api/mcp/sse"]
     }
@@ -30,7 +30,7 @@ Add FlowForge to your MCP configuration:
 }
 ```
 
-### 2. Start Using FlowForge
+### 2. Start Using Orchestrate
 
 In Claude, you can now say:
 
@@ -43,7 +43,7 @@ In Claude, you can now say:
 ## Features
 
 ### Workflow Generation
-Create workflows from natural language descriptions. FlowForge uses AI to design node-based workflows automatically.
+Create workflows from natural language descriptions. Orchestrate uses AI to design node-based workflows automatically.
 
 ### LogicArt Visualization
 Every workflow can be visualized as an interactive flowchart via LogicArt. Get shareable URLs instantly.
@@ -65,12 +65,12 @@ Built-in tools for searching the web and summarizing content within your workflo
 
 1. Open Claude Desktop settings
 2. Navigate to MCP Servers configuration
-3. Add the FlowForge server:
+3. Add the Orchestrate server:
 
 ```json
 {
   "mcpServers": {
-    "flowforge": {
+    "orchestrate": {
       "command": "npx",
       "args": ["-y", "mcp-remote", "https://flow-forge--jpaulgrayson.replit.app/api/mcp/sse"]
     }
@@ -82,12 +82,12 @@ Built-in tools for searching the web and summarizing content within your workflo
 
 ### For Cowork
 
-Cowork uses the same MCP protocol. Add FlowForge to your `.mcp.json` file:
+Cowork uses the same MCP protocol. Add Orchestrate to your `.mcp.json` file:
 
 ```json
 {
   "mcpServers": {
-    "flowforge": {
+    "orchestrate": {
       "type": "sse",
       "url": "https://flow-forge--jpaulgrayson.replit.app/api/mcp/sse"
     }
@@ -321,7 +321,7 @@ All example workflows are located in `src/examples/`:
 
 ## Support
 
-FlowForge is integrated with:
+Orchestrate is integrated with:
 - **Claude Desktop** - MCP protocol
 - **Cowork** - Agentic workflows
 - **LogicArt** - Visual workflow editor
