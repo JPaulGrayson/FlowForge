@@ -192,3 +192,94 @@ function copyWorkflowJson(encoded) {
   navigator.clipboard.writeText(JSON.stringify(JSON.parse(json), null, 2));
   alert('Workflow JSON copied to clipboard!');
 }
+
+function openHelpModal() {
+  const existing = document.getElementById('help-modal');
+  if (existing) existing.remove();
+  
+  const modal = document.createElement('div');
+  modal.id = 'help-modal';
+  modal.className = 'help-modal';
+  
+  modal.innerHTML = `
+    <div class="help-modal-content">
+      <div class="help-modal-header">
+        <h2>Help & Documentation</h2>
+        <button class="help-close-btn" onclick="closeHelpModal()">&times;</button>
+      </div>
+      
+      <div class="help-section">
+        <h3>What is Orchestrate?</h3>
+        <p>Orchestrate is a visual workflow orchestration platform powered by AI. Design workflows in natural language, execute them with Claude tools, and visualize them with LogicArt.</p>
+      </div>
+      
+      <div class="help-section">
+        <h3>Getting Started</h3>
+        <p>Connect Orchestrate to Claude Desktop or Cowork by adding this to your MCP configuration:</p>
+        <pre><code>{
+  "mcpServers": {
+    "orchestrate": {
+      "command": "npx",
+      "args": ["-y", "mcp-remote", "https://orchestrate.us.com/api/mcp/sse"]
+    }
+  }
+}</code></pre>
+      </div>
+      
+      <div class="help-section">
+        <h3>Available Tools</h3>
+        <ul>
+          <li><code>generate_workflow</code> - Create workflows from natural language</li>
+          <li><code>visualize_workflow</code> - Get LogicArt visualization URL</li>
+          <li><code>council_query</code> - Query multiple AI models (Claude, GPT-4, Gemini)</li>
+          <li><code>save_workflow</code> - Save a workflow for later use</li>
+          <li><code>load_workflow</code> - Load a saved workflow by ID</li>
+          <li><code>list_workflows</code> - List all saved workflows</li>
+          <li><code>web_search</code> - Search the web</li>
+          <li><code>summarize</code> - Summarize text content</li>
+        </ul>
+      </div>
+      
+      <div class="help-section">
+        <h3>Example Commands</h3>
+        <p>Try saying these to Claude:</p>
+        <ul>
+          <li>"Generate a workflow for processing customer feedback"</li>
+          <li>"Visualize this workflow in LogicArt"</li>
+          <li>"Ask the AI council about API design best practices"</li>
+          <li>"Save this workflow for later"</li>
+          <li>"List my saved workflows"</li>
+        </ul>
+      </div>
+      
+      <div class="help-section">
+        <h3>API Endpoints</h3>
+        <ul>
+          <li><code>GET /api/mcp/sse</code> - SSE connection for MCP</li>
+          <li><code>POST /api/mcp/sse</code> - JSON-RPC requests</li>
+          <li><code>GET /api/mcp/tools</code> - List available tools</li>
+          <li><code>POST /api/mcp/call</code> - Execute a tool directly</li>
+        </ul>
+      </div>
+      
+      <div class="help-section">
+        <h3>Need More Help?</h3>
+        <div class="help-links">
+          <a href="https://orchestrate.us.com/docs/README.md" target="_blank" class="help-link">Full Documentation</a>
+          <a href="https://logic.art" target="_blank" class="help-link">LogicArt Editor</a>
+        </div>
+      </div>
+    </div>
+  `;
+  
+  modal.addEventListener('click', (e) => {
+    if (e.target === modal) closeHelpModal();
+  });
+  
+  document.body.appendChild(modal);
+}
+
+function closeHelpModal() {
+  const modal = document.getElementById('help-modal');
+  if (modal) modal.remove();
+}
