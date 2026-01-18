@@ -102,7 +102,8 @@ async function executeTool(name: string, args: any): Promise<any> {
     case "generate_workflow":
       return await generator.generate({ prompt: args.prompt });
     case "visualize_workflow":
-      return { url: await createLogicArtAdapter({ serverUrl: "https://logic.art" }).visualize(args.workflow) };
+      const serverUrl = args.target === 'logiprocess' ? "https://logic.art/process" : "https://logic.art";
+      return { url: await createLogicArtAdapter({ serverUrl }).visualize(args.workflow) };
     case "council_query":
       return await council.query(args);
     case "save_workflow":

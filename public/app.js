@@ -471,7 +471,10 @@ function showExampleDetail(workflow) {
       </div>
       
       <div style="display:flex;gap:12px;margin-top:24px;flex-wrap:wrap;">
-        <button onclick="visualizeInLogicArt('${encodeURIComponent(JSON.stringify(workflow))}')" class="btn-primary">
+        <button onclick="visualizeInLogiProcess('${encodeURIComponent(JSON.stringify(workflow))}')" class="btn-primary">
+          Visualize in LogiProcess
+        </button>
+        <button onclick="visualizeInLogicArt('${encodeURIComponent(JSON.stringify(workflow))}')" class="btn-secondary" style="background:rgba(255,255,255,0.1);border:1px solid rgba(255,255,255,0.2);color:#fff;padding:10px 20px;border-radius:8px;cursor:pointer;">
           Visualize in LogicArt
         </button>
         <button onclick="copyExampleJson('${encodeURIComponent(JSON.stringify(workflow))}')" class="btn-secondary" style="background:rgba(255,255,255,0.1);border:1px solid rgba(255,255,255,0.2);color:#fff;padding:10px 20px;border-radius:8px;cursor:pointer;">
@@ -501,6 +504,25 @@ async function visualizeInLogicArt(encoded) {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({ tool: 'visualize_workflow', params: { workflow } })
+    });
+    const data = await response.json();
+    if (data.result && data.result.url) {
+      window.open(data.result.url, '_blank');
+    } else {
+      alert('Could not generate visualization URL');
+    }
+  } catch (error) {
+    alert('Error: ' + error.message);
+  }
+}
+
+async function visualizeInLogiProcess(encoded) {
+  const workflow = JSON.parse(decodeURIComponent(encoded));
+  try {
+    const response = await fetch('/api/mcp/call', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ tool: 'visualize_workflow', params: { workflow, target: 'logiprocess' } })
     });
     const data = await response.json();
     if (data.result && data.result.url) {
