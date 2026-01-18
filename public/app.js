@@ -408,3 +408,107 @@ function closeHelpModal() {
   const modal = document.getElementById('help-modal');
   if (modal) modal.remove();
 }
+
+async function loadExample(name) {
+  try {
+    const response = await fetch(`/api/examples/${name}`);
+    if (!response.ok) throw new Error('Example not found');
+    const workflow = await response.json();
+    showExampleDetail(workflow);
+  } catch (error) {
+    alert('Error loading example: ' + error.message);
+  }
+}
+
+function showExampleDetail(workflow) {
+  const existing = document.getElementById('example-modal');
+  if (existing) existing.remove();
+  
+  const modal = document.createElement('div');
+  modal.id = 'example-modal';
+  modal.className = 'help-modal';
+  
+  const nodes = workflow.nodes || [];
+  const edges = workflow.edges || [];
+  const tags = (workflow.metadata && workflow.metadata.tags) || [];
+  
+  modal.innerHTML = `
+    <div class="help-modal-content">
+      <div class="help-modal-header">
+        <h2>${workflow.name || workflow.id}</h2>
+        <button class="help-close-btn" onclick="document.getElementById('example-modal').remove()">&times;</button>
+      </div>
+      
+      <p style="color:#ccc;margin-bottom:20px;">${workflow.description || 'No description'}</p>
+      
+      ${tags.length > 0 ? `
+        <div style="margin-bottom:20px;">
+          ${tags.map(t => `<span class="tag">${t}</span>`).join('')}
+        </div>
+      ` : ''}
+      
+      <div class="help-section">
+        <h3>Nodes (${nodes.length})</h3>
+        <div style="display:flex;flex-wrap:wrap;gap:8px;">
+          ${nodes.map(n => `
+            <div class="tool-item" style="flex:0 0 auto;padding:10px 14px;">
+              <span style="color:#00d9ff;font-weight:600;">${n.label}</span>
+              <span style="color:#888;font-size:12px;margin-left:8px;">${n.type}</span>
+            </div>
+          `).join('')}
+        </div>
+      </div>
+      
+      <div class="help-section">
+        <h3>Flow</h3>
+        <div style="display:flex;flex-wrap:wrap;gap:8px;">
+          ${edges.map(e => `
+            <span style="background:rgba(0,217,255,0.1);color:#00d9ff;padding:6px 12px;border-radius:6px;font-size:13px;">
+              ${e.sourceNodeId} → ${e.targetNodeId}${e.label ? ` (${e.label})` : ''}
+            </span>
+          `).join('')}
+        </div>
+      </div>
+      
+      <div style="display:flex;gap:12px;margin-top:24px;">
+        <button onclick="visualizeExample('${encodeURIComponent(JSON.stringify(workflow))}')" class="btn-primary">
+          Visualize in LogicArt
+        </button>
+        <button onclick="copyExampleJson('${encodeURIComponent(JSON.stringify(workflow))}')" class="btn-secondary" style="background:rgba(255,255,255,0.1);border:1px solid rgba(255,255,255,0.2);color:#fff;padding:10px 20px;border-radius:8px;cursor:pointer;">
+          Copy JSON
+        </button>
+      </div>
+    </div>
+  `;
+  
+  modal.addEventListener('click', (e) => {
+    if (e.target === modal) modal.remove();
+  });
+  
+  document.body.appendChild(modal);
+}
+
+async function visualizeExample(encoded) {
+  const workflow = JSON.parse(decodeURIComponent(encoded));
+  try {
+    const response = await fetch('/api/mcp/call', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ tool: 'visualize_workflow', params: { workflow } })
+    });
+    const data = await response.json();
+    if (data.result && data.result.url) {
+      window.open(data.result.url, '_blank');
+    } else {
+      alert('Could not generate visualization URL');
+    }
+  } catch (error) {
+    alert('Error: ' + error.message);
+  }
+}
+
+function copyExampleJson(encoded) {
+  const json = decodeURIComponent(encoded);
+  navigator.clipboard.writeText(JSON.stringify(JSON.parse(json), null, 2));
+  alert('Example JSON copied to clipboard!');
+}

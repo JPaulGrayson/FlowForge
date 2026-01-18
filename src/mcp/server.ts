@@ -221,6 +221,35 @@ app.post("/api/mcp/sse", async (req, res) => {
 
 app.get("/api/mcp/tools", (_, res) => res.json({ tools: MCP_TOOLS }));
 
+app.get("/api/examples/:name", async (req, res) => {
+  const { name } = req.params;
+  const filePath = path.join(__dirname, `../examples/${name}.json`);
+  try {
+    const fs = await import("fs/promises");
+    const data = await fs.readFile(filePath, "utf-8");
+    res.json(JSON.parse(data));
+  } catch (e) {
+    res.status(404).json({ error: "Example not found" });
+  }
+});
+
+app.get("/api/examples", async (_, res) => {
+  const examplesDir = path.join(__dirname, "../examples");
+  try {
+    const fs = await import("fs/promises");
+    const files = await fs.readdir(examplesDir);
+    const examples = await Promise.all(
+      files.filter(f => f.endsWith(".json")).map(async f => {
+        const data = await fs.readFile(path.join(examplesDir, f), "utf-8");
+        return JSON.parse(data);
+      })
+    );
+    res.json({ examples });
+  } catch (e) {
+    res.status(500).json({ error: "Failed to load examples" });
+  }
+});
+
 app.post("/api/mcp/call", async (req, res) => {
   const { tool, params } = req.body;
   try {
