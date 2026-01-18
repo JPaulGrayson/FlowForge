@@ -471,14 +471,13 @@ function showExampleDetail(workflow) {
       </div>
       
       <div style="display:flex;gap:12px;margin-top:24px;flex-wrap:wrap;">
-        <button onclick="copyExampleJson('${encodeURIComponent(JSON.stringify(workflow))}')" class="btn-primary">
-          Copy Workflow JSON
+        <button onclick="visualizeInLogicArt('${encodeURIComponent(JSON.stringify(workflow))}')" class="btn-primary">
+          Visualize in LogicArt
         </button>
-        <button onclick="window.open('https://logic.art', '_blank')" class="btn-secondary" style="background:rgba(255,255,255,0.1);border:1px solid rgba(255,255,255,0.2);color:#fff;padding:10px 20px;border-radius:8px;cursor:pointer;">
-          Open LogicArt
+        <button onclick="copyExampleJson('${encodeURIComponent(JSON.stringify(workflow))}')" class="btn-secondary" style="background:rgba(255,255,255,0.1);border:1px solid rgba(255,255,255,0.2);color:#fff;padding:10px 20px;border-radius:8px;cursor:pointer;">
+          Copy JSON
         </button>
       </div>
-      <p style="color:#888;font-size:12px;margin-top:12px;">Copy the JSON and paste it into LogicArt to visualize the workflow.</p>
     </div>
   `;
   
@@ -492,5 +491,24 @@ function showExampleDetail(workflow) {
 function copyExampleJson(encoded) {
   const json = decodeURIComponent(encoded);
   navigator.clipboard.writeText(JSON.stringify(JSON.parse(json), null, 2));
-  alert('Workflow JSON copied! Paste it into LogicArt to visualize.');
+  alert('Workflow JSON copied to clipboard!');
+}
+
+async function visualizeInLogicArt(encoded) {
+  const workflow = JSON.parse(decodeURIComponent(encoded));
+  try {
+    const response = await fetch('/api/mcp/call', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ tool: 'visualize_workflow', params: { workflow } })
+    });
+    const data = await response.json();
+    if (data.result && data.result.url) {
+      window.open(data.result.url, '_blank');
+    } else {
+      alert('Could not generate visualization URL');
+    }
+  } catch (error) {
+    alert('Error: ' + error.message);
+  }
 }
