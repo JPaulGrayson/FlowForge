@@ -2,7 +2,7 @@ import { v4 as uuidv4 } from "uuid";
 import type { Workflow, WorkflowExecution } from "../types/workflow.js";
 export class WorkflowExecutor {
   private tools: Map<string, Function> = new Map();
-  constructor(private config: any = {}) {}
+  constructor(private _config: any = {}) {}
   registerTool(name: string, fn: Function) { this.tools.set(name, fn); }
   async execute(wf: Workflow, inputs: any): Promise<WorkflowExecution> {
     const ex: WorkflowExecution = { id: uuidv4(), workflowId: wf.id, status: "running", inputs, history: [], variables: {}, nodeOutputs: {}, startedAt: new Date().toISOString() };

@@ -25,7 +25,7 @@ export class Council {
       return { responses, synthesis };
     }
     if (req.pattern === "specialist") {
-      const tasks = req.models.map((m, i) => ({ ...m, response: responses[i].response }));
+      const _tasks = req.models.map((m, i) => ({ ...m, response: responses[i].response }));
       return { responses, synthesis: "Specialist responses collected for roles: " + req.models.map(m => m.role || m.name).join(", ") };
     }
     return { responses, winner: responses[0]?.modelId };

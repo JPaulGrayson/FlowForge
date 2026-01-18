@@ -1,23 +1,24 @@
 {
-  "name": "flowforge",
-  "version": "0.1.0",
-  "description": "Visual workflow orchestration powered by AI. Design workflows in natural language, execute with Claude tools, visualize with LogicArt.",
+  "name": "logicprocess",
+  "version": "1.0.0",
+  "description": "Business Process Mapping with BPMN Swimlanes - Visual process design tool",
   "type": "module",
   "main": "dist/index.js",
   "types": "dist/index.d.ts",
   "scripts": {
-    "build": "tsc",
-    "dev": "tsx watch src/index.ts",
-    "start": "node dist/index.js",
-    "test": "vitest",
-    "server": "tsx src/mcp/server.ts"
+    "dev": "vite",
+    "build": "tsc && vite build",
+    "preview": "vite preview",
+    "server": "tsx src/mcp/server.ts",
+    "test": "vitest"
   },
   "keywords": [
+    "bpmn",
+    "process-mapping",
+    "swimlanes",
     "workflow",
-    "orchestration",
-    "ai",
-    "claude",
-    "flowchart"
+    "business-process",
+    "visualization"
   ],
   "license": "MIT",
   "dependencies": {
@@ -25,14 +26,20 @@
     "@google/generative-ai": "^0.24.1",
     "express": "^4.22.1",
     "openai": "^6.16.0",
+    "react": "^18.3.1",
+    "react-dom": "^18.3.1",
     "uuid": "^9.0.1",
     "zod": "^3.22.4"
   },
   "devDependencies": {
     "@types/express": "^4.17.25",
     "@types/node": "^20.10.0",
+    "@types/react": "^18.3.12",
+    "@types/react-dom": "^18.3.1",
     "@types/uuid": "^9.0.8",
+    "@vitejs/plugin-react": "^4.3.3",
     "tsx": "^4.21.0",
-    "typescript": "^5.9.3"
+    "typescript": "^5.9.3",
+    "vite": "^5.4.11"
   }
 }

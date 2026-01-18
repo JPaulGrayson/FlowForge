@@ -1,0 +1,52 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta name="description" content="LogicProcess - Business Process Mapping with BPMN Swimlanes">
+  <title>LogicProcess - Business Process Mapping</title>
+  <link rel="icon" type="image/svg+xml" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='%2300d9ff' stroke-width='2'><rect x='2' y='3' width='6' height='4' rx='1'/><rect x='9' y='10' width='6' height='4' rx='1'/><rect x='16' y='17' width='6' height='4' rx='1'/><path d='M5 7v3h7M12 14v3h7'/></svg>">
+  <style>
+    /* Critical CSS for initial render */
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+    body {
+      font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+      background: linear-gradient(135deg, #1a1a2e 0%, #16213e 100%);
+      min-height: 100vh;
+      color: #e0e0e0;
+    }
+    #root {
+      min-height: 100vh;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+    }
+    .loading {
+      text-align: center;
+    }
+    .loading-spinner {
+      width: 40px;
+      height: 40px;
+      border: 3px solid rgba(0, 217, 255, 0.2);
+      border-top-color: #00d9ff;
+      border-radius: 50%;
+      animation: spin 1s linear infinite;
+      margin: 0 auto 16px;
+    }
+    @keyframes spin { to { transform: rotate(360deg); } }
+    .loading-text {
+      color: #888;
+      font-size: 14px;
+    }
+  </style>
+</head>
+<body>
+  <div id="root">
+    <div class="loading">
+      <div class="loading-spinner"></div>
+      <div class="loading-text">Loading LogicProcess...</div>
+    </div>
+  </div>
+  <script type="module" src="/src/client/index.tsx"></script>
+</body>
+</html>
