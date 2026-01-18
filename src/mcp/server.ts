@@ -2,7 +2,7 @@ import express from "express";
 import path from "path";
 import { fileURLToPath } from "url";
 import { generator } from "../generator/workflow-generator.js";
-import { createExecutor } from "../executor/workflow-executor.js";
+import { createExecutor as _createExecutor } from "../executor/workflow-executor.js";
 import { createLogicArtAdapter } from "../integration/logicart-adapter.js";
 import { council } from "../council/council.js";
 import { toolHandlers } from "../tools/handlers.js";
