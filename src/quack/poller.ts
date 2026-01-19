@@ -33,9 +33,9 @@ export class QuackPoller {
   async fetchAvailableInboxes(): Promise<string[]> {
     try {
       const response = await fetch(`${QUACK_API_BASE}/inboxes`);
-      const data = await response.json();
+      const data = await response.json() as { inboxes?: Array<string | { name: string }> };
       if (data.inboxes && Array.isArray(data.inboxes)) {
-        this.monitoredInboxes = data.inboxes.map((inbox: any) => 
+        this.monitoredInboxes = data.inboxes.map((inbox) => 
           typeof inbox === 'string' ? inbox : inbox.name
         );
       }
@@ -49,13 +49,14 @@ export class QuackPoller {
   async checkInbox(inboxName: string): Promise<InboxState> {
     try {
       const response = await fetch(`${QUACK_API_BASE}/inbox/${inboxName}`);
-      const data = await response.json();
+      const data = await response.json() as { messages?: QuackMessage[] };
       
+      const messages = data.messages || [];
       const state: InboxState = {
         name: inboxName,
-        messages: data.messages || [],
-        pendingCount: (data.messages || []).filter(
-          (m: QuackMessage) => ['pending', 'approved', 'in_progress'].includes(m.status)
+        messages,
+        pendingCount: messages.filter(
+          (m) => ['pending', 'approved', 'in_progress'].includes(m.status)
         ).length,
         lastChecked: new Date()
       };
@@ -114,11 +115,11 @@ export class QuackPoller {
       const response = await fetch(`${QUACK_API_BASE}/approve/${messageId}`, {
         method: 'POST'
       });
-      const data = await response.json();
+      const data = await response.json() as { success?: boolean };
       if (data.success) {
         await this.checkAllInboxes();
       }
-      return data.success;
+      return data.success || false;
     } catch (error) {
       console.error('Error approving message:', error);
       return false;
@@ -132,11 +133,11 @@ export class QuackPoller {
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ status })
       });
-      const data = await response.json();
+      const data = await response.json() as { success?: boolean };
       if (data.success) {
         await this.checkAllInboxes();
       }
-      return data.success;
+      return data.success || false;
     } catch (error) {
       console.error('Error updating status:', error);
       return false;
@@ -155,8 +156,8 @@ export class QuackPoller {
           context 
         })
       });
-      const data = await response.json();
-      return data.success;
+      const data = await response.json() as { success?: boolean };
+      return data.success || false;
     } catch (error) {
       console.error('Error sending message:', error);
       return false;
