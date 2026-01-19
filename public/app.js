@@ -95,13 +95,13 @@ async function loadWorkflows() {
   }
 }
 
-async function refreshWorkflows() {
+window.refreshWorkflows = async function() {
   const container = document.getElementById('workflows-list');
   container.innerHTML = '<p class="loading">Loading workflows...</p>';
   await loadWorkflows();
-}
+};
 
-async function visualizeWorkflow(id) {
+window.visualizeWorkflow = async function(id) {
   try {
     const loadResponse = await fetch('/api/mcp/call', {
       method: 'POST',
@@ -125,9 +125,9 @@ async function visualizeWorkflow(id) {
   } catch (error) {
     alert('Error visualizing workflow: ' + error.message);
   }
-}
+};
 
-async function loadWorkflow(id) {
+window.loadWorkflow = async function(id) {
   try {
     const response = await fetch('/api/mcp/call', {
       method: 'POST',
@@ -187,13 +187,13 @@ function showWorkflowDetail(workflow) {
   document.body.appendChild(modal);
 }
 
-function copyWorkflowJson(encoded) {
+window.copyWorkflowJson = function(encoded) {
   const json = decodeURIComponent(encoded);
   navigator.clipboard.writeText(JSON.stringify(JSON.parse(json), null, 2));
   alert('Workflow JSON copied to clipboard!');
-}
+};
 
-function openHelpModal() {
+window.openHelpModal = function() {
   const existing = document.getElementById('help-modal');
   if (existing) existing.remove();
   
@@ -404,12 +404,12 @@ function openHelpModal() {
   document.body.appendChild(modal);
 }
 
-function closeHelpModal() {
+window.closeHelpModal = function() {
   const modal = document.getElementById('help-modal');
   if (modal) modal.remove();
-}
+};
 
-async function loadExample(name) {
+window.loadExample = async function(name) {
   try {
     const response = await fetch(`/api/examples/${name}`);
     if (!response.ok) throw new Error('Example not found');
@@ -418,7 +418,7 @@ async function loadExample(name) {
   } catch (error) {
     alert('Error loading example: ' + error.message);
   }
-}
+};
 
 function showExampleDetail(workflow) {
   const existing = document.getElementById('example-modal');
