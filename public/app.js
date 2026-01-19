@@ -491,13 +491,13 @@ function showExampleDetail(workflow) {
   document.body.appendChild(modal);
 }
 
-function copyExampleJson(encoded) {
+window.copyExampleJson = function(encoded) {
   const json = decodeURIComponent(encoded);
   navigator.clipboard.writeText(JSON.stringify(JSON.parse(json), null, 2));
   alert('Workflow JSON copied to clipboard!');
-}
+};
 
-async function visualizeInLogicArt(encoded) {
+window.visualizeInLogicArt = async function(encoded) {
   const workflow = JSON.parse(decodeURIComponent(encoded));
   try {
     const response = await fetch('/api/mcp/call', {
@@ -514,9 +514,9 @@ async function visualizeInLogicArt(encoded) {
   } catch (error) {
     alert('Error: ' + error.message);
   }
-}
+};
 
-async function visualizeInLogiProcess(encoded) {
+window.visualizeInLogiProcess = async function(encoded) {
   const workflow = JSON.parse(decodeURIComponent(encoded));
   try {
     const response = await fetch('/api/mcp/call', {
@@ -533,4 +533,4 @@ async function visualizeInLogiProcess(encoded) {
   } catch (error) {
     alert('Error: ' + error.message);
   }
-}
+};
