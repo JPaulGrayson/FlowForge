@@ -24,12 +24,26 @@ export class QuackPoller {
   private intervalId: NodeJS.Timeout | null = null;
   private onUpdate: ((inboxes: Map<string, InboxState>) => void) | null = null;
 
-  private monitoredInboxes = [
-    'claude', 'replit', 'cursor', 'gpt', 'gemini', 'grok', 'copilot', 'antigravity'
-  ];
+  private monitoredInboxes: string[] = [];
 
   constructor(onUpdate?: (inboxes: Map<string, InboxState>) => void) {
     this.onUpdate = onUpdate || null;
+  }
+
+  async fetchAvailableInboxes(): Promise<string[]> {
+    try {
+      const response = await fetch(`${QUACK_API_BASE}/inboxes`);
+      const data = await response.json();
+      if (data.inboxes && Array.isArray(data.inboxes)) {
+        this.monitoredInboxes = data.inboxes.map((inbox: any) => 
+          typeof inbox === 'string' ? inbox : inbox.name
+        );
+      }
+      return this.monitoredInboxes;
+    } catch (error) {
+      console.error('Error fetching inboxes list:', error);
+      return ['claude', 'replit', 'cursor', 'gpt', 'gemini', 'grok', 'copilot', 'antigravity'];
+    }
   }
 
   async checkInbox(inboxName: string): Promise<InboxState> {
@@ -60,6 +74,10 @@ export class QuackPoller {
   }
 
   async checkAllInboxes(): Promise<Map<string, InboxState>> {
+    if (this.monitoredInboxes.length === 0) {
+      await this.fetchAvailableInboxes();
+    }
+    
     await Promise.all(
       this.monitoredInboxes.map(inbox => this.checkInbox(inbox))
     );
