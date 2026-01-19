@@ -19,6 +19,7 @@
 
     <nav class="nav">
       <button class="nav-btn active" data-tab="workflows">Workflows</button>
+      <button class="nav-btn" data-tab="control-room">Control Room</button>
       <button class="nav-btn" data-tab="tools">Tools</button>
       <button class="nav-btn" data-tab="examples">Examples</button>
     </nav>
@@ -31,6 +32,30 @@
         </div>
         <div id="workflows-list" class="card-grid">
           <p class="loading">Loading workflows...</p>
+        </div>
+      </section>
+
+      <section id="control-room" class="tab-content">
+        <div class="section-header">
+          <h2>Quack Control Room</h2>
+          <button class="btn-primary" onclick="refreshControlRoom()">Refresh</button>
+        </div>
+        <div class="control-room-stats" id="control-room-stats">
+          <div class="stat-card">
+            <div class="stat-value" id="stat-inboxes">0</div>
+            <div class="stat-label">Inboxes</div>
+          </div>
+          <div class="stat-card">
+            <div class="stat-value" id="stat-messages">0</div>
+            <div class="stat-label">Messages</div>
+          </div>
+          <div class="stat-card pending">
+            <div class="stat-value" id="stat-pending">0</div>
+            <div class="stat-label">Pending</div>
+          </div>
+        </div>
+        <div id="agent-tiles" class="agent-tiles-grid">
+          <p class="loading">Loading agent inboxes...</p>
         </div>
       </section>
 

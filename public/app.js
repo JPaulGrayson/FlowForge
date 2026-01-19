@@ -2,6 +2,7 @@ document.addEventListener('DOMContentLoaded', () => {
   initTabs();
   loadTools();
   loadWorkflows();
+  loadControlRoom();
 });
 
 function initTabs() {
@@ -532,5 +533,240 @@ window.visualizeInLogiProcess = async function(encoded) {
     }
   } catch (error) {
     alert('Error: ' + error.message);
+  }
+};
+
+// ===== QUACK CONTROL ROOM =====
+
+let controlRoomData = { inboxes: [] };
+let selectedInbox = null;
+let selectedMessage = null;
+
+window.loadControlRoom = async function() {
+  const container = document.getElementById('agent-tiles');
+  try {
+    const response = await fetch('/api/quack/inboxes');
+    const data = await response.json();
+    controlRoomData = data;
+    
+    const inboxes = data.inboxes || [];
+    
+    // Update stats
+    const totalMessages = inboxes.reduce((sum, i) => sum + (i.messages?.length || 0), 0);
+    const totalPending = inboxes.reduce((sum, i) => sum + i.pendingCount, 0);
+    
+    document.getElementById('stat-inboxes').textContent = inboxes.length;
+    document.getElementById('stat-messages').textContent = totalMessages;
+    document.getElementById('stat-pending').textContent = totalPending;
+    
+    if (inboxes.length > 0) {
+      container.innerHTML = inboxes.map(inbox => {
+        const latestMsg = inbox.messages?.[0];
+        return `
+          <div class="agent-tile ${inbox.pendingCount > 0 ? 'has-pending' : ''}" 
+               onclick="selectInbox('${inbox.name}')">
+            <div class="agent-tile-header">
+              <span class="agent-tile-name">/${inbox.name}</span>
+              <span class="agent-tile-badge ${inbox.pendingCount > 0 ? 'pending' : 'clear'}">
+                ${inbox.pendingCount} pending
+              </span>
+            </div>
+            ${latestMsg ? `
+              <div class="agent-tile-message">
+                <span class="from">From: ${latestMsg.from}</span>
+                <span class="task">${latestMsg.task}</span>
+                <div class="time">${new Date(latestMsg.timestamp).toLocaleString()}</div>
+              </div>
+            ` : '<p class="agent-tile-message">No messages yet</p>'}
+          </div>
+        `;
+      }).join('');
+    } else {
+      container.innerHTML = '<p class="empty-state">No agent inboxes available</p>';
+    }
+  } catch (error) {
+    container.innerHTML = `<p class="empty-state">Error loading inboxes: ${error.message}</p>`;
+  }
+};
+
+window.refreshControlRoom = async function() {
+  const container = document.getElementById('agent-tiles');
+  container.innerHTML = '<p class="loading">Refreshing...</p>';
+  await loadControlRoom();
+};
+
+window.selectInbox = function(name) {
+  const inbox = controlRoomData.inboxes?.find(i => i.name === name);
+  if (!inbox) return;
+  
+  selectedInbox = inbox;
+  showInboxSidebar(inbox);
+};
+
+function showInboxSidebar(inbox) {
+  const existing = document.getElementById('inbox-sidebar');
+  if (existing) existing.remove();
+  
+  const sidebar = document.createElement('div');
+  sidebar.id = 'inbox-sidebar';
+  sidebar.className = 'message-sidebar';
+  
+  sidebar.innerHTML = `
+    <div class="message-sidebar-header">
+      <span class="message-sidebar-title">/${inbox.name}</span>
+      <button class="message-sidebar-close" onclick="closeInboxSidebar()">&times;</button>
+    </div>
+    <div class="message-list">
+      ${inbox.messages?.length > 0 ? inbox.messages.map(msg => `
+        <div class="message-item" onclick="showMessageDetail('${msg.id}')">
+          <div class="message-item-header">
+            <span class="from" style="color:#00d9ff;">From: ${msg.from}</span>
+            <span class="message-status ${msg.status}">${msg.status}</span>
+          </div>
+          <p style="color:#ccc;font-size:13px;margin:6px 0;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;">${msg.task}</p>
+          <p style="color:#666;font-size:11px;">${new Date(msg.timestamp).toLocaleString()}</p>
+        </div>
+      `).join('') : '<p style="color:#888;text-align:center;padding:20px;">No messages</p>'}
+    </div>
+  `;
+  
+  document.body.appendChild(sidebar);
+}
+
+window.closeInboxSidebar = function() {
+  const sidebar = document.getElementById('inbox-sidebar');
+  if (sidebar) sidebar.remove();
+  selectedInbox = null;
+};
+
+window.showMessageDetail = function(messageId) {
+  const message = selectedInbox?.messages?.find(m => m.id === messageId);
+  if (!message) return;
+  
+  selectedMessage = message;
+  
+  const existing = document.getElementById('message-detail-modal');
+  if (existing) existing.remove();
+  
+  const modal = document.createElement('div');
+  modal.id = 'message-detail-modal';
+  modal.className = 'message-detail-modal';
+  
+  modal.innerHTML = `
+    <div class="message-detail-content">
+      <div class="help-modal-header">
+        <h2 style="color:#00d9ff;">Message Details</h2>
+        <button class="help-close-btn" onclick="closeMessageDetail()">&times;</button>
+      </div>
+      
+      <div class="message-detail-field">
+        <div class="message-detail-label">Task</div>
+        <div class="message-detail-value">${message.task}</div>
+      </div>
+      
+      <div class="message-detail-field">
+        <div class="message-detail-label">From → To</div>
+        <div class="message-detail-value">${message.from} → ${message.to}</div>
+      </div>
+      
+      <div class="message-detail-field">
+        <div class="message-detail-label">Status</div>
+        <span class="message-status ${message.status}" style="margin-left:0;">${message.status}</span>
+      </div>
+      
+      <div class="message-detail-field">
+        <div class="message-detail-label">Time</div>
+        <div class="message-detail-value">${new Date(message.timestamp).toLocaleString()}</div>
+      </div>
+      
+      ${message.context ? `
+        <div class="message-detail-field">
+          <div class="message-detail-label">Context</div>
+          <div class="message-detail-value">${message.context}</div>
+        </div>
+      ` : ''}
+      
+      <div class="message-actions">
+        ${message.status === 'pending' ? `
+          <button class="btn-primary btn-approve" onclick="approveMessage('${message.id}')">Approve</button>
+        ` : ''}
+        ${message.status === 'approved' ? `
+          <button class="btn-primary btn-start" onclick="startWork('${message.id}')">Start Work</button>
+        ` : ''}
+        ${message.status === 'in_progress' ? `
+          <button class="btn-primary btn-complete" onclick="completeMessage('${message.id}')">Complete</button>
+          <button class="btn-primary btn-fail" onclick="failMessage('${message.id}')">Mark Failed</button>
+        ` : ''}
+        <button class="btn-secondary" style="background:rgba(255,255,255,0.1);border:1px solid rgba(255,255,255,0.2);color:#fff;padding:10px 20px;border-radius:8px;cursor:pointer;" onclick="closeMessageDetail()">Close</button>
+      </div>
+    </div>
+  `;
+  
+  modal.addEventListener('click', (e) => {
+    if (e.target === modal) closeMessageDetail();
+  });
+  
+  document.body.appendChild(modal);
+};
+
+window.closeMessageDetail = function() {
+  const modal = document.getElementById('message-detail-modal');
+  if (modal) modal.remove();
+  selectedMessage = null;
+};
+
+window.approveMessage = async function(id) {
+  try {
+    await fetch(`/api/quack/approve/${id}`, { method: 'POST' });
+    closeMessageDetail();
+    closeInboxSidebar();
+    await loadControlRoom();
+  } catch (error) {
+    alert('Error approving message: ' + error.message);
+  }
+};
+
+window.startWork = async function(id) {
+  try {
+    await fetch(`/api/quack/status/${id}`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ status: 'in_progress' })
+    });
+    closeMessageDetail();
+    closeInboxSidebar();
+    await loadControlRoom();
+  } catch (error) {
+    alert('Error starting work: ' + error.message);
+  }
+};
+
+window.completeMessage = async function(id) {
+  try {
+    await fetch(`/api/quack/status/${id}`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ status: 'completed' })
+    });
+    closeMessageDetail();
+    closeInboxSidebar();
+    await loadControlRoom();
+  } catch (error) {
+    alert('Error completing message: ' + error.message);
+  }
+};
+
+window.failMessage = async function(id) {
+  try {
+    await fetch(`/api/quack/status/${id}`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ status: 'failed' })
+    });
+    closeMessageDetail();
+    closeInboxSidebar();
+    await loadControlRoom();
+  } catch (error) {
+    alert('Error failing message: ' + error.message);
   }
 };

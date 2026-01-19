@@ -575,3 +575,242 @@ body {
     grid-template-columns: 1fr;
   }
 }
+
+/* Control Room Styles */
+.control-room-stats {
+  display: flex;
+  justify-content: center;
+  gap: 30px;
+  margin-bottom: 30px;
+}
+
+.stat-card {
+  background: rgba(26, 26, 46, 0.8);
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  border-radius: 12px;
+  padding: 20px 40px;
+  text-align: center;
+}
+
+.stat-card.pending {
+  border-color: rgba(234, 179, 8, 0.5);
+}
+
+.stat-value {
+  font-size: 36px;
+  font-weight: 700;
+  color: #00d9ff;
+}
+
+.stat-card.pending .stat-value {
+  color: #eab308;
+}
+
+.stat-label {
+  font-size: 14px;
+  color: #888;
+  margin-top: 5px;
+}
+
+.agent-tiles-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
+  gap: 20px;
+}
+
+.agent-tile {
+  background: rgba(26, 26, 46, 0.8);
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  border-radius: 12px;
+  padding: 20px;
+  cursor: pointer;
+  transition: all 0.3s;
+}
+
+.agent-tile:hover {
+  background: rgba(26, 26, 46, 1);
+  transform: translateY(-2px);
+  box-shadow: 0 8px 25px rgba(0, 0, 0, 0.3);
+}
+
+.agent-tile.has-pending {
+  border-color: rgba(234, 179, 8, 0.5);
+  box-shadow: 0 0 15px rgba(234, 179, 8, 0.2);
+}
+
+.agent-tile-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 12px;
+}
+
+.agent-tile-name {
+  font-size: 18px;
+  font-weight: 600;
+  color: #fff;
+}
+
+.agent-tile-badge {
+  padding: 4px 10px;
+  border-radius: 20px;
+  font-size: 12px;
+  font-weight: 700;
+}
+
+.agent-tile-badge.pending {
+  background: #eab308;
+  color: #000;
+}
+
+.agent-tile-badge.clear {
+  background: rgba(100, 100, 100, 0.5);
+  color: #888;
+}
+
+.agent-tile-message {
+  font-size: 13px;
+  color: #888;
+}
+
+.agent-tile-message .from {
+  color: #00d9ff;
+}
+
+.agent-tile-message .task {
+  color: #ccc;
+  display: block;
+  margin-top: 4px;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.agent-tile-message .time {
+  color: #666;
+  font-size: 11px;
+  margin-top: 6px;
+}
+
+/* Message Modal Styles */
+.message-sidebar {
+  position: fixed;
+  right: 0;
+  top: 0;
+  height: 100vh;
+  width: 400px;
+  background: linear-gradient(135deg, #1a1a2e 0%, #16213e 100%);
+  border-left: 1px solid rgba(255, 255, 255, 0.1);
+  padding: 20px;
+  overflow-y: auto;
+  z-index: 100;
+  box-shadow: -10px 0 30px rgba(0, 0, 0, 0.3);
+}
+
+.message-sidebar-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 20px;
+}
+
+.message-sidebar-title {
+  font-size: 20px;
+  font-weight: 600;
+  color: #00d9ff;
+}
+
+.message-sidebar-close {
+  background: none;
+  border: none;
+  color: #888;
+  font-size: 24px;
+  cursor: pointer;
+}
+
+.message-sidebar-close:hover {
+  color: #fff;
+}
+
+.message-item {
+  background: rgba(255, 255, 255, 0.05);
+  border-radius: 8px;
+  padding: 12px;
+  margin-bottom: 10px;
+  cursor: pointer;
+  transition: background 0.2s;
+}
+
+.message-item:hover {
+  background: rgba(255, 255, 255, 0.1);
+}
+
+.message-item-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 6px;
+}
+
+.message-status {
+  padding: 2px 8px;
+  border-radius: 10px;
+  font-size: 10px;
+  font-weight: 700;
+}
+
+.message-status.pending { background: #eab308; color: #000; }
+.message-status.approved { background: #3b82f6; color: #fff; }
+.message-status.in_progress { background: #a855f7; color: #fff; }
+.message-status.completed { background: #22c55e; color: #fff; }
+.message-status.failed { background: #ef4444; color: #fff; }
+
+.message-detail-modal {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background: rgba(0, 0, 0, 0.85);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 200;
+  padding: 20px;
+}
+
+.message-detail-content {
+  background: linear-gradient(135deg, #1a1a2e 0%, #16213e 100%);
+  border-radius: 16px;
+  padding: 30px;
+  max-width: 600px;
+  width: 100%;
+  border: 1px solid rgba(255, 255, 255, 0.1);
+}
+
+.message-detail-field {
+  margin-bottom: 16px;
+}
+
+.message-detail-label {
+  font-size: 12px;
+  color: #888;
+  margin-bottom: 4px;
+}
+
+.message-detail-value {
+  font-size: 15px;
+  color: #fff;
+}
+
+.message-actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 10px;
+  margin-top: 24px;
+}
+
+.btn-approve { background: #eab308; color: #000; }
+.btn-start { background: #3b82f6; color: #fff; }
+.btn-complete { background: #22c55e; color: #fff; }
+.btn-fail { background: #ef4444; color: #fff; }

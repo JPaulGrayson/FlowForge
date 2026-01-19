@@ -7,6 +7,7 @@ import { createLogicArtAdapter } from "../integration/logicart-adapter.js";
 import { council } from "../council/council.js";
 import { toolHandlers } from "../tools/handlers.js";
 import { saveWorkflow, loadWorkflow, listWorkflows } from "../tools/persistence.js";
+import { QuackPoller } from "../quack/poller.js";
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
@@ -85,6 +86,61 @@ const MCP_TOOLS = [
       properties: { text: { type: "string" } },
       required: ["text"]
     }
+  },
+  {
+    name: "quack_check_inbox",
+    description: "Check a Quack inbox for pending messages",
+    inputSchema: {
+      type: "object",
+      properties: {
+        inbox: { type: "string", description: "Inbox name (claude, replit, cursor, gpt, gemini, grok, copilot, antigravity)" }
+      },
+      required: ["inbox"]
+    }
+  },
+  {
+    name: "quack_approve",
+    description: "Approve a pending message to allow the receiving agent to proceed",
+    inputSchema: {
+      type: "object",
+      properties: {
+        messageId: { type: "string", description: "The ID of the message to approve" }
+      },
+      required: ["messageId"]
+    }
+  },
+  {
+    name: "quack_update_status",
+    description: "Update the status of a message (in_progress, completed, failed)",
+    inputSchema: {
+      type: "object",
+      properties: {
+        messageId: { type: "string", description: "The ID of the message to update" },
+        status: { type: "string", enum: ["in_progress", "completed", "failed"], description: "The new status" }
+      },
+      required: ["messageId", "status"]
+    }
+  },
+  {
+    name: "quack_send",
+    description: "Send a message to another agent via Quack",
+    inputSchema: {
+      type: "object",
+      properties: {
+        to: { type: "string", description: "Destination inbox (replit, cursor, claude, gpt, gemini, grok, copilot, antigravity)" },
+        task: { type: "string", description: "The task or message to send" },
+        context: { type: "string", description: "Optional context or background information" }
+      },
+      required: ["to", "task"]
+    }
+  },
+  {
+    name: "quack_list_inboxes",
+    description: "List all monitored Quack inboxes with their pending message counts",
+    inputSchema: {
+      type: "object",
+      properties: {}
+    }
   }
 ];
 
@@ -116,6 +172,30 @@ async function executeTool(name: string, args: any): Promise<any> {
       return await toolHandlers.web_search(args);
     case "summarize":
       return await toolHandlers.summarize(args);
+    case "quack_check_inbox":
+      const quackPoller = new QuackPoller();
+      return await quackPoller.checkInbox(args.inbox);
+    case "quack_approve":
+      const approvePoller = new QuackPoller();
+      const approved = await approvePoller.approveMessage(args.messageId);
+      return { success: approved, message: approved ? 'Message approved' : 'Failed to approve' };
+    case "quack_update_status":
+      const statusPoller = new QuackPoller();
+      const updated = await statusPoller.updateStatus(args.messageId, args.status);
+      return { success: updated, message: updated ? `Status updated to ${args.status}` : 'Failed to update' };
+    case "quack_send":
+      const sendPoller = new QuackPoller();
+      const sent = await sendPoller.sendMessage(args.to, args.task, args.context);
+      return { success: sent, message: sent ? 'Message sent' : 'Failed to send' };
+    case "quack_list_inboxes":
+      const listPoller = new QuackPoller();
+      const inboxes = await listPoller.checkAllInboxes();
+      return Array.from(inboxes.entries()).map(([name, state]) => ({
+        name,
+        pendingCount: state.pendingCount,
+        messageCount: state.messages.length,
+        lastChecked: state.lastChecked
+      }));
     default:
       throw new Error(`Unknown tool: ${name}`);
   }
@@ -256,6 +336,63 @@ app.post("/api/mcp/call", async (req, res) => {
   try {
     const result = await executeTool(tool, params);
     res.json({ result });
+  } catch (e: any) {
+    res.status(500).json({ error: e.message });
+  }
+});
+
+// Quack Control Room API endpoints
+app.get("/api/quack/inboxes", async (_, res) => {
+  try {
+    const poller = new QuackPoller();
+    const inboxes = await poller.checkAllInboxes();
+    const result = Array.from(inboxes.entries()).map(([name, state]) => ({
+      name,
+      pendingCount: state.pendingCount,
+      messages: state.messages,
+      lastChecked: state.lastChecked
+    }));
+    res.json({ inboxes: result });
+  } catch (e: any) {
+    res.status(500).json({ error: e.message });
+  }
+});
+
+app.get("/api/quack/inbox/:name", async (req, res) => {
+  try {
+    const poller = new QuackPoller();
+    const inbox = await poller.checkInbox(req.params.name);
+    res.json(inbox);
+  } catch (e: any) {
+    res.status(500).json({ error: e.message });
+  }
+});
+
+app.post("/api/quack/approve/:id", async (req, res) => {
+  try {
+    const poller = new QuackPoller();
+    const success = await poller.approveMessage(req.params.id);
+    res.json({ success });
+  } catch (e: any) {
+    res.status(500).json({ error: e.message });
+  }
+});
+
+app.post("/api/quack/status/:id", async (req, res) => {
+  try {
+    const poller = new QuackPoller();
+    const success = await poller.updateStatus(req.params.id, req.body.status);
+    res.json({ success });
+  } catch (e: any) {
+    res.status(500).json({ error: e.message });
+  }
+});
+
+app.post("/api/quack/send", async (req, res) => {
+  try {
+    const poller = new QuackPoller();
+    const success = await poller.sendMessage(req.body.to, req.body.task, req.body.context);
+    res.json({ success });
   } catch (e: any) {
     res.status(500).json({ error: e.message });
   }
