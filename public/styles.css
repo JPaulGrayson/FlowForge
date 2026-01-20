@@ -814,3 +814,373 @@ body {
 .btn-start { background: #3b82f6; color: #fff; }
 .btn-complete { background: #22c55e; color: #fff; }
 .btn-fail { background: #ef4444; color: #fff; }
+
+/* LogicProcess Node Editor Styles */
+.node-editor-container {
+  display: grid;
+  grid-template-columns: 200px 1fr 300px;
+  gap: 20px;
+  min-height: 500px;
+}
+
+.node-palette {
+  background: rgba(26, 26, 46, 0.8);
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  border-radius: 12px;
+  padding: 15px;
+}
+
+.node-palette h3 {
+  font-size: 14px;
+  color: #888;
+  margin-bottom: 15px;
+  text-transform: uppercase;
+  letter-spacing: 1px;
+}
+
+.palette-node {
+  background: rgba(255, 255, 255, 0.05);
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  border-radius: 8px;
+  padding: 12px;
+  margin-bottom: 10px;
+  cursor: grab;
+  transition: all 0.2s;
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.palette-node:hover {
+  background: rgba(0, 217, 255, 0.1);
+  border-color: rgba(0, 217, 255, 0.3);
+}
+
+.palette-node:active {
+  cursor: grabbing;
+}
+
+.node-icon {
+  font-size: 18px;
+}
+
+.node-canvas {
+  background: rgba(26, 26, 46, 0.8);
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  border-radius: 12px;
+  min-height: 500px;
+  position: relative;
+  overflow: hidden;
+}
+
+.canvas-placeholder {
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  text-align: center;
+  color: #666;
+}
+
+.canvas-placeholder .hint {
+  font-size: 13px;
+  margin-top: 10px;
+}
+
+.workflow-node {
+  position: absolute;
+  background: rgba(26, 26, 46, 0.95);
+  border: 2px solid rgba(0, 217, 255, 0.5);
+  border-radius: 10px;
+  padding: 15px;
+  min-width: 180px;
+  cursor: move;
+  box-shadow: 0 4px 15px rgba(0, 0, 0, 0.3);
+}
+
+.workflow-node.selected {
+  border-color: #00d9ff;
+  box-shadow: 0 0 20px rgba(0, 217, 255, 0.3);
+}
+
+.workflow-node .node-header {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin-bottom: 10px;
+  font-weight: 600;
+}
+
+.workflow-node .node-body {
+  font-size: 12px;
+  color: #888;
+}
+
+.workflow-node .node-connector {
+  position: absolute;
+  width: 12px;
+  height: 12px;
+  background: #00d9ff;
+  border-radius: 50%;
+  cursor: crosshair;
+}
+
+.workflow-node .node-connector.input {
+  left: -6px;
+  top: 50%;
+  transform: translateY(-50%);
+}
+
+.workflow-node .node-connector.output {
+  right: -6px;
+  top: 50%;
+  transform: translateY(-50%);
+}
+
+.node-config-panel {
+  background: rgba(26, 26, 46, 0.8);
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  border-radius: 12px;
+  padding: 15px;
+}
+
+.node-config-panel h3 {
+  font-size: 14px;
+  color: #00d9ff;
+  margin-bottom: 15px;
+}
+
+.config-field {
+  margin-bottom: 15px;
+}
+
+.config-field label {
+  display: block;
+  font-size: 12px;
+  color: #888;
+  margin-bottom: 5px;
+}
+
+.config-field select,
+.config-field input,
+.config-field textarea {
+  width: 100%;
+  padding: 10px;
+  background: rgba(255, 255, 255, 0.05);
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  border-radius: 6px;
+  color: #fff;
+  font-size: 13px;
+}
+
+.config-field textarea {
+  min-height: 80px;
+  resize: vertical;
+}
+
+.input-source-toggle {
+  display: flex;
+  gap: 5px;
+  margin-top: 5px;
+}
+
+.input-source-toggle button {
+  flex: 1;
+  padding: 6px;
+  font-size: 11px;
+  background: rgba(255, 255, 255, 0.05);
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  border-radius: 4px;
+  color: #888;
+  cursor: pointer;
+}
+
+.input-source-toggle button.active {
+  background: rgba(0, 217, 255, 0.2);
+  border-color: rgba(0, 217, 255, 0.5);
+  color: #00d9ff;
+}
+
+/* CoWork Styles */
+.cowork-container {
+  max-width: 700px;
+  margin: 0 auto;
+}
+
+.workflow-selector {
+  margin-bottom: 30px;
+}
+
+.workflow-selector label {
+  display: block;
+  margin-bottom: 8px;
+  color: #888;
+}
+
+.workflow-selector select {
+  width: 100%;
+  padding: 12px;
+  background: rgba(255, 255, 255, 0.05);
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  border-radius: 8px;
+  color: #fff;
+  font-size: 15px;
+}
+
+.cowork-form {
+  background: rgba(26, 26, 46, 0.8);
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  border-radius: 12px;
+  padding: 25px;
+}
+
+.cowork-step {
+  margin-bottom: 25px;
+  padding-bottom: 25px;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+}
+
+.cowork-step:last-child {
+  margin-bottom: 0;
+  padding-bottom: 0;
+  border-bottom: none;
+}
+
+.cowork-step h4 {
+  color: #00d9ff;
+  margin-bottom: 12px;
+}
+
+.cowork-step input,
+.cowork-step textarea {
+  width: 100%;
+  padding: 12px;
+  background: rgba(255, 255, 255, 0.05);
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  border-radius: 8px;
+  color: #fff;
+  font-size: 14px;
+}
+
+.cowork-step textarea {
+  min-height: 100px;
+}
+
+.run-workflow-btn {
+  width: 100%;
+  padding: 15px;
+  margin-top: 20px;
+  background: linear-gradient(135deg, #00d9ff, #a855f7);
+  border: none;
+  border-radius: 10px;
+  color: #fff;
+  font-size: 16px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: transform 0.2s, box-shadow 0.2s;
+}
+
+.run-workflow-btn:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 5px 20px rgba(0, 217, 255, 0.3);
+}
+
+.cowork-execution {
+  background: rgba(26, 26, 46, 0.8);
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  border-radius: 12px;
+  padding: 25px;
+  margin-top: 20px;
+}
+
+.execution-step {
+  display: flex;
+  align-items: flex-start;
+  gap: 15px;
+  margin-bottom: 20px;
+  padding: 15px;
+  background: rgba(255, 255, 255, 0.03);
+  border-radius: 8px;
+}
+
+.execution-step-icon {
+  font-size: 20px;
+}
+
+.execution-step.completed .execution-step-icon { color: #22c55e; }
+.execution-step.in-progress .execution-step-icon { color: #eab308; }
+.execution-step.pending .execution-step-icon { color: #666; }
+.execution-step.waiting .execution-step-icon { color: #3b82f6; }
+
+.execution-step-content {
+  flex: 1;
+}
+
+.execution-step-title {
+  font-weight: 600;
+  margin-bottom: 4px;
+}
+
+.execution-step-status {
+  font-size: 12px;
+  color: #888;
+}
+
+/* Templates Styles */
+.template-cards {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(250px, 1fr));
+  gap: 20px;
+}
+
+.template-card {
+  background: rgba(26, 26, 46, 0.8);
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  border-radius: 12px;
+  padding: 25px;
+  cursor: pointer;
+  transition: all 0.3s;
+  text-align: center;
+}
+
+.template-card:hover {
+  background: rgba(26, 26, 46, 1);
+  transform: translateY(-3px);
+  box-shadow: 0 10px 30px rgba(0, 0, 0, 0.3);
+  border-color: rgba(0, 217, 255, 0.3);
+}
+
+.template-icon {
+  font-size: 40px;
+  margin-bottom: 15px;
+}
+
+.template-card h3 {
+  color: #fff;
+  margin-bottom: 8px;
+}
+
+.template-card p {
+  color: #888;
+  font-size: 13px;
+  margin-bottom: 12px;
+}
+
+.header-actions {
+  display: flex;
+  gap: 10px;
+}
+
+.btn-secondary {
+  padding: 10px 20px;
+  background: rgba(255, 255, 255, 0.1);
+  border: 1px solid rgba(255, 255, 255, 0.2);
+  border-radius: 8px;
+  color: #fff;
+  cursor: pointer;
+  transition: all 0.2s;
+}
+
+.btn-secondary:hover {
+  background: rgba(255, 255, 255, 0.15);
+}

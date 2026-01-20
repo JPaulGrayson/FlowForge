@@ -19,9 +19,11 @@
 
     <nav class="nav">
       <button class="nav-btn active" data-tab="workflows">Workflows</button>
+      <button class="nav-btn" data-tab="logic-process">LogicProcess</button>
+      <button class="nav-btn" data-tab="cowork">CoWork</button>
       <button class="nav-btn" data-tab="control-room">Control Room</button>
+      <button class="nav-btn" data-tab="templates">Templates</button>
       <button class="nav-btn" data-tab="tools">Tools</button>
-      <button class="nav-btn" data-tab="examples">Examples</button>
     </nav>
 
     <main class="main">
@@ -32,6 +34,69 @@
         </div>
         <div id="workflows-list" class="card-grid">
           <p class="loading">Loading workflows...</p>
+        </div>
+      </section>
+
+      <section id="logic-process" class="tab-content">
+        <div class="section-header">
+          <h2>LogicProcess - Build Mode</h2>
+          <div class="header-actions">
+            <button class="btn-secondary" onclick="clearCanvas()">New</button>
+            <button class="btn-primary" onclick="saveCurrentWorkflow()">Save Template</button>
+            <button class="btn-secondary" onclick="testRunWorkflow()">Test Run</button>
+          </div>
+        </div>
+        <div class="node-editor-container">
+          <div class="node-palette">
+            <h3>Node Types</h3>
+            <div class="palette-node" draggable="true" data-type="trigger">
+              <span class="node-icon">▶</span> Trigger
+            </div>
+            <div class="palette-node" draggable="true" data-type="ai-agent">
+              <span class="node-icon">🤖</span> AI Agent
+            </div>
+            <div class="palette-node" draggable="true" data-type="transform">
+              <span class="node-icon">⚙</span> Transform
+            </div>
+            <div class="palette-node" draggable="true" data-type="condition">
+              <span class="node-icon">◇</span> Condition
+            </div>
+            <div class="palette-node" draggable="true" data-type="human-review">
+              <span class="node-icon">👤</span> Human Review
+            </div>
+            <div class="palette-node" draggable="true" data-type="output">
+              <span class="node-icon">📤</span> Output
+            </div>
+          </div>
+          <div class="node-canvas" id="node-canvas">
+            <div class="canvas-placeholder">
+              <p>Drag nodes from the palette to build your workflow</p>
+              <p class="hint">Click a node to configure its inputs and settings</p>
+            </div>
+          </div>
+          <div class="node-config-panel" id="node-config-panel" style="display:none;">
+            <h3>Node Configuration</h3>
+            <div id="node-config-content"></div>
+          </div>
+        </div>
+      </section>
+
+      <section id="cowork" class="tab-content">
+        <div class="section-header">
+          <h2>CoWork - Run Mode</h2>
+        </div>
+        <div class="cowork-container">
+          <div class="workflow-selector">
+            <label>Select Workflow:</label>
+            <select id="cowork-workflow-select" onchange="loadWorkflowForRun()">
+              <option value="">-- Choose a workflow --</option>
+            </select>
+          </div>
+          <div id="cowork-form" class="cowork-form">
+            <p class="empty-state">Select a workflow to see its input form</p>
+          </div>
+          <div id="cowork-execution" class="cowork-execution" style="display:none;">
+          </div>
         </div>
       </section>
 
@@ -68,40 +133,45 @@
         </div>
       </section>
 
-      <section id="examples" class="tab-content">
+      <section id="templates" class="tab-content">
         <div class="section-header">
-          <h2>Example Workflows</h2>
+          <h2>Template Library</h2>
         </div>
-        <div class="example-cards">
-          <div class="example-card" onclick="loadExample('data-processing-pipeline')">
-            <h3>Data Processing Pipeline</h3>
-            <p>Search, process, and summarize data with conditional branching.</p>
+        <div class="template-cards">
+          <div class="template-card" onclick="loadTemplate('content-pipeline')">
+            <div class="template-icon">📝</div>
+            <h3>Content Pipeline</h3>
+            <p>Topics → Outlines → Articles → Review</p>
+            <span class="tag">content</span>
+            <span class="tag">writing</span>
+          </div>
+          <div class="template-card" onclick="loadTemplate('code-review')">
+            <div class="template-icon">🔍</div>
+            <h3>Code Review</h3>
+            <p>Upload code → Analysis → Suggestions</p>
+            <span class="tag">code</span>
+            <span class="tag">review</span>
+          </div>
+          <div class="template-card" onclick="loadTemplate('data-analysis')">
+            <div class="template-icon">📊</div>
+            <h3>Data Analysis</h3>
+            <p>CSV → Insights → Report</p>
             <span class="tag">data</span>
-            <span class="tag">processing</span>
+            <span class="tag">analysis</span>
           </div>
-          <div class="example-card" onclick="loadExample('approval-workflow')">
-            <h3>Approval Workflow</h3>
-            <p>Human-in-the-loop document review and approval process.</p>
-            <span class="tag">approval</span>
-            <span class="tag">human-in-the-loop</span>
+          <div class="template-card" onclick="loadTemplate('image-generation')">
+            <div class="template-icon">🎨</div>
+            <h3>Image Generation</h3>
+            <p>Prompts → Images → QA</p>
+            <span class="tag">images</span>
+            <span class="tag">creative</span>
           </div>
-          <div class="example-card" onclick="loadExample('parallel-research')">
-            <h3>Parallel Research</h3>
-            <p>Search multiple topics simultaneously and combine results.</p>
-            <span class="tag">parallel</span>
-            <span class="tag">research</span>
-          </div>
-          <div class="example-card" onclick="loadExample('code-review-workflow')">
-            <h3>AI Code Review</h3>
-            <p>Use AI Council for comprehensive code review across security, performance, and style.</p>
-            <span class="tag">code-review</span>
-            <span class="tag">council</span>
-          </div>
-          <div class="example-card" onclick="loadExample('council-research')">
-            <h3>Multi-AI Research</h3>
-            <p>Query Claude, GPT-4, and Gemini for research synthesis.</p>
-            <span class="tag">council</span>
-            <span class="tag">research</span>
+          <div class="template-card" onclick="loadTemplate('email-processor')">
+            <div class="template-icon">📧</div>
+            <h3>Email Processor</h3>
+            <p>Emails → Categorize → Draft replies</p>
+            <span class="tag">email</span>
+            <span class="tag">automation</span>
           </div>
         </div>
       </section>

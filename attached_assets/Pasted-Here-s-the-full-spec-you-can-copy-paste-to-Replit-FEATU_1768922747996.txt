@@ -1,0 +1,243 @@
+Here's the full spec you can copy/paste to Replit:
+
+FEATURE SPEC: LogicProcess + CoWork for Orchestrate
+Overview
+Add workflow building and running capabilities to Orchestrate. This is TWO MODES of the same tool:
+
+LogicProcess (Build Mode) - Developers create workflow templates
+CoWork (Run Mode) - End users run workflows with their own data
+
+Architecture
+Orchestrate (orchestrate.us.com) is ONE Replit app that includes:
+
+Control Room (existing)
+LogicProcess (new - Build Mode)
+CoWork (new - Run Mode)
+
+It integrates with existing APIs:
+
+Quack (quack.us.com) for agent messaging
+LogicArt (logic.art) for code visualization
+
+
+LogicProcess (Build Mode)
+Visual workflow builder where developers create automation templates.
+Node Editor UI
+┌─────────────────────────────────────────────────────────────┐
+│ LogicProcess - Build Mode                    [▶ Run Mode]   │
+├─────────────────────────────────────────────────────────────┤
+│                                                             │
+│   ┌─────────┐      ┌─────────┐      ┌─────────┐            │
+│   │ Node 1  │─────▶│ Node 2  │─────▶│ Node 3  │            │
+│   │ Generate│      │ Process │      │ Output  │            │
+│   └─────────┘      └─────────┘      └─────────┘            │
+│                                                             │
+│   [+ Add Node]  [Save Template]  [Test Run]  [Share]       │
+└─────────────────────────────────────────────────────────────┘
+Node Types
+TypeDescriptionTriggerStarts workflow (manual, scheduled, webhook)AI AgentSends task to agent via QuackTransformModify data between nodes (filter, map, format)ConditionBranch based on resultHuman ReviewPause for approvalOutputSave results (file, notification, etc.)
+Node Configuration
+Each node has THREE input slots:
+┌─────────────────────────────────────┐
+│  Node: Generate Content             │
+├─────────────────────────────────────┤
+│                                     │
+│  📄 DATA INPUT                      │
+│  What data does this node receive?  │
+│  ○ From previous node               │
+│  ○ User provides at runtime         │
+│  ○ Fixed value: [_____________]     │
+│                                     │
+│  📝 INSTRUCTIONS                    │
+│  What should the agent do?          │
+│  ○ User provides at runtime         │
+│  ○ Fixed prompt:                    │
+│    [Analyze this data and...]       │
+│                                     │
+│  🤖 AGENT                           │
+│  [Claude ▼]                         │
+│                                     │
+│  ⚙️ SETTINGS                        │
+│  Output format: [JSON ▼]            │
+│  Pass to next node: [result.items]  │
+│                                     │
+└─────────────────────────────────────┘
+Key concept: Inputs marked "User provides at runtime" become form fields in CoWork Run Mode.
+Workflow Data Model
+json{
+  "id": "workflow-123",
+  "name": "Content Pipeline",
+  "description": "Generate and review blog posts",
+  "nodes": [
+    {
+      "id": "node-1",
+      "type": "ai-agent",
+      "agent": "claude",
+      "position": { "x": 100, "y": 100 },
+      "inputs": {
+        "data": { "source": "runtime", "label": "Upload your topics CSV" },
+        "instructions": { "source": "fixed", "value": "Generate blog outlines for each topic" }
+      },
+      "output": "result.outlines"
+    },
+    {
+      "id": "node-2",
+      "type": "human-review",
+      "position": { "x": 300, "y": 100 },
+      "inputs": {
+        "data": { "source": "previous", "path": "outlines" }
+      }
+    },
+    {
+      "id": "node-3",
+      "type": "ai-agent",
+      "agent": "claude",
+      "position": { "x": 500, "y": 100 },
+      "inputs": {
+        "data": { "source": "previous", "path": "approved" },
+        "instructions": { "source": "runtime", "label": "Paste your style guide" }
+      }
+    }
+  ],
+  "edges": [
+    { "from": "node-1", "to": "node-2" },
+    { "from": "node-2", "to": "node-3" }
+  ]
+}
+```
+
+---
+
+## CoWork (Run Mode)
+
+Simplified UI for end users to run workflows with their own data.
+
+### Run Mode UI
+```
+┌─────────────────────────────────────────────────────────────┐
+│ CoWork - Content Pipeline                   [🔧 Build Mode] │
+├─────────────────────────────────────────────────────────────┤
+│                                                             │
+│  Step 1: Upload Topics                                      │
+│  ┌─────────────────────────────────────┐                   │
+│  │ 📄 Upload your topics CSV:          │                   │
+│  │ [topics.csv]                [Browse]│                   │
+│  └─────────────────────────────────────┘                   │
+│                                                             │
+│  Step 2: Style Guide                                        │
+│  ┌─────────────────────────────────────┐                   │
+│  │ 📝 Paste your style guide:          │                   │
+│  │ [Write in conversational tone...   ]│                   │
+│  └─────────────────────────────────────┘                   │
+│                                                             │
+│  ┌─────────────────────────────────────┐                   │
+│  │         [▶ Run Workflow]            │                   │
+│  └─────────────────────────────────────┘                   │
+│                                                             │
+└─────────────────────────────────────────────────────────────┘
+```
+
+### Execution View
+```
+┌─────────────────────────────────────────────────────────────┐
+│ Running: Content Pipeline                          [Cancel] │
+├─────────────────────────────────────────────────────────────┤
+│                                                             │
+│  ✅ Step 1: Generate Outlines          COMPLETED            │
+│     └─ Created 5 outlines                                   │
+│                                                             │
+│  ⏸️ Step 2: Review Outlines            WAITING FOR APPROVAL │
+│     ┌─────────────────────────────────────────┐            │
+│     │ Outline 1: "AI in Healthcare"           │            │
+│     │ Outline 2: "Future of Remote Work"      │            │
+│     │ [✓ Approve All] [Select Items] [Reject] │            │
+│     └─────────────────────────────────────────┘            │
+│                                                             │
+│  ⏳ Step 3: Write Articles             PENDING              │
+│                                                             │
+└─────────────────────────────────────────────────────────────┘
+
+Execution Engine
+When a workflow runs:
+
+Start - User clicks "Run Workflow"
+Collect inputs - Gather all runtime inputs from user
+Execute nodes - For each node:
+
+If AI Agent: Send Quack message, wait for reply
+If Transform: Process data locally
+If Human Review: Pause, show UI, wait for approval
+If Condition: Evaluate and branch
+
+
+Pass data - Output from each node feeds into next
+Complete - Show final results, offer download
+
+Quack Integration
+Each AI Agent node sends a Quack message:
+jsonPOST https://quack.us.com/api/send
+{
+  "to": "claude",
+  "from": "orchestrate",
+  "task": "Generate blog outlines for each topic",
+  "context": "Workflow: Content Pipeline, Node: Generate Outlines",
+  "files": [
+    { "name": "topics.csv", "content": "..." }
+  ],
+  "replyTo": "workflow-run-123"
+}
+```
+
+When reply received, workflow continues to next node.
+
+---
+
+## File Handling
+
+### Upload Methods (Start with these)
+1. **Browser upload** - Click to select file
+2. **Paste text** - For small content
+3. **URL fetch** - Paste a link to fetch
+
+### Future (v2)
+4. **Google Drive** - Connect and select files
+5. **Dropbox** - Connect and select files
+
+---
+
+## Template Library
+
+Pre-built workflows users can start with:
+
+| Template | Description |
+|----------|-------------|
+| **Content Pipeline** | Topics → Outlines → Articles → Review |
+| **Code Review** | Upload code → Analysis → Suggestions |
+| **Data Analysis** | CSV → Insights → Report |
+| **Image Generation** | Prompts → Images → QA |
+| **Email Processor** | Emails → Categorize → Draft replies |
+
+Users can:
+- Use templates as-is
+- Duplicate and customize
+- Create from scratch
+- Share their own
+
+---
+
+## UI Routes
+```
+orchestrate.us.com/
+├── /                    → Control Room (dashboard)
+├── /workflows           → List saved workflows
+├── /workflows/new       → Create new (Build Mode)
+├── /workflows/:id/edit  → Edit workflow (Build Mode)
+├── /workflows/:id/run   → Run workflow (CoWork Mode)
+├── /runs                → List workflow runs
+├── /runs/:id            → View run status/results
+├── /templates           → Template library
+└── /settings            → BYOK, webhooks, etc.
+
+Summary
+ComponentWhat It DoesLogicProcessVisual node editor to BUILD workflowsCoWorkSimplified UI to RUN workflowsNodesHave data, instruction, and config slotsRuntime inputsBecome form fields in CoWorkExecutionUses Quack API for AI agent communicationTemplatesPre-built workflows to get started
+This makes Orchestrate a complete workflow automation platform that non-developers can use with their own data.

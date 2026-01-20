@@ -770,3 +770,591 @@ window.failMessage = async function(id) {
     alert('Error failing message: ' + error.message);
   }
 };
+
+// ===== LOGICPROCESS NODE EDITOR =====
+
+let workflowNodes = [];
+let workflowEdges = [];
+let selectedNode = null;
+let nodeIdCounter = 1;
+let currentWorkflow = null;
+
+const NODE_TYPES = {
+  'trigger': { icon: '▶', name: 'Trigger', color: '#22c55e' },
+  'ai-agent': { icon: '🤖', name: 'AI Agent', color: '#00d9ff' },
+  'transform': { icon: '⚙', name: 'Transform', color: '#a855f7' },
+  'condition': { icon: '◇', name: 'Condition', color: '#eab308' },
+  'human-review': { icon: '👤', name: 'Human Review', color: '#3b82f6' },
+  'output': { icon: '📤', name: 'Output', color: '#ef4444' }
+};
+
+function initNodeEditor() {
+  const canvas = document.getElementById('node-canvas');
+  const paletteNodes = document.querySelectorAll('.palette-node');
+  
+  paletteNodes.forEach(node => {
+    node.addEventListener('dragstart', (e) => {
+      e.dataTransfer.setData('nodeType', node.dataset.type);
+    });
+  });
+  
+  canvas.addEventListener('dragover', (e) => {
+    e.preventDefault();
+  });
+  
+  canvas.addEventListener('drop', (e) => {
+    e.preventDefault();
+    const nodeType = e.dataTransfer.getData('nodeType');
+    if (nodeType) {
+      const rect = canvas.getBoundingClientRect();
+      const x = e.clientX - rect.left - 90;
+      const y = e.clientY - rect.top - 30;
+      addNodeToCanvas(nodeType, x, y);
+    }
+  });
+  
+  canvas.addEventListener('click', (e) => {
+    if (e.target === canvas || e.target.classList.contains('canvas-placeholder')) {
+      deselectNode();
+    }
+  });
+}
+
+function addNodeToCanvas(type, x, y) {
+  const canvas = document.getElementById('node-canvas');
+  const placeholder = canvas.querySelector('.canvas-placeholder');
+  if (placeholder) placeholder.style.display = 'none';
+  
+  const nodeId = 'node-' + nodeIdCounter++;
+  const nodeInfo = NODE_TYPES[type];
+  
+  const node = {
+    id: nodeId,
+    type: type,
+    position: { x, y },
+    inputs: {
+      data: { source: 'previous', label: 'Data input' },
+      instructions: { source: 'fixed', value: '' }
+    },
+    agent: type === 'ai-agent' ? 'claude' : undefined,
+    output: 'result'
+  };
+  
+  workflowNodes.push(node);
+  
+  const nodeEl = document.createElement('div');
+  nodeEl.className = 'workflow-node';
+  nodeEl.id = nodeId;
+  nodeEl.style.left = x + 'px';
+  nodeEl.style.top = y + 'px';
+  nodeEl.style.borderColor = nodeInfo.color;
+  nodeEl.innerHTML = `
+    <div class="node-connector input"></div>
+    <div class="node-header">
+      <span class="node-icon">${nodeInfo.icon}</span>
+      <span>${nodeInfo.name}</span>
+    </div>
+    <div class="node-body">${getNodeDescription(node)}</div>
+    <div class="node-connector output"></div>
+  `;
+  
+  nodeEl.addEventListener('click', (e) => {
+    e.stopPropagation();
+    selectNode(nodeId);
+  });
+  
+  makeNodeDraggable(nodeEl);
+  canvas.appendChild(nodeEl);
+  selectNode(nodeId);
+}
+
+function getNodeDescription(node) {
+  if (node.type === 'ai-agent') {
+    return `Agent: ${node.agent || 'Claude'}`;
+  } else if (node.type === 'trigger') {
+    return 'Start workflow';
+  } else if (node.type === 'output') {
+    return 'Save results';
+  }
+  return 'Configure...';
+}
+
+function makeNodeDraggable(nodeEl) {
+  let isDragging = false;
+  let startX, startY, origX, origY;
+  
+  nodeEl.addEventListener('mousedown', (e) => {
+    if (e.target.classList.contains('node-connector')) return;
+    isDragging = true;
+    startX = e.clientX;
+    startY = e.clientY;
+    origX = nodeEl.offsetLeft;
+    origY = nodeEl.offsetTop;
+    nodeEl.style.zIndex = 1000;
+  });
+  
+  document.addEventListener('mousemove', (e) => {
+    if (!isDragging) return;
+    const dx = e.clientX - startX;
+    const dy = e.clientY - startY;
+    nodeEl.style.left = (origX + dx) + 'px';
+    nodeEl.style.top = (origY + dy) + 'px';
+    
+    const node = workflowNodes.find(n => n.id === nodeEl.id);
+    if (node) {
+      node.position.x = origX + dx;
+      node.position.y = origY + dy;
+    }
+  });
+  
+  document.addEventListener('mouseup', () => {
+    isDragging = false;
+    nodeEl.style.zIndex = '';
+  });
+}
+
+function selectNode(nodeId) {
+  document.querySelectorAll('.workflow-node').forEach(n => n.classList.remove('selected'));
+  const nodeEl = document.getElementById(nodeId);
+  if (nodeEl) nodeEl.classList.add('selected');
+  
+  selectedNode = workflowNodes.find(n => n.id === nodeId);
+  showNodeConfig(selectedNode);
+}
+
+function deselectNode() {
+  document.querySelectorAll('.workflow-node').forEach(n => n.classList.remove('selected'));
+  selectedNode = null;
+  document.getElementById('node-config-panel').style.display = 'none';
+}
+
+function showNodeConfig(node) {
+  const panel = document.getElementById('node-config-panel');
+  const content = document.getElementById('node-config-content');
+  panel.style.display = 'block';
+  
+  let html = `<div class="config-field">
+    <label>Node Type</label>
+    <input type="text" value="${NODE_TYPES[node.type].name}" readonly>
+  </div>`;
+  
+  if (node.type === 'ai-agent') {
+    html += `
+      <div class="config-field">
+        <label>Agent</label>
+        <select onchange="updateNodeConfig('agent', this.value)">
+          <option value="claude" ${node.agent === 'claude' ? 'selected' : ''}>Claude</option>
+          <option value="gpt" ${node.agent === 'gpt' ? 'selected' : ''}>GPT-4</option>
+          <option value="gemini" ${node.agent === 'gemini' ? 'selected' : ''}>Gemini</option>
+        </select>
+      </div>
+      <div class="config-field">
+        <label>Data Input</label>
+        <div class="input-source-toggle">
+          <button class="${node.inputs.data.source === 'previous' ? 'active' : ''}" onclick="setInputSource('data', 'previous')">From Previous</button>
+          <button class="${node.inputs.data.source === 'runtime' ? 'active' : ''}" onclick="setInputSource('data', 'runtime')">User Input</button>
+          <button class="${node.inputs.data.source === 'fixed' ? 'active' : ''}" onclick="setInputSource('data', 'fixed')">Fixed</button>
+        </div>
+        ${node.inputs.data.source === 'runtime' ? `<input type="text" placeholder="Label for user" value="${node.inputs.data.label || ''}" onchange="updateInputLabel('data', this.value)">` : ''}
+        ${node.inputs.data.source === 'fixed' ? `<textarea placeholder="Fixed value" onchange="updateInputValue('data', this.value)">${node.inputs.data.value || ''}</textarea>` : ''}
+      </div>
+      <div class="config-field">
+        <label>Instructions</label>
+        <div class="input-source-toggle">
+          <button class="${node.inputs.instructions.source === 'runtime' ? 'active' : ''}" onclick="setInputSource('instructions', 'runtime')">User Input</button>
+          <button class="${node.inputs.instructions.source === 'fixed' ? 'active' : ''}" onclick="setInputSource('instructions', 'fixed')">Fixed</button>
+        </div>
+        ${node.inputs.instructions.source === 'runtime' ? `<input type="text" placeholder="Label for user" value="${node.inputs.instructions.label || ''}" onchange="updateInputLabel('instructions', this.value)">` : ''}
+        ${node.inputs.instructions.source === 'fixed' ? `<textarea placeholder="Instructions for AI" onchange="updateInputValue('instructions', this.value)">${node.inputs.instructions.value || ''}</textarea>` : ''}
+      </div>
+    `;
+  }
+  
+  html += `<div class="config-field">
+    <label>Output Path</label>
+    <input type="text" value="${node.output || 'result'}" onchange="updateNodeConfig('output', this.value)">
+  </div>
+  <button class="btn-secondary" style="width:100%;margin-top:10px;color:#ef4444;" onclick="deleteNode('${node.id}')">Delete Node</button>`;
+  
+  content.innerHTML = html;
+}
+
+window.updateNodeConfig = function(key, value) {
+  if (selectedNode) {
+    selectedNode[key] = value;
+    const nodeEl = document.getElementById(selectedNode.id);
+    if (nodeEl) {
+      nodeEl.querySelector('.node-body').textContent = getNodeDescription(selectedNode);
+    }
+  }
+};
+
+window.setInputSource = function(inputKey, source) {
+  if (selectedNode && selectedNode.inputs) {
+    selectedNode.inputs[inputKey] = { source, label: '', value: '' };
+    showNodeConfig(selectedNode);
+  }
+};
+
+window.updateInputLabel = function(inputKey, label) {
+  if (selectedNode && selectedNode.inputs) {
+    selectedNode.inputs[inputKey].label = label;
+  }
+};
+
+window.updateInputValue = function(inputKey, value) {
+  if (selectedNode && selectedNode.inputs) {
+    selectedNode.inputs[inputKey].value = value;
+  }
+};
+
+window.deleteNode = function(nodeId) {
+  workflowNodes = workflowNodes.filter(n => n.id !== nodeId);
+  workflowEdges = workflowEdges.filter(e => e.from !== nodeId && e.to !== nodeId);
+  const nodeEl = document.getElementById(nodeId);
+  if (nodeEl) nodeEl.remove();
+  deselectNode();
+  
+  if (workflowNodes.length === 0) {
+    const canvas = document.getElementById('node-canvas');
+    const placeholder = canvas.querySelector('.canvas-placeholder');
+    if (placeholder) placeholder.style.display = 'block';
+  }
+};
+
+window.clearCanvas = function() {
+  workflowNodes = [];
+  workflowEdges = [];
+  nodeIdCounter = 1;
+  selectedNode = null;
+  currentWorkflow = null;
+  
+  const canvas = document.getElementById('node-canvas');
+  canvas.querySelectorAll('.workflow-node').forEach(n => n.remove());
+  const placeholder = canvas.querySelector('.canvas-placeholder');
+  if (placeholder) placeholder.style.display = 'block';
+  document.getElementById('node-config-panel').style.display = 'none';
+};
+
+window.saveCurrentWorkflow = async function() {
+  const name = prompt('Workflow name:');
+  if (!name) return;
+  
+  const workflow = {
+    id: 'workflow-' + Date.now(),
+    name: name,
+    description: '',
+    nodes: workflowNodes,
+    edges: workflowEdges
+  };
+  
+  try {
+    const response = await fetch('/api/mcp/call', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ tool: 'save_workflow', params: { workflow } })
+    });
+    const data = await response.json();
+    if (data.result) {
+      alert('Workflow saved!');
+      currentWorkflow = workflow;
+      loadCoworkWorkflows();
+    }
+  } catch (error) {
+    alert('Error saving workflow: ' + error.message);
+  }
+};
+
+window.testRunWorkflow = function() {
+  if (workflowNodes.length === 0) {
+    alert('Add some nodes first!');
+    return;
+  }
+  
+  document.querySelector('[data-tab="cowork"]').click();
+  setTimeout(() => {
+    const select = document.getElementById('cowork-workflow-select');
+    if (currentWorkflow) {
+      select.value = currentWorkflow.id;
+    }
+    generateCoworkForm();
+  }, 100);
+};
+
+// ===== COWORK RUN MODE =====
+
+let coworkWorkflows = [];
+let selectedWorkflow = null;
+
+async function loadCoworkWorkflows() {
+  try {
+    const response = await fetch('/api/workflows');
+    const data = await response.json();
+    coworkWorkflows = data.workflows || [];
+    
+    const select = document.getElementById('cowork-workflow-select');
+    select.innerHTML = '<option value="">-- Choose a workflow --</option>';
+    coworkWorkflows.forEach(wf => {
+      select.innerHTML += `<option value="${wf.id}">${wf.name}</option>`;
+    });
+  } catch (error) {
+    console.error('Error loading workflows:', error);
+  }
+}
+
+window.loadWorkflowForRun = async function() {
+  const select = document.getElementById('cowork-workflow-select');
+  const workflowId = select.value;
+  
+  if (!workflowId) {
+    document.getElementById('cowork-form').innerHTML = '<p class="empty-state">Select a workflow to see its input form</p>';
+    return;
+  }
+  
+  try {
+    const response = await fetch('/api/mcp/call', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ tool: 'load_workflow', params: { id: workflowId } })
+    });
+    const data = await response.json();
+    if (data.result && data.result.workflow) {
+      selectedWorkflow = data.result.workflow;
+      generateCoworkForm();
+    }
+  } catch (error) {
+    console.error('Error loading workflow:', error);
+  }
+};
+
+function generateCoworkForm() {
+  const form = document.getElementById('cowork-form');
+  
+  if (!selectedWorkflow && workflowNodes.length > 0) {
+    selectedWorkflow = { nodes: workflowNodes, edges: workflowEdges };
+  }
+  
+  if (!selectedWorkflow) {
+    form.innerHTML = '<p class="empty-state">No workflow selected</p>';
+    return;
+  }
+  
+  const runtimeInputs = [];
+  (selectedWorkflow.nodes || []).forEach((node, idx) => {
+    if (node.inputs) {
+      Object.entries(node.inputs).forEach(([key, input]) => {
+        if (input.source === 'runtime') {
+          runtimeInputs.push({
+            nodeId: node.id,
+            nodeIndex: idx + 1,
+            inputKey: key,
+            label: input.label || `${key} for ${NODE_TYPES[node.type]?.name || node.type}`
+          });
+        }
+      });
+    }
+  });
+  
+  if (runtimeInputs.length === 0) {
+    form.innerHTML = `
+      <p style="color:#888;margin-bottom:20px;">This workflow has no runtime inputs - it will run with fixed values.</p>
+      <button class="run-workflow-btn" onclick="runWorkflow()">Run Workflow</button>
+    `;
+    return;
+  }
+  
+  let html = '';
+  runtimeInputs.forEach((input, idx) => {
+    html += `
+      <div class="cowork-step">
+        <h4>Step ${idx + 1}: ${input.label}</h4>
+        <textarea id="runtime-${input.nodeId}-${input.inputKey}" placeholder="Enter ${input.label}..."></textarea>
+      </div>
+    `;
+  });
+  
+  html += '<button class="run-workflow-btn" onclick="runWorkflow()">Run Workflow</button>';
+  form.innerHTML = html;
+}
+
+window.runWorkflow = async function() {
+  const executionDiv = document.getElementById('cowork-execution');
+  executionDiv.style.display = 'block';
+  
+  const nodes = selectedWorkflow?.nodes || workflowNodes;
+  
+  let html = '<h3 style="margin-bottom:20px;">Execution Progress</h3>';
+  nodes.forEach((node, idx) => {
+    const nodeInfo = NODE_TYPES[node.type] || { icon: '?', name: node.type };
+    html += `
+      <div class="execution-step pending" id="exec-${node.id}">
+        <div class="execution-step-icon">${idx === 0 ? '🔄' : '⏳'}</div>
+        <div class="execution-step-content">
+          <div class="execution-step-title">Step ${idx + 1}: ${nodeInfo.name}</div>
+          <div class="execution-step-status">${idx === 0 ? 'Running...' : 'Pending'}</div>
+        </div>
+      </div>
+    `;
+  });
+  executionDiv.innerHTML = html;
+  
+  for (let i = 0; i < nodes.length; i++) {
+    const node = nodes[i];
+    const stepEl = document.getElementById(`exec-${node.id}`);
+    
+    stepEl.classList.remove('pending');
+    stepEl.classList.add('in-progress');
+    stepEl.querySelector('.execution-step-icon').textContent = '🔄';
+    stepEl.querySelector('.execution-step-status').textContent = 'Running...';
+    
+    if (node.type === 'ai-agent') {
+      const runtimeData = document.getElementById(`runtime-${node.id}-data`)?.value || '';
+      const runtimeInstructions = document.getElementById(`runtime-${node.id}-instructions`)?.value || '';
+      
+      const task = node.inputs?.instructions?.source === 'runtime' 
+        ? runtimeInstructions 
+        : node.inputs?.instructions?.value || 'Process the data';
+      
+      try {
+        await fetch('/api/quack/send', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            to: node.agent || 'claude',
+            task: task,
+            context: `Workflow execution - Node: ${node.id}`
+          })
+        });
+        stepEl.querySelector('.execution-step-status').textContent = 'Sent to ' + (node.agent || 'claude') + ' via Quack';
+      } catch (error) {
+        stepEl.querySelector('.execution-step-status').textContent = 'Error: ' + error.message;
+      }
+    } else if (node.type === 'human-review') {
+      stepEl.classList.remove('in-progress');
+      stepEl.classList.add('waiting');
+      stepEl.querySelector('.execution-step-icon').textContent = '⏸️';
+      stepEl.querySelector('.execution-step-status').textContent = 'Waiting for approval...';
+      break;
+    }
+    
+    await new Promise(r => setTimeout(r, 1000));
+    
+    stepEl.classList.remove('in-progress');
+    stepEl.classList.add('completed');
+    stepEl.querySelector('.execution-step-icon').textContent = '✅';
+    stepEl.querySelector('.execution-step-status').textContent = 'Completed';
+    
+    if (i < nodes.length - 1) {
+      const nextEl = document.getElementById(`exec-${nodes[i + 1].id}`);
+      if (nextEl) {
+        nextEl.querySelector('.execution-step-icon').textContent = '🔄';
+      }
+    }
+  }
+};
+
+// ===== TEMPLATES =====
+
+const TEMPLATES = {
+  'content-pipeline': {
+    name: 'Content Pipeline',
+    nodes: [
+      { id: 'node-1', type: 'trigger', position: { x: 50, y: 100 }, inputs: {}, output: 'start' },
+      { id: 'node-2', type: 'ai-agent', agent: 'claude', position: { x: 250, y: 100 }, inputs: { data: { source: 'runtime', label: 'Upload your topics CSV' }, instructions: { source: 'fixed', value: 'Generate blog outlines for each topic' } }, output: 'outlines' },
+      { id: 'node-3', type: 'human-review', position: { x: 450, y: 100 }, inputs: { data: { source: 'previous' } }, output: 'approved' },
+      { id: 'node-4', type: 'ai-agent', agent: 'claude', position: { x: 650, y: 100 }, inputs: { data: { source: 'previous' }, instructions: { source: 'runtime', label: 'Paste your style guide' } }, output: 'articles' },
+      { id: 'node-5', type: 'output', position: { x: 850, y: 100 }, inputs: { data: { source: 'previous' } }, output: 'final' }
+    ],
+    edges: [{ from: 'node-1', to: 'node-2' }, { from: 'node-2', to: 'node-3' }, { from: 'node-3', to: 'node-4' }, { from: 'node-4', to: 'node-5' }]
+  },
+  'code-review': {
+    name: 'Code Review',
+    nodes: [
+      { id: 'node-1', type: 'trigger', position: { x: 50, y: 100 }, inputs: {}, output: 'start' },
+      { id: 'node-2', type: 'ai-agent', agent: 'claude', position: { x: 250, y: 100 }, inputs: { data: { source: 'runtime', label: 'Paste your code' }, instructions: { source: 'fixed', value: 'Review this code for bugs, security issues, and best practices' } }, output: 'review' },
+      { id: 'node-3', type: 'output', position: { x: 450, y: 100 }, inputs: { data: { source: 'previous' } }, output: 'final' }
+    ],
+    edges: [{ from: 'node-1', to: 'node-2' }, { from: 'node-2', to: 'node-3' }]
+  },
+  'data-analysis': {
+    name: 'Data Analysis',
+    nodes: [
+      { id: 'node-1', type: 'trigger', position: { x: 50, y: 100 }, inputs: {}, output: 'start' },
+      { id: 'node-2', type: 'ai-agent', agent: 'claude', position: { x: 250, y: 100 }, inputs: { data: { source: 'runtime', label: 'Upload CSV data' }, instructions: { source: 'fixed', value: 'Analyze this data and provide key insights' } }, output: 'insights' },
+      { id: 'node-3', type: 'ai-agent', agent: 'claude', position: { x: 450, y: 100 }, inputs: { data: { source: 'previous' }, instructions: { source: 'fixed', value: 'Generate a summary report from these insights' } }, output: 'report' },
+      { id: 'node-4', type: 'output', position: { x: 650, y: 100 }, inputs: { data: { source: 'previous' } }, output: 'final' }
+    ],
+    edges: [{ from: 'node-1', to: 'node-2' }, { from: 'node-2', to: 'node-3' }, { from: 'node-3', to: 'node-4' }]
+  },
+  'image-generation': {
+    name: 'Image Generation',
+    nodes: [
+      { id: 'node-1', type: 'trigger', position: { x: 50, y: 100 }, inputs: {}, output: 'start' },
+      { id: 'node-2', type: 'ai-agent', agent: 'claude', position: { x: 250, y: 100 }, inputs: { data: { source: 'runtime', label: 'Enter image prompts' }, instructions: { source: 'fixed', value: 'Generate detailed image descriptions from these prompts' } }, output: 'descriptions' },
+      { id: 'node-3', type: 'human-review', position: { x: 450, y: 100 }, inputs: { data: { source: 'previous' } }, output: 'approved' },
+      { id: 'node-4', type: 'output', position: { x: 650, y: 100 }, inputs: { data: { source: 'previous' } }, output: 'final' }
+    ],
+    edges: [{ from: 'node-1', to: 'node-2' }, { from: 'node-2', to: 'node-3' }, { from: 'node-3', to: 'node-4' }]
+  },
+  'email-processor': {
+    name: 'Email Processor',
+    nodes: [
+      { id: 'node-1', type: 'trigger', position: { x: 50, y: 100 }, inputs: {}, output: 'start' },
+      { id: 'node-2', type: 'ai-agent', agent: 'claude', position: { x: 250, y: 100 }, inputs: { data: { source: 'runtime', label: 'Paste emails' }, instructions: { source: 'fixed', value: 'Categorize these emails by urgency and topic' } }, output: 'categorized' },
+      { id: 'node-3', type: 'ai-agent', agent: 'claude', position: { x: 450, y: 100 }, inputs: { data: { source: 'previous' }, instructions: { source: 'fixed', value: 'Draft responses for each email' } }, output: 'drafts' },
+      { id: 'node-4', type: 'human-review', position: { x: 650, y: 100 }, inputs: { data: { source: 'previous' } }, output: 'approved' },
+      { id: 'node-5', type: 'output', position: { x: 850, y: 100 }, inputs: { data: { source: 'previous' } }, output: 'final' }
+    ],
+    edges: [{ from: 'node-1', to: 'node-2' }, { from: 'node-2', to: 'node-3' }, { from: 'node-3', to: 'node-4' }, { from: 'node-4', to: 'node-5' }]
+  }
+};
+
+window.loadTemplate = function(templateId) {
+  const template = TEMPLATES[templateId];
+  if (!template) return;
+  
+  clearCanvas();
+  
+  const canvas = document.getElementById('node-canvas');
+  const placeholder = canvas.querySelector('.canvas-placeholder');
+  if (placeholder) placeholder.style.display = 'none';
+  
+  workflowNodes = JSON.parse(JSON.stringify(template.nodes));
+  workflowEdges = JSON.parse(JSON.stringify(template.edges));
+  nodeIdCounter = workflowNodes.length + 1;
+  
+  workflowNodes.forEach(node => {
+    const nodeInfo = NODE_TYPES[node.type];
+    const nodeEl = document.createElement('div');
+    nodeEl.className = 'workflow-node';
+    nodeEl.id = node.id;
+    nodeEl.style.left = node.position.x + 'px';
+    nodeEl.style.top = node.position.y + 'px';
+    nodeEl.style.borderColor = nodeInfo.color;
+    nodeEl.innerHTML = `
+      <div class="node-connector input"></div>
+      <div class="node-header">
+        <span class="node-icon">${nodeInfo.icon}</span>
+        <span>${nodeInfo.name}</span>
+      </div>
+      <div class="node-body">${getNodeDescription(node)}</div>
+      <div class="node-connector output"></div>
+    `;
+    
+    nodeEl.addEventListener('click', (e) => {
+      e.stopPropagation();
+      selectNode(node.id);
+    });
+    
+    makeNodeDraggable(nodeEl);
+    canvas.appendChild(nodeEl);
+  });
+  
+  document.querySelector('[data-tab="logic-process"]').click();
+  currentWorkflow = { id: 'template-' + templateId, name: template.name, nodes: workflowNodes, edges: workflowEdges };
+};
+
+document.addEventListener('DOMContentLoaded', () => {
+  initNodeEditor();
+  loadCoworkWorkflows();
+});

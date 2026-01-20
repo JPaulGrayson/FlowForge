@@ -302,6 +302,33 @@ app.post("/api/mcp/sse", async (req, res) => {
 
 app.get("/api/mcp/tools", (_, res) => res.json({ tools: MCP_TOOLS }));
 
+app.get("/api/workflows", async (_, res) => {
+  try {
+    const workflows = await listWorkflows();
+    res.json({ workflows });
+  } catch (e: any) {
+    res.status(500).json({ error: e.message });
+  }
+});
+
+app.get("/api/workflows/:id", async (req, res) => {
+  try {
+    const workflow = await loadWorkflow(req.params.id);
+    res.json({ workflow });
+  } catch (e: any) {
+    res.status(404).json({ error: "Workflow not found" });
+  }
+});
+
+app.post("/api/workflows", async (req, res) => {
+  try {
+    const id = await saveWorkflow(req.body);
+    res.json({ success: true, id });
+  } catch (e: any) {
+    res.status(500).json({ error: e.message });
+  }
+});
+
 app.get("/api/examples/:name", async (req, res) => {
   const { name } = req.params;
   const filePath = path.join(__dirname, `../examples/${name}.json`);
