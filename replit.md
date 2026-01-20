@@ -78,7 +78,34 @@ Quack (quack.us.com) enables agent-to-agent messaging with workflow management:
 - `quack_update_status` - Update message status
 - `quack_send` - Send task to another agent
 
-**Control Room**: Dashboard tab for viewing agent tiles, message counts, and managing message workflows with approve/start/complete/fail actions.
+**Control Room**: Unified dashboard with Quick Actions, Activity Feed, Active Workflows, and Settings.
+
+## Control Room Features
+
+### Quick Actions Bar
+- **Send Quack**: Open modal to send message to any agent inbox
+- **New Workflow**: Navigate to LogicProcess Build Mode
+- **Analyze Code**: Open LogicArt code analysis modal
+- **Run Template**: Dropdown to run any saved template
+- **Refresh All**: Refresh inboxes and workflow status
+
+### Activity Feed
+Real-time stream of all events across the system with filters:
+- Quack messages (new, approved, completed)
+- Workflow events (started, waiting, completed, failed)
+- LogicArt analysis completions
+
+### Active Workflows Panel
+Shows currently running workflows with:
+- Progress bar showing current step
+- Status badge (Running, Waiting, Paused)
+- Quick actions: View, Pause, Cancel, Review Now
+
+### Settings Page
+- **API Keys (BYOK)**: Enter own keys for Anthropic, OpenAI, Google
+- **Webhooks**: Configure auto-dispatch and completion URLs
+- **Notifications**: Sound, toast, email preferences
+- **Appearance**: Theme and default tab selection
 
 ## LogicProcess Node Types
 
@@ -101,6 +128,8 @@ Quack (quack.us.com) enables agent-to-agent messaging with workflow management:
 
 ## Recent Changes
 
+- 2026-01-20: Enhanced Control Room with Quick Actions, Activity Feed, Active Workflows panel
+- 2026-01-20: Added Settings page with API Keys, Webhooks, Notifications configuration
 - 2026-01-20: Added LogicProcess visual node editor (Build Mode)
 - 2026-01-20: Added CoWork execution UI (Run Mode)
 - 2026-01-20: Added Template Library with 5 pre-built workflows
