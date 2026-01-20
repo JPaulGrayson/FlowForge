@@ -103,8 +103,34 @@
       <section id="control-room" class="tab-content">
         <div class="section-header">
           <h2>Quack Control Room</h2>
-          <button class="btn-primary" onclick="refreshControlRoom()">Refresh</button>
+          <button class="btn-secondary" onclick="openSettings()">Settings</button>
         </div>
+        
+        <!-- Quick Actions Bar -->
+        <div class="quick-actions-bar">
+          <button class="quick-action-btn" onclick="openSendQuackModal()">
+            <span class="quick-action-icon">🦆</span>
+            <span>Send Quack</span>
+          </button>
+          <button class="quick-action-btn" onclick="document.querySelector('[data-tab=&quot;logic-process&quot;]').click()">
+            <span class="quick-action-icon">➕</span>
+            <span>New Workflow</span>
+          </button>
+          <button class="quick-action-btn" onclick="openAnalyzeModal()">
+            <span class="quick-action-icon">📊</span>
+            <span>Analyze Code</span>
+          </button>
+          <button class="quick-action-btn" onclick="openTemplateDropdown(event)">
+            <span class="quick-action-icon">📋</span>
+            <span>Run Template</span>
+          </button>
+          <button class="quick-action-btn" onclick="refreshControlRoom()">
+            <span class="quick-action-icon">🔄</span>
+            <span>Refresh All</span>
+          </button>
+        </div>
+        
+        <!-- Stats Bar -->
         <div class="control-room-stats" id="control-room-stats">
           <div class="stat-card">
             <div class="stat-value" id="stat-inboxes">0</div>
@@ -118,9 +144,174 @@
             <div class="stat-value" id="stat-pending">0</div>
             <div class="stat-label">Pending</div>
           </div>
+          <div class="stat-card workflows">
+            <div class="stat-value" id="stat-workflows">0</div>
+            <div class="stat-label">Active</div>
+          </div>
+        </div>
+        
+        <div class="control-room-grid">
+          <!-- Active Workflows Panel -->
+          <div class="active-workflows-panel">
+            <div class="panel-header">
+              <h3>Active Workflows</h3>
+              <button class="btn-link" onclick="document.querySelector('[data-tab=&quot;cowork&quot;]').click()">View All</button>
+            </div>
+            <div id="active-workflows-list" class="active-workflows-list">
+              <p class="empty-state-small">No active workflows</p>
+            </div>
+          </div>
+          
+          <!-- Activity Feed -->
+          <div class="activity-feed-panel">
+            <div class="panel-header">
+              <h3>Recent Activity</h3>
+              <select id="activity-filter" onchange="filterActivity()">
+                <option value="all">All Events</option>
+                <option value="quack">Quack Messages</option>
+                <option value="workflow">Workflows</option>
+                <option value="logicart">LogicArt</option>
+              </select>
+            </div>
+            <div id="activity-feed" class="activity-feed">
+              <p class="empty-state-small">No recent activity</p>
+            </div>
+          </div>
+        </div>
+        
+        <!-- Agent Tiles -->
+        <div class="panel-header" style="margin-top:20px;">
+          <h3>Agent Inboxes</h3>
         </div>
         <div id="agent-tiles" class="agent-tiles-grid">
           <p class="loading">Loading agent inboxes...</p>
+        </div>
+      </section>
+      
+      <!-- Settings Section -->
+      <section id="settings" class="tab-content">
+        <div class="section-header">
+          <h2>Settings</h2>
+          <button class="btn-secondary" onclick="document.querySelector('[data-tab=&quot;control-room&quot;]').click()">Back</button>
+        </div>
+        
+        <div class="settings-grid">
+          <!-- API Keys Section -->
+          <div class="settings-section">
+            <h3>API Keys (BYOK)</h3>
+            <p class="settings-desc">Enter your own API keys for AI models</p>
+            
+            <div class="settings-field">
+              <label>Anthropic API Key</label>
+              <div class="settings-input-row">
+                <input type="password" id="api-anthropic" placeholder="sk-ant-..." value="">
+                <button class="btn-small" onclick="testApiKey('anthropic')">Test</button>
+                <button class="btn-small btn-danger" onclick="clearApiKey('anthropic')">Clear</button>
+              </div>
+            </div>
+            
+            <div class="settings-field">
+              <label>OpenAI API Key</label>
+              <div class="settings-input-row">
+                <input type="password" id="api-openai" placeholder="sk-..." value="">
+                <button class="btn-small" onclick="testApiKey('openai')">Test</button>
+                <button class="btn-small btn-danger" onclick="clearApiKey('openai')">Clear</button>
+              </div>
+            </div>
+            
+            <div class="settings-field">
+              <label>Google AI API Key</label>
+              <div class="settings-input-row">
+                <input type="password" id="api-google" placeholder="AIza..." value="">
+                <button class="btn-small" onclick="testApiKey('google')">Test</button>
+                <button class="btn-small btn-danger" onclick="clearApiKey('google')">Clear</button>
+              </div>
+            </div>
+          </div>
+          
+          <!-- Webhooks Section -->
+          <div class="settings-section">
+            <h3>Webhooks</h3>
+            <p class="settings-desc">Configure webhook URLs for automation</p>
+            
+            <div class="settings-field">
+              <label>Replit Auto-Dispatch URL</label>
+              <div class="settings-input-row">
+                <input type="text" id="webhook-replit" placeholder="https://your-app.replit.app/api/task">
+                <button class="btn-small" onclick="testWebhook('replit')">Test</button>
+              </div>
+            </div>
+            
+            <div class="settings-field">
+              <label>Workflow Completion Webhook</label>
+              <div class="settings-input-row">
+                <input type="text" id="webhook-completion" placeholder="https://...">
+                <button class="btn-small" onclick="testWebhook('completion')">Test</button>
+              </div>
+            </div>
+          </div>
+          
+          <!-- Notifications Section -->
+          <div class="settings-section">
+            <h3>Notifications</h3>
+            <p class="settings-desc">Configure notification preferences</p>
+            
+            <div class="settings-checkbox">
+              <input type="checkbox" id="notify-sound" checked>
+              <label for="notify-sound">Sound notifications (quack!)</label>
+            </div>
+            
+            <div class="settings-checkbox">
+              <input type="checkbox" id="notify-toast" checked>
+              <label for="notify-toast">Toast notifications</label>
+            </div>
+            
+            <div class="settings-checkbox">
+              <input type="checkbox" id="notify-email">
+              <label for="notify-email">Email notifications</label>
+            </div>
+            
+            <div class="settings-field" style="margin-top:15px;">
+              <label>Refresh Interval</label>
+              <select id="refresh-interval">
+                <option value="5">5 seconds</option>
+                <option value="8" selected>8 seconds</option>
+                <option value="15">15 seconds</option>
+                <option value="30">30 seconds</option>
+                <option value="60">1 minute</option>
+              </select>
+            </div>
+          </div>
+          
+          <!-- Appearance Section -->
+          <div class="settings-section">
+            <h3>Appearance</h3>
+            <p class="settings-desc">Customize the look and feel</p>
+            
+            <div class="settings-field">
+              <label>Theme</label>
+              <select id="theme-select">
+                <option value="dark" selected>Dark</option>
+                <option value="light">Light</option>
+                <option value="auto">System</option>
+              </select>
+            </div>
+            
+            <div class="settings-field">
+              <label>Default Tab</label>
+              <select id="default-tab">
+                <option value="workflows">Workflows</option>
+                <option value="control-room" selected>Control Room</option>
+                <option value="logic-process">LogicProcess</option>
+                <option value="cowork">CoWork</option>
+              </select>
+            </div>
+          </div>
+        </div>
+        
+        <div class="settings-actions">
+          <button class="btn-primary" onclick="saveSettings()">Save Changes</button>
+          <button class="btn-secondary" onclick="resetSettings()">Reset to Defaults</button>
         </div>
       </section>
 

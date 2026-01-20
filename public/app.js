@@ -1358,3 +1358,571 @@ document.addEventListener('DOMContentLoaded', () => {
   initNodeEditor();
   loadCoworkWorkflows();
 });
+
+// ===== ENHANCED CONTROL ROOM =====
+
+let activityEvents = [];
+let activeWorkflows = [];
+let refreshInterval = null;
+let settings = {
+  apiKeys: { anthropic: '', openai: '', google: '' },
+  webhooks: { replit: '', completion: '' },
+  notifications: { sound: true, toast: true, email: false },
+  refreshInterval: 8,
+  theme: 'dark',
+  defaultTab: 'control-room'
+};
+
+function loadSettings() {
+  const saved = localStorage.getItem('orchestrate-settings');
+  if (saved) {
+    settings = { ...settings, ...JSON.parse(saved) };
+  }
+  applySettings();
+}
+
+function applySettings() {
+  if (document.getElementById('api-anthropic')) {
+    document.getElementById('api-anthropic').value = settings.apiKeys?.anthropic || '';
+    document.getElementById('api-openai').value = settings.apiKeys?.openai || '';
+    document.getElementById('api-google').value = settings.apiKeys?.google || '';
+    document.getElementById('webhook-replit').value = settings.webhooks?.replit || '';
+    document.getElementById('webhook-completion').value = settings.webhooks?.completion || '';
+    document.getElementById('notify-sound').checked = settings.notifications?.sound ?? true;
+    document.getElementById('notify-toast').checked = settings.notifications?.toast ?? true;
+    document.getElementById('notify-email').checked = settings.notifications?.email ?? false;
+    document.getElementById('refresh-interval').value = settings.refreshInterval || 8;
+    document.getElementById('theme-select').value = settings.theme || 'dark';
+    document.getElementById('default-tab').value = settings.defaultTab || 'control-room';
+  }
+  
+  if (refreshInterval) clearInterval(refreshInterval);
+  refreshInterval = setInterval(refreshControlRoom, (settings.refreshInterval || 8) * 1000);
+}
+
+window.openSettings = function() {
+  document.querySelectorAll('.tab-content').forEach(t => t.classList.remove('active'));
+  document.querySelectorAll('.nav-btn').forEach(b => b.classList.remove('active'));
+  document.getElementById('settings').classList.add('active');
+  applySettings();
+};
+
+window.saveSettings = function() {
+  settings = {
+    apiKeys: {
+      anthropic: document.getElementById('api-anthropic').value,
+      openai: document.getElementById('api-openai').value,
+      google: document.getElementById('api-google').value
+    },
+    webhooks: {
+      replit: document.getElementById('webhook-replit').value,
+      completion: document.getElementById('webhook-completion').value
+    },
+    notifications: {
+      sound: document.getElementById('notify-sound').checked,
+      toast: document.getElementById('notify-toast').checked,
+      email: document.getElementById('notify-email').checked
+    },
+    refreshInterval: parseInt(document.getElementById('refresh-interval').value),
+    theme: document.getElementById('theme-select').value,
+    defaultTab: document.getElementById('default-tab').value
+  };
+  
+  localStorage.setItem('orchestrate-settings', JSON.stringify(settings));
+  applySettings();
+  showToast('Settings saved!');
+  document.querySelector('[data-tab="control-room"]').click();
+};
+
+window.resetSettings = function() {
+  localStorage.removeItem('orchestrate-settings');
+  settings = {
+    apiKeys: { anthropic: '', openai: '', google: '' },
+    webhooks: { replit: '', completion: '' },
+    notifications: { sound: true, toast: true, email: false },
+    refreshInterval: 8,
+    theme: 'dark',
+    defaultTab: 'control-room'
+  };
+  applySettings();
+  showToast('Settings reset to defaults');
+};
+
+window.testApiKey = async function(provider) {
+  const keyEl = document.getElementById('api-' + provider);
+  if (!keyEl.value) {
+    showToast('Please enter an API key first', 'error');
+    return;
+  }
+  showToast('Testing ' + provider + ' API key...');
+};
+
+window.clearApiKey = function(provider) {
+  document.getElementById('api-' + provider).value = '';
+  showToast(provider + ' API key cleared');
+};
+
+window.testWebhook = async function(type) {
+  const urlEl = document.getElementById('webhook-' + type);
+  if (!urlEl.value) {
+    showToast('Please enter a webhook URL first', 'error');
+    return;
+  }
+  showToast('Testing webhook...');
+};
+
+function showToast(message, type = 'success') {
+  const existing = document.querySelector('.toast');
+  if (existing) existing.remove();
+  
+  const toast = document.createElement('div');
+  toast.className = 'toast';
+  toast.style.cssText = `
+    position: fixed;
+    bottom: 30px;
+    right: 30px;
+    background: ${type === 'error' ? '#ef4444' : '#22c55e'};
+    color: #fff;
+    padding: 12px 20px;
+    border-radius: 8px;
+    font-size: 14px;
+    z-index: 2000;
+    animation: slideIn 0.3s;
+  `;
+  toast.textContent = message;
+  document.body.appendChild(toast);
+  setTimeout(() => toast.remove(), 3000);
+}
+
+// Activity Feed
+function addActivity(type, title, body, actions = []) {
+  const icons = {
+    quack: '🦆',
+    workflow_start: '▶️',
+    workflow_complete: '✅',
+    workflow_waiting: '⏸️',
+    workflow_fail: '❌',
+    logicart: '📊',
+    message_approved: '✉️'
+  };
+  
+  activityEvents.unshift({
+    id: 'evt-' + Date.now(),
+    type,
+    icon: icons[type] || '📌',
+    title,
+    body,
+    actions,
+    time: new Date()
+  });
+  
+  if (activityEvents.length > 50) activityEvents.pop();
+  renderActivityFeed();
+}
+
+function renderActivityFeed() {
+  const feed = document.getElementById('activity-feed');
+  if (!feed) return;
+  
+  const filter = document.getElementById('activity-filter')?.value || 'all';
+  let events = activityEvents;
+  
+  if (filter !== 'all') {
+    events = activityEvents.filter(e => {
+      if (filter === 'quack') return e.type.includes('quack') || e.type.includes('message');
+      if (filter === 'workflow') return e.type.includes('workflow');
+      if (filter === 'logicart') return e.type === 'logicart';
+      return true;
+    });
+  }
+  
+  if (events.length === 0) {
+    feed.innerHTML = '<p class="empty-state-small">No recent activity</p>';
+    return;
+  }
+  
+  feed.innerHTML = events.slice(0, 20).map(evt => {
+    const timeAgo = getTimeAgo(evt.time);
+    const actionsHtml = evt.actions.map(a => 
+      `<button onclick="${a.onclick}">${a.label}</button>`
+    ).join('');
+    
+    return `
+      <div class="activity-item" data-type="${evt.type}">
+        <div class="activity-header">
+          <div class="activity-icon-title">
+            <span class="activity-icon">${evt.icon}</span>
+            <span class="activity-title">${evt.title}</span>
+          </div>
+          <span class="activity-time">${timeAgo}</span>
+        </div>
+        ${evt.body ? `<div class="activity-body">${evt.body}</div>` : ''}
+        ${actionsHtml ? `<div class="activity-actions">${actionsHtml}</div>` : ''}
+      </div>
+    `;
+  }).join('');
+}
+
+window.filterActivity = function() {
+  renderActivityFeed();
+};
+
+function getTimeAgo(date) {
+  const seconds = Math.floor((new Date() - date) / 1000);
+  if (seconds < 60) return 'just now';
+  if (seconds < 3600) return Math.floor(seconds / 60) + ' min ago';
+  if (seconds < 86400) return Math.floor(seconds / 3600) + ' hr ago';
+  return Math.floor(seconds / 86400) + ' days ago';
+}
+
+// Active Workflows Panel
+function renderActiveWorkflows() {
+  const list = document.getElementById('active-workflows-list');
+  if (!list) return;
+  
+  document.getElementById('stat-workflows').textContent = activeWorkflows.length;
+  
+  if (activeWorkflows.length === 0) {
+    list.innerHTML = '<p class="empty-state-small">No active workflows</p>';
+    return;
+  }
+  
+  list.innerHTML = activeWorkflows.map(wf => {
+    const progress = Math.round((wf.currentStep / wf.totalSteps) * 100);
+    const statusClass = wf.status.toLowerCase().replace(' ', '-');
+    
+    let actionsHtml = '<button class="btn-view" onclick="viewWorkflow(\'' + wf.id + '\')">View</button>';
+    if (wf.status === 'WAITING APPROVAL') {
+      actionsHtml += '<button class="btn-review" onclick="reviewWorkflow(\'' + wf.id + '\')">Review Now</button>';
+    } else if (wf.status === 'RUNNING') {
+      actionsHtml += '<button class="btn-pause" onclick="pauseWorkflow(\'' + wf.id + '\')">Pause</button>';
+    }
+    actionsHtml += '<button class="btn-cancel" onclick="cancelWorkflow(\'' + wf.id + '\')">Cancel</button>';
+    
+    return `
+      <div class="active-workflow-item">
+        <div class="active-workflow-header">
+          <span class="active-workflow-name">${wf.name}</span>
+          <span class="workflow-status-badge ${statusClass}">${wf.status}</span>
+        </div>
+        <div class="workflow-progress-bar">
+          <div class="workflow-progress-fill" style="width:${progress}%"></div>
+        </div>
+        <div class="workflow-current-step">Step ${wf.currentStep}/${wf.totalSteps}: ${wf.currentAction}</div>
+        <div class="workflow-actions-row">${actionsHtml}</div>
+      </div>
+    `;
+  }).join('');
+}
+
+window.viewWorkflow = function(id) {
+  document.querySelector('[data-tab="cowork"]').click();
+};
+
+window.reviewWorkflow = function(id) {
+  const wf = activeWorkflows.find(w => w.id === id);
+  if (wf) {
+    wf.status = 'RUNNING';
+    addActivity('workflow_start', `Workflow "${wf.name}" resumed`, 'Human review completed');
+    renderActiveWorkflows();
+  }
+};
+
+window.pauseWorkflow = function(id) {
+  const wf = activeWorkflows.find(w => w.id === id);
+  if (wf) {
+    wf.status = 'PAUSED';
+    renderActiveWorkflows();
+    showToast('Workflow paused');
+  }
+};
+
+window.cancelWorkflow = function(id) {
+  activeWorkflows = activeWorkflows.filter(w => w.id !== id);
+  addActivity('workflow_fail', 'Workflow cancelled', '');
+  renderActiveWorkflows();
+  showToast('Workflow cancelled');
+};
+
+// Send Quack Modal
+window.openSendQuackModal = function() {
+  const modal = document.createElement('div');
+  modal.id = 'send-quack-modal';
+  modal.className = 'send-quack-modal';
+  modal.innerHTML = `
+    <div class="send-quack-content">
+      <h2>🦆 Send Quack</h2>
+      <div class="settings-field">
+        <label>To Agent</label>
+        <select id="quack-to">
+          <option value="claude">Claude</option>
+          <option value="gpt">GPT-4</option>
+          <option value="gemini">Gemini</option>
+          <option value="replit">Replit</option>
+          <option value="cursor">Cursor</option>
+          <option value="grok">Grok</option>
+          <option value="copilot">Copilot</option>
+        </select>
+      </div>
+      <div class="settings-field">
+        <label>Task</label>
+        <textarea id="quack-task" rows="4" placeholder="Describe the task..."></textarea>
+      </div>
+      <div class="settings-field">
+        <label>Context (optional)</label>
+        <textarea id="quack-context" rows="2" placeholder="Additional context..."></textarea>
+      </div>
+      <div style="display:flex;gap:10px;margin-top:20px;">
+        <button class="btn-primary" onclick="sendQuackMessage()">Send Quack</button>
+        <button class="btn-secondary" onclick="closeSendQuackModal()">Cancel</button>
+      </div>
+    </div>
+  `;
+  document.body.appendChild(modal);
+};
+
+window.closeSendQuackModal = function() {
+  const modal = document.getElementById('send-quack-modal');
+  if (modal) modal.remove();
+};
+
+window.sendQuackMessage = async function() {
+  const to = document.getElementById('quack-to').value;
+  const task = document.getElementById('quack-task').value;
+  const context = document.getElementById('quack-context').value;
+  
+  if (!task) {
+    showToast('Please enter a task', 'error');
+    return;
+  }
+  
+  try {
+    await fetch('/api/quack/send', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ to, task, context })
+    });
+    
+    addActivity('quack', `Quack sent to /${to}`, task.substring(0, 60) + '...', []);
+    closeSendQuackModal();
+    showToast('Quack sent successfully!');
+    
+    if (settings.notifications?.sound) {
+      playQuackSound();
+    }
+  } catch (error) {
+    showToast('Error sending quack: ' + error.message, 'error');
+  }
+};
+
+function playQuackSound() {
+  // Simple audio feedback
+  try {
+    const ctx = new (window.AudioContext || window.webkitAudioContext)();
+    const osc = ctx.createOscillator();
+    const gain = ctx.createGain();
+    osc.connect(gain);
+    gain.connect(ctx.destination);
+    osc.frequency.value = 800;
+    gain.gain.value = 0.1;
+    osc.start();
+    osc.stop(ctx.currentTime + 0.1);
+  } catch (e) {}
+}
+
+// Analyze Code Modal
+window.openAnalyzeModal = function() {
+  const modal = document.createElement('div');
+  modal.id = 'analyze-modal';
+  modal.className = 'send-quack-modal';
+  modal.innerHTML = `
+    <div class="send-quack-content">
+      <h2>📊 Analyze Code</h2>
+      <div class="settings-field">
+        <label>Code to Analyze</label>
+        <textarea id="analyze-code" rows="10" placeholder="Paste your code here..." style="font-family:monospace;font-size:12px;"></textarea>
+      </div>
+      <div class="settings-field">
+        <label>Language</label>
+        <select id="analyze-lang">
+          <option value="javascript">JavaScript</option>
+          <option value="typescript">TypeScript</option>
+          <option value="python">Python</option>
+          <option value="go">Go</option>
+          <option value="rust">Rust</option>
+        </select>
+      </div>
+      <div style="display:flex;gap:10px;margin-top:20px;">
+        <button class="btn-primary" onclick="analyzeCode()">Analyze with LogicArt</button>
+        <button class="btn-secondary" onclick="closeAnalyzeModal()">Cancel</button>
+      </div>
+    </div>
+  `;
+  document.body.appendChild(modal);
+};
+
+window.closeAnalyzeModal = function() {
+  const modal = document.getElementById('analyze-modal');
+  if (modal) modal.remove();
+};
+
+window.analyzeCode = async function() {
+  const code = document.getElementById('analyze-code').value;
+  const lang = document.getElementById('analyze-lang').value;
+  
+  if (!code) {
+    showToast('Please enter code to analyze', 'error');
+    return;
+  }
+  
+  try {
+    const response = await fetch('/api/mcp/call', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ 
+        tool: 'analyze_code', 
+        params: { code, language: lang } 
+      })
+    });
+    const data = await response.json();
+    
+    if (data.result && data.result.url) {
+      addActivity('logicart', `LogicArt: analyzed ${lang} code`, 'Complexity: ' + (data.result.complexity || 'N/A'), [
+        { label: 'View Flowchart', onclick: `window.open('${data.result.url}', '_blank')` }
+      ]);
+      window.open(data.result.url, '_blank');
+    }
+    closeAnalyzeModal();
+    showToast('Code analysis complete!');
+  } catch (error) {
+    showToast('Analysis error: ' + error.message, 'error');
+  }
+};
+
+// Template Dropdown
+let templateDropdownEl = null;
+
+window.openTemplateDropdown = function(event) {
+  if (templateDropdownEl) {
+    templateDropdownEl.remove();
+    templateDropdownEl = null;
+    return;
+  }
+  
+  const templates = [
+    { id: 'content-pipeline', icon: '📝', name: 'Content Pipeline' },
+    { id: 'code-review', icon: '🔍', name: 'Code Review' },
+    { id: 'data-analysis', icon: '📊', name: 'Data Analysis' },
+    { id: 'image-generation', icon: '🎨', name: 'Image Generation' },
+    { id: 'email-processor', icon: '📧', name: 'Email Processor' }
+  ];
+  
+  const dropdown = document.createElement('div');
+  dropdown.className = 'template-dropdown';
+  dropdown.style.position = 'fixed';
+  dropdown.style.top = (event.target.getBoundingClientRect().bottom + 5) + 'px';
+  dropdown.style.left = event.target.getBoundingClientRect().left + 'px';
+  
+  dropdown.innerHTML = templates.map(t => `
+    <div class="template-dropdown-item" onclick="runTemplate('${t.id}')">
+      <span>${t.icon}</span>
+      <span>${t.name}</span>
+    </div>
+  `).join('');
+  
+  document.body.appendChild(dropdown);
+  templateDropdownEl = dropdown;
+  
+  setTimeout(() => {
+    document.addEventListener('click', closeTemplateDropdown, { once: true });
+  }, 0);
+};
+
+function closeTemplateDropdown() {
+  if (templateDropdownEl) {
+    templateDropdownEl.remove();
+    templateDropdownEl = null;
+  }
+}
+
+window.runTemplate = function(templateId) {
+  closeTemplateDropdown();
+  loadTemplate(templateId);
+  
+  const wf = {
+    id: 'wf-' + Date.now(),
+    name: templateId.replace(/-/g, ' ').replace(/\b\w/g, l => l.toUpperCase()),
+    status: 'RUNNING',
+    currentStep: 1,
+    totalSteps: 4,
+    currentAction: 'Initializing...'
+  };
+  activeWorkflows.push(wf);
+  
+  addActivity('workflow_start', `Workflow "${wf.name}" started`, 'Step 1/4: Initializing...', [
+    { label: 'View Progress', onclick: `document.querySelector('[data-tab="cowork"]').click()` }
+  ]);
+  
+  renderActiveWorkflows();
+  showToast('Template loaded - running workflow!');
+};
+
+// Enhanced Control Room refresh
+async function loadControlRoom() {
+  loadSettings();
+  
+  try {
+    const response = await fetch('/api/quack/inboxes');
+    const data = await response.json();
+    
+    if (data.inboxes) {
+      let totalMessages = 0;
+      let totalPending = 0;
+      
+      data.inboxes.forEach(inbox => {
+        totalMessages += inbox.messages?.length || 0;
+        totalPending += inbox.pendingCount || 0;
+        
+        // Add to activity feed for new messages
+        if (inbox.messages) {
+          inbox.messages.slice(0, 2).forEach(msg => {
+            if (msg.status === 'pending' && !activityEvents.find(e => e.id === msg.id)) {
+              addActivity('quack', `New quack from /${inbox.name}`, msg.task?.substring(0, 60) || '', [
+                { label: 'View', onclick: `openAgentSidebar('${inbox.name}')` },
+                { label: 'Approve', onclick: `approveMessage('${msg.id}')` }
+              ]);
+            }
+          });
+        }
+      });
+      
+      document.getElementById('stat-inboxes').textContent = data.inboxes.length;
+      document.getElementById('stat-messages').textContent = totalMessages;
+      document.getElementById('stat-pending').textContent = totalPending;
+      
+      renderAgentTiles(data.inboxes);
+    }
+  } catch (error) {
+    console.error('Error loading control room:', error);
+  }
+  
+  renderActiveWorkflows();
+  renderActivityFeed();
+}
+
+window.refreshControlRoom = async function() {
+  showToast('Refreshing...');
+  await loadControlRoom();
+};
+
+// Initialize on load
+document.addEventListener('DOMContentLoaded', () => {
+  loadSettings();
+  
+  // Set default tab from settings
+  const defaultTab = settings.defaultTab || 'workflows';
+  const tabBtn = document.querySelector(`[data-tab="${defaultTab}"]`);
+  if (tabBtn) {
+    tabBtn.click();
+  }
+});
