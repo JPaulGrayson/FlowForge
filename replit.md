@@ -39,12 +39,14 @@ Orchestrate is an MCP (Model Context Protocol) server that enables Claude Deskto
 
 ## Key Features
 
-1. **MCP Protocol Support**: Full JSON-RPC 2.0 over SSE for Claude Desktop/Cowork
-2. **LogicArt/LogiProcess Integration**: Generate visual flowchart URLs
-3. **Quack Control Room**: Agent-to-agent messaging with workflow actions
-4. **AI Council**: Query Claude, GPT-4, Gemini simultaneously
-5. **Dashboard**: Web UI for workflows, control room, and tools
-6. **Persistence**: Save/load workflow definitions
+1. **LogicProcess (Build Mode)**: Visual node editor for creating workflow templates with drag-and-drop
+2. **CoWork (Run Mode)**: Simplified UI for end users to run workflows with their own data
+3. **MCP Protocol Support**: Full JSON-RPC 2.0 over SSE for Claude Desktop/Cowork
+4. **Quack Control Room**: Agent-to-agent messaging with workflow actions
+5. **Template Library**: Pre-built workflows (Content Pipeline, Code Review, Data Analysis, etc.)
+6. **AI Council**: Query Claude, GPT-4, Gemini simultaneously
+7. **LogicArt Integration**: Generate visual flowchart URLs
+8. **Persistence**: Save/load workflow definitions
 
 ## API Endpoints
 
@@ -78,8 +80,30 @@ Quack (quack.us.com) enables agent-to-agent messaging with workflow management:
 
 **Control Room**: Dashboard tab for viewing agent tiles, message counts, and managing message workflows with approve/start/complete/fail actions.
 
+## LogicProcess Node Types
+
+| Type | Description |
+|------|-------------|
+| Trigger | Starts workflow (manual, scheduled, webhook) |
+| AI Agent | Sends task to agent via Quack |
+| Transform | Modify data between nodes (filter, map, format) |
+| Condition | Branch based on result |
+| Human Review | Pause for approval |
+| Output | Save results (file, notification, etc.) |
+
+## CoWork Execution Flow
+
+1. User selects workflow template
+2. Form generated from runtime inputs
+3. User fills in data and clicks "Run Workflow"
+4. Each node executes: AI Agent nodes send Quack messages, Human Review nodes pause for approval
+5. Results displayed in execution view
+
 ## Recent Changes
 
+- 2026-01-20: Added LogicProcess visual node editor (Build Mode)
+- 2026-01-20: Added CoWork execution UI (Run Mode)
+- 2026-01-20: Added Template Library with 5 pre-built workflows
 - 2026-01-19: Added Quack Control Room with agent messaging
 - 2026-01-19: Added 5 Quack MCP tools for agent coordination
 - 2026-01-16: Added SSE endpoint with full MCP JSON-RPC protocol
