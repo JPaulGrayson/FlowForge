@@ -134,6 +134,7 @@ Shows currently running workflows with:
 
 ## Recent Changes
 
+- 2026-01-22: Added Voyai authentication check - redirects to voyai.org/login if not authenticated
 - 2026-01-22: Added Quack task receiving endpoint (`/api/task`) and my-inbox endpoint
 - 2026-01-20: Enhanced Control Room with Quick Actions, Activity Feed, Active Workflows panel
 - 2026-01-20: Added Settings page with API Keys, Webhooks, Notifications configuration

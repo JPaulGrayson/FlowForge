@@ -1914,8 +1914,34 @@ window.refreshControlRoom = async function() {
   await loadControlRoom();
 };
 
+// Voyai authentication check
+let voyaiStatus = null;
+
+async function checkVoyaiAuth() {
+  try {
+    const res = await fetch("https://voyai.org/api/orchestrate/status", {
+      credentials: "include"
+    });
+    if (!res.ok) {
+      const returnUrl = encodeURIComponent(window.location.href);
+      window.location.href = `https://voyai.org/login?return_to=${returnUrl}`;
+      return null;
+    }
+    return await res.json();
+  } catch (e) {
+    const returnUrl = encodeURIComponent(window.location.href);
+    window.location.href = `https://voyai.org/login?return_to=${returnUrl}`;
+    return null;
+  }
+}
+
 // Initialize on load
-document.addEventListener('DOMContentLoaded', () => {
+document.addEventListener('DOMContentLoaded', async () => {
+  // Check Voyai authentication first
+  voyaiStatus = await checkVoyaiAuth();
+  if (!voyaiStatus) return; // Will redirect to login
+  
+  // User is authenticated, proceed with app initialization
   loadSettings();
   
   // Set default tab from settings
