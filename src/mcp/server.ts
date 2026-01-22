@@ -464,5 +464,44 @@ app.get("/api/quack/my-inbox", async (_, res) => {
   }
 });
 
+// Voyai Bundle Status and Subscription endpoints
+app.get("/api/orchestrate/status", async (_, res) => {
+  // Return current bundle status
+  // In production, this would check against Voyai's API
+  res.json({
+    active: true,
+    plan: "orchestrate",
+    features: ["quack_premium", "logicart_pro", "logicprocess"],
+    expiresAt: new Date(Date.now() + 30 * 24 * 60 * 60 * 1000).toISOString(),
+    usage: {
+      quackMessages: 0,
+      workflowRuns: 0,
+      logicArtVisualizations: 0
+    }
+  });
+});
+
+app.post("/api/orchestrate/subscribe", async (req, res) => {
+  const { email, plan } = req.body;
+  
+  if (!email || !plan) {
+    return res.status(400).json({ success: false, message: "Email and plan required" });
+  }
+  
+  const validPlans = ['orchestrate', 'enterprise'];
+  if (!validPlans.includes(plan)) {
+    return res.status(400).json({ success: false, message: `Invalid plan. Must be one of: ${validPlans.join(', ')}` });
+  }
+  
+  // In production, this would create a Stripe checkout session
+  const subscriptionId = `sub_${Date.now()}`;
+  res.json({
+    success: true,
+    subscriptionId,
+    checkoutUrl: `https://voyai.org/checkout/${subscriptionId}`,
+    message: `Subscription created for ${email} on ${plan} plan`
+  });
+});
+
 const PORT = parseInt(process.env.PORT || "5000", 10);
 app.listen(PORT, "0.0.0.0", () => console.log(`Orchestrate MCP on port ${PORT}`));
