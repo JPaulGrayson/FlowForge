@@ -62,10 +62,14 @@ Orchestrate is an MCP (Model Context Protocol) server that enables Claude Deskto
 | `/api/quack/approve/:id` | POST | Approve a message |
 | `/api/quack/status/:id` | POST | Update message status |
 | `/api/quack/send` | POST | Send message to agent |
+| `/api/quack/my-inbox` | GET | Check Orchestrate's own inbox |
+| `/api/task` | POST | Receive tasks from other agents |
 
 ## Quack Integration
 
 Quack (quack.us.com) enables agent-to-agent messaging with workflow management:
+
+**My Inbox**: `replit/orchestrate` - This app's inbox for receiving tasks from other agents
 
 **Monitored Inboxes**: claude, replit, cursor, gpt, gemini, grok, copilot, antigravity
 
@@ -128,6 +132,7 @@ Shows currently running workflows with:
 
 ## Recent Changes
 
+- 2026-01-22: Added Quack task receiving endpoint (`/api/task`) and my-inbox endpoint
 - 2026-01-20: Enhanced Control Room with Quick Actions, Activity Feed, Active Workflows panel
 - 2026-01-20: Added Settings page with API Keys, Webhooks, Notifications configuration
 - 2026-01-20: Added LogicProcess visual node editor (Build Mode)

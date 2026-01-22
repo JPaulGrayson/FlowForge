@@ -1,4 +1,6 @@
 const QUACK_API_BASE = 'https://quack.us.com/api';
+const QUACK_URL = 'https://quack.us.com';
+export const MY_INBOX = 'replit/orchestrate';
 
 export interface QuackMessage {
   id: string;
@@ -151,7 +153,7 @@ export class QuackPoller {
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ 
           to, 
-          from: 'orchestrate', 
+          from: MY_INBOX, 
           task,
           context 
         })

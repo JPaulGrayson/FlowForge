@@ -7,7 +7,9 @@ import { createLogicArtAdapter } from "../integration/logicart-adapter.js";
 import { council } from "../council/council.js";
 import { toolHandlers } from "../tools/handlers.js";
 import { saveWorkflow, loadWorkflow, listWorkflows } from "../tools/persistence.js";
-import { QuackPoller } from "../quack/poller.js";
+import { QuackPoller, MY_INBOX } from "../quack/poller.js";
+
+const QUACK_URL = 'https://quack.us.com';
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
@@ -420,6 +422,43 @@ app.post("/api/quack/send", async (req, res) => {
     const poller = new QuackPoller();
     const success = await poller.sendMessage(req.body.to, req.body.task, req.body.context);
     res.json({ success });
+  } catch (e: any) {
+    res.status(500).json({ error: e.message });
+  }
+});
+
+// Endpoint to receive tasks from other agents via Quack
+app.post("/api/task", async (req, res) => {
+  const { messageId, from, task, context } = req.body;
+  console.log(`📨 Quack task from ${from}: ${task}`);
+  
+  try {
+    // Log the incoming task for processing
+    console.log(`📋 Task context: ${context || 'none'}`);
+    
+    // TODO: Add custom task processing logic here based on what was requested
+    // For now, acknowledge receipt and mark as in_progress
+    
+    // Mark the task as complete when done
+    await fetch(`${QUACK_URL}/api/complete/${messageId}`, { method: 'POST' });
+    
+    res.json({ 
+      success: true, 
+      message: `Task received and processed`,
+      inbox: MY_INBOX
+    });
+  } catch (error: any) {
+    console.error('Error processing Quack task:', error);
+    res.status(500).json({ success: false, error: error.message });
+  }
+});
+
+// Helper endpoint to check my inbox
+app.get("/api/quack/my-inbox", async (_, res) => {
+  try {
+    const response = await fetch(`${QUACK_URL}/api/inbox/${MY_INBOX}?autoApprove=true`);
+    const data = await response.json() as Record<string, unknown>;
+    res.json({ inbox: MY_INBOX, ...data });
   } catch (e: any) {
     res.status(500).json({ error: e.message });
   }
