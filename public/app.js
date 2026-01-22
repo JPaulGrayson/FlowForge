@@ -1911,7 +1911,6 @@ async function loadControlRoom() {
 }
 
 window.refreshControlRoom = async function() {
-  showToast('Refreshing...');
   await loadControlRoom();
 };
 
