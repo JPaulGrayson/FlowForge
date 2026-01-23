@@ -1,0 +1,26 @@
+{
+  "compilerOptions": {
+    "target": "ES2022",
+    "module": "NodeNext",
+    "moduleResolution": "NodeNext",
+    "outDir": "./dist",
+    "rootDir": "./src",
+    "strict": false,
+    "esModuleInterop": true,
+    "skipLibCheck": true,
+    "forceConsistentCasingInFileNames": true,
+    "resolveJsonModule": true,
+    "declaration": false
+  },
+  "include": [
+    "src/mcp/**/*",
+    "src/generator/**/*",
+    "src/executor/**/*",
+    "src/integration/**/*",
+    "src/council/**/*",
+    "src/quack/**/*",
+    "src/tools/**/*",
+    "src/types/**/*"
+  ],
+  "exclude": ["node_modules", "dist", "src/client/**/*"]
+}

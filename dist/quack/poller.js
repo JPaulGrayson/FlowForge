@@ -1,4 +1,6 @@
 const QUACK_API_BASE = 'https://quack.us.com/api';
+const QUACK_URL = 'https://quack.us.com';
+export const MY_INBOX = 'replit/orchestrate';
 export class QuackPoller {
     inboxes = new Map();
     pollInterval = 5000;
@@ -114,7 +116,7 @@ export class QuackPoller {
                 headers: { 'Content-Type': 'application/json' },
                 body: JSON.stringify({
                     to,
-                    from: 'orchestrate',
+                    from: MY_INBOX,
                     task,
                     context
                 })
@@ -131,4 +133,3 @@ export class QuackPoller {
 export function createQuackPoller(onUpdate) {
     return new QuackPoller(onUpdate);
 }
-//# sourceMappingURL=poller.js.map

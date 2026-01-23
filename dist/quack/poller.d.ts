@@ -1,3 +1,4 @@
+export declare const MY_INBOX = "replit/orchestrate";
 export interface QuackMessage {
     id: string;
     to: string;
@@ -32,4 +33,3 @@ export declare class QuackPoller {
     sendMessage(to: string, task: string, context?: string): Promise<boolean>;
 }
 export declare function createQuackPoller(onUpdate?: (inboxes: Map<string, InboxState>) => void): QuackPoller;
-//# sourceMappingURL=poller.d.ts.map
