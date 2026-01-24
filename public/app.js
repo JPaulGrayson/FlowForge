@@ -71,7 +71,7 @@ function updateAuthUI() {
 }
 
 window.voyaiLogin = function() {
-  const returnUrl = encodeURIComponent(window.location.origin);
+  const returnUrl = window.location.host; // Just the domain, e.g., orchestrate.us.com
   window.location.href = `https://voyai.org/login?return_to=${returnUrl}&app=orchestrate`;
 };
 
