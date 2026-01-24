@@ -1,5 +1,6 @@
 import express from "express";
 import path from "path";
+import crypto from "crypto";
 import { fileURLToPath } from "url";
 import { generator } from "../generator/workflow-generator.js";
 import { createExecutor as _createExecutor } from "../executor/workflow-executor.js";
@@ -10,6 +11,47 @@ import { saveWorkflow, loadWorkflow, listWorkflows } from "../tools/persistence.
 import { QuackPoller, MY_INBOX } from "../quack/poller.js";
 
 const QUACK_URL = 'https://quack.us.com';
+
+// ===== VOYAI SERVER-TO-SERVER SESSION HANDSHAKE =====
+
+interface VoyaiSessionData {
+  voyaiUserId: string;
+  email: string;
+  displayName?: string;
+  hasBundle: boolean;
+  tier: 'none' | 'bundle';
+  features: {
+    quack_control_room: boolean;
+    quack_multi_inbox: boolean;
+    quack_toast_notifications: boolean;
+    logicart_cloud_history: boolean;
+    logicart_rabbit_hole: boolean;
+    logicart_github_sync: boolean;
+    logicart_managed_credits: boolean;
+    logicprocess_enabled: boolean;
+  };
+  subscriptionStatus: 'active' | 'trialing' | 'past_due' | 'cancelled' | 'none';
+  currentPeriodEnd?: string;
+}
+
+interface PendingSession {
+  data: VoyaiSessionData;
+  createdAt: number;
+  expiresAt: number;
+}
+
+const pendingSessions = new Map<string, PendingSession>();
+
+// Cleanup expired sessions periodically
+setInterval(() => {
+  const now = Date.now();
+  for (const [id, session] of pendingSessions.entries()) {
+    if (now > session.expiresAt) {
+      pendingSessions.delete(id);
+      console.log(`[Voyai Session] Cleaned up expired session`);
+    }
+  }
+}, 60000); // Every minute
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
@@ -500,6 +542,97 @@ app.post("/api/orchestrate/subscribe", async (req, res) => {
     subscriptionId,
     checkoutUrl: `https://voyai.org/checkout/${subscriptionId}`,
     message: `Subscription created for ${email} on ${plan} plan`
+  });
+});
+
+// ===== VOYAI SESSION ENDPOINTS =====
+
+// Voyai calls this endpoint server-to-server to create a session
+app.post("/api/voyai/session", (req, res) => {
+  // Verify the request is from Voyai using API key
+  const authHeader = req.headers.authorization;
+  const expectedKey = process.env.VOYAI_API_KEY;
+  
+  if (!expectedKey) {
+    console.error('[Voyai Session] VOYAI_API_KEY not configured');
+    return res.status(500).json({ error: 'Server configuration error' });
+  }
+  
+  if (!authHeader || authHeader !== `Bearer ${expectedKey}`) {
+    console.error('[Voyai Session] Unauthorized request');
+    return res.status(401).json({ error: 'Unauthorized' });
+  }
+  
+  const sessionData: VoyaiSessionData = req.body;
+  
+  // Validate required fields
+  if (!sessionData.email || !sessionData.voyaiUserId) {
+    return res.status(400).json({ error: 'Missing required fields' });
+  }
+  
+  // Generate a short, random session ID
+  const sessionId = crypto.randomBytes(32).toString('hex');
+  const expiresAt = Date.now() + 10 * 60 * 1000; // 10 minutes
+  
+  // Store the session
+  pendingSessions.set(sessionId, {
+    data: sessionData,
+    createdAt: Date.now(),
+    expiresAt
+  });
+  
+  console.log(`[Voyai Session] Created session ${sessionId.substring(0, 8)}... for ${sessionData.email}`);
+  console.log(`[Voyai Session] User has bundle: ${sessionData.hasBundle}`);
+  
+  // Return session ID to Voyai
+  res.json({
+    success: true,
+    data: {
+      sessionId,
+      expiresAt: new Date(expiresAt).toISOString()
+    }
+  });
+});
+
+// Orchestrate frontend calls this to claim the session
+app.get("/api/voyai/claim-session", (req, res) => {
+  const sessionId = req.query.session as string;
+  
+  if (!sessionId) {
+    return res.status(400).json({ error: 'Session ID required' });
+  }
+  
+  const session = pendingSessions.get(sessionId);
+  
+  if (!session) {
+    console.warn(`[Voyai Session] Session not found: ${sessionId.substring(0, 8)}...`);
+    return res.status(404).json({ error: 'Session not found or expired' });
+  }
+  
+  if (Date.now() > session.expiresAt) {
+    pendingSessions.delete(sessionId);
+    return res.status(410).json({ error: 'Session expired' });
+  }
+  
+  // Delete the session (one-time use)
+  pendingSessions.delete(sessionId);
+  
+  console.log(`[Voyai Session] Claimed session for ${session.data.email}`);
+  
+  // Return the user data
+  res.json({
+    success: true,
+    user: session.data
+  });
+});
+
+// Get current user session (for frontend to check if logged in)
+app.get("/api/voyai/me", (req, res) => {
+  // This is just a passthrough - actual user data is stored client-side
+  // The frontend should call this after claiming a session to verify
+  res.json({ 
+    authenticated: false, 
+    message: 'Check client-side localStorage for voyai_user'
   });
 });
 

@@ -1,0 +1,293 @@
+Orchestrate Integration Fix: Server-to-Server Session Handshake
+
+The Problem
+
+The current redirect-based authentication has login loop issues. Users authenticate on Voyai but the redirect back to Orchestrate fails, causing infinite loops.
+
+The Solution
+
+Implement the same server-to-server session handshake that works reliably for Turai.
+
+What Orchestrate Needs to Implement
+
+1. Create Session Endpoint on Orchestrate
+
+Orchestrate needs to create an API endpoint that Voyai can call server-to-server:
+
+// orchestrate-server/routes/voyai.ts
+import express from 'express';
+import crypto from 'crypto';
+const router = express.Router();
+// In-memory session store (use Redis in production)
+const pendingSessions = new Map<string, {
+  data: VoyaiSessionData;
+  createdAt: number;
+  expiresAt: number;
+}>();
+interface VoyaiSessionData {
+  voyaiUserId: string;
+  email: string;
+  displayName?: string;
+  hasBundle: boolean;
+  tier: 'none' | 'bundle';
+  features: {
+    quack_control_room: boolean;
+    quack_multi_inbox: boolean;
+    quack_toast_notifications: boolean;
+    logicart_cloud_history: boolean;
+    logicart_rabbit_hole: boolean;
+    logicart_github_sync: boolean;
+    logicart_managed_credits: boolean;
+    logicprocess_enabled: boolean;
+  };
+  subscriptionStatus: 'active' | 'trialing' | 'past_due' | 'cancelled' | 'none';
+  currentPeriodEnd?: string;
+}
+// Voyai calls this endpoint server-to-server
+router.post('/api/voyai/session', (req, res) => {
+  // Verify the request is from Voyai using API key
+  const authHeader = req.headers.authorization;
+  const expectedKey = process.env.VOYAI_API_KEY; // Set this in Orchestrate's environment
+  
+  if (!authHeader || authHeader !== `Bearer ${expectedKey}`) {
+    console.error('[Voyai Session] Unauthorized request');
+    return res.status(401).json({ error: 'Unauthorized' });
+  }
+  const sessionData: VoyaiSessionData = req.body;
+  
+  // Validate required fields
+  if (!sessionData.email || !sessionData.voyaiUserId) {
+    return res.status(400).json({ error: 'Missing required fields' });
+  }
+  // Generate a short, random session ID
+  const sessionId = crypto.randomBytes(32).toString('hex');
+  const expiresAt = Date.now() + 10 * 60 * 1000; // 10 minutes
+  // Store the session
+  pendingSessions.set(sessionId, {
+    data: sessionData,
+    createdAt: Date.now(),
+    expiresAt
+  });
+  console.log(`[Voyai Session] Created session ${sessionId.substring(0, 8)}... for ${sessionData.email}`);
+  console.log(`[Voyai Session] User has bundle: ${sessionData.hasBundle}`);
+  // Return session ID to Voyai
+  res.json({
+    success: true,
+    data: {
+      sessionId,
+      expiresAt: new Date(expiresAt).toISOString()
+    }
+  });
+});
+// Orchestrate frontend calls this to claim the session
+router.get('/api/voyai/claim-session', (req, res) => {
+  const sessionId = req.query.session as string;
+  
+  if (!sessionId) {
+    return res.status(400).json({ error: 'Session ID required' });
+  }
+  const session = pendingSessions.get(sessionId);
+  
+  if (!session) {
+    console.warn(`[Voyai Session] Session not found: ${sessionId.substring(0, 8)}...`);
+    return res.status(404).json({ error: 'Session not found or expired' });
+  }
+  if (Date.now() > session.expiresAt) {
+    pendingSessions.delete(sessionId);
+    return res.status(410).json({ error: 'Session expired' });
+  }
+  // Delete the session (one-time use)
+  pendingSessions.delete(sessionId);
+  console.log(`[Voyai Session] Claimed session for ${session.data.email}`);
+  // Return the user data
+  res.json({
+    success: true,
+    user: session.data
+  });
+});
+// Cleanup expired sessions periodically
+setInterval(() => {
+  const now = Date.now();
+  for (const [id, session] of pendingSessions.entries()) {
+    if (now > session.expiresAt) {
+      pendingSessions.delete(id);
+      console.log(`[Voyai Session] Cleaned up expired session`);
+    }
+  }
+}, 60000); // Every minute
+export default router;
+2. Update Orchestrate Frontend
+
+When user arrives at orchestrate.us.com/?session=abc123:
+
+// orchestrate-client/hooks/useVoyaiAuth.ts
+import { useEffect, useState } from 'react';
+interface VoyaiUser {
+  voyaiUserId: string;
+  email: string;
+  displayName?: string;
+  hasBundle: boolean;
+  tier: 'none' | 'bundle';
+  features: {
+    quack_control_room: boolean;
+    quack_multi_inbox: boolean;
+    quack_toast_notifications: boolean;
+    logicart_cloud_history: boolean;
+    logicart_rabbit_hole: boolean;
+    logicart_github_sync: boolean;
+    logicart_managed_credits: boolean;
+    logicprocess_enabled: boolean;
+  };
+  subscriptionStatus: string;
+  currentPeriodEnd?: string;
+}
+export function useVoyaiAuth() {
+  const [user, setUser] = useState<VoyaiUser | null>(null);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
+  useEffect(() => {
+    async function checkAuth() {
+      const params = new URLSearchParams(window.location.search);
+      const sessionId = params.get('session');
+      if (sessionId) {
+        try {
+          // Claim the session from Voyai
+          const response = await fetch(`/api/voyai/claim-session?session=${sessionId}`);
+          const data = await response.json();
+          if (data.success && data.user) {
+            // Store user in localStorage or your auth system
+            localStorage.setItem('voyai_user', JSON.stringify(data.user));
+            setUser(data.user);
+            
+            // Clean URL - remove session param
+            const url = new URL(window.location.href);
+            url.searchParams.delete('session');
+            window.history.replaceState({}, '', url.toString());
+            
+            console.log('[Auth] User authenticated:', data.user.email);
+            console.log('[Auth] Has Orchestrate bundle:', data.user.hasBundle);
+          } else {
+            setError(data.error || 'Failed to claim session');
+          }
+        } catch (err) {
+          console.error('Voyai auth error:', err);
+          setError('Authentication failed');
+        }
+      } else {
+        // Check localStorage for existing session
+        const stored = localStorage.getItem('voyai_user');
+        if (stored) {
+          try {
+            setUser(JSON.parse(stored));
+          } catch (e) {
+            localStorage.removeItem('voyai_user');
+          }
+        }
+      }
+      setLoading(false);
+    }
+    checkAuth();
+  }, []);
+  const loginWithVoyai = () => {
+    // Redirect to Voyai login
+    const returnUrl = encodeURIComponent(window.location.origin);
+    window.location.href = `https://voyai.org/login?return_to=${returnUrl}&app=orchestrate`;
+  };
+  const logout = () => {
+    localStorage.removeItem('voyai_user');
+    setUser(null);
+  };
+  const hasFeature = (feature: keyof VoyaiUser['features']): boolean => {
+    return user?.features?.[feature] === true;
+  };
+  return { user, loading, error, loginWithVoyai, logout, hasFeature };
+}
+3. Feature Gating Example
+
+// orchestrate-client/components/ControlRoom.tsx
+import { useVoyaiAuth } from '../hooks/useVoyaiAuth';
+export function ControlRoom() {
+  const { user, hasFeature, loginWithVoyai } = useVoyaiAuth();
+  if (!user) {
+    return (
+      <div className="login-prompt">
+        <h2>Control Room</h2>
+        <p>Sign in with Voyai to access the Control Room</p>
+        <button onClick={loginWithVoyai}>Log in with Voyai</button>
+      </div>
+    );
+  }
+  if (!hasFeature('quack_control_room')) {
+    return (
+      <div className="upgrade-prompt">
+        <h2>Control Room</h2>
+        <p>Upgrade to Orchestrate Bundle to access the Control Room</p>
+        <a href="https://voyai.org/subscribe?app=orchestrate">Upgrade Now</a>
+      </div>
+    );
+  }
+  return (
+    <div className="control-room">
+      <h2>Control Room</h2>
+      <p>Welcome, {user.displayName || user.email}!</p>
+      {/* Control Room UI */}
+    </div>
+  );
+}
+4. Environment Variables for Orchestrate
+
+# Add to Orchestrate's environment
+VOYAI_API_KEY=<generate-a-secure-random-key>
+Share this key with Voyai team to add to Voyai's secrets as ORCHESTRATE_API_KEY.
+
+What Voyai Will Implement
+
+Once Orchestrate has the /api/voyai/session endpoint ready, Voyai will:
+
+Create a launchOrchestrate() function similar to launchTurai()
+Call Orchestrate's session endpoint server-to-server
+Redirect user to orchestrate.us.com/?session=<session_id>
+Session Data Structure
+
+Voyai will send this data to your /api/voyai/session endpoint:
+
+{
+  voyaiUserId: "user_abc123",          // Voyai user ID
+  email: "user@example.com",           // User's email
+  displayName: "John Doe",             // Optional display name
+  hasBundle: true,                      // Has active Orchestrate subscription
+  tier: "bundle",                       // "none" or "bundle"
+  features: {
+    quack_control_room: true,
+    quack_multi_inbox: true,
+    quack_toast_notifications: true,
+    logicart_cloud_history: true,
+    logicart_rabbit_hole: true,
+    logicart_github_sync: true,
+    logicart_managed_credits: true,
+    logicprocess_enabled: true
+  },
+  subscriptionStatus: "active",         // Stripe status
+  currentPeriodEnd: "2026-02-24T..."   // When subscription renews
+}
+Testing
+
+Orchestrate implements the /api/voyai/session endpoint
+Share the VOYAI_API_KEY with Voyai team
+Voyai adds ORCHESTRATE_API_KEY to secrets and enables the integration
+Test the flow:
+User visits orchestrate.us.com
+Clicks "Log in with Voyai"
+Redirects to voyai.org/login?return_to=orchestrate.us.com
+User logs in on Voyai
+Voyai calls orchestrate.us.com/api/voyai/session server-to-server
+User redirects to orchestrate.us.com/?session=abc123
+Orchestrate claims session and user is logged in with their bundle features
+Why This Works
+
+Aspect	Old Approach (Broken)	New Approach (Reliable)
+Auth method	Cookie/redirect loop	Server-to-server handshake
+URL complexity	Multiple redirects	Single redirect with short ID
+Validation	Client must call back	Pre-validated by Voyai
+Session	Relies on shared cookies	Self-contained session ID
+Reliability	Browser/SPA issues	Simple HTTP communication

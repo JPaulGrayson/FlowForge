@@ -66,6 +66,9 @@ Orchestrate is an MCP (Model Context Protocol) server that enables Claude Deskto
 | `/api/task` | POST | Receive tasks from other agents |
 | `/api/orchestrate/status` | GET | Check bundle status and features |
 | `/api/orchestrate/subscribe` | POST | Create bundle subscription |
+| `/api/voyai/session` | POST | Server-to-server session creation (Voyai calls this) |
+| `/api/voyai/claim-session` | GET | Frontend claims session with `?session=<id>` |
+| `/api/voyai/me` | GET | Check current auth status |
 
 ## Quack Integration
 
@@ -132,8 +135,33 @@ Shows currently running workflows with:
 4. Each node executes: AI Agent nodes send Quack messages, Human Review nodes pause for approval
 5. Results displayed in execution view
 
+## Voyai Authentication
+
+Server-to-server session handshake for reliable authentication:
+
+1. User visits orchestrate.us.com, clicks "Log in with Voyai"
+2. Redirects to voyai.org/login with return URL
+3. Voyai authenticates user, calls `/api/voyai/session` server-to-server
+4. Voyai redirects user to orchestrate.us.com/?session=<id>
+5. Frontend claims session via `/api/voyai/claim-session`
+6. User data stored in localStorage, session cleaned from URL
+
+**Environment Variables Required**:
+- `VOYAI_API_KEY`: Shared secret for server-to-server communication
+
+**Frontend Functions**:
+- `voyaiLogin()` - Redirect to Voyai login
+- `voyaiLogout()` - Clear local session
+- `getVoyaiUser()` - Get current user data
+- `hasVoyaiFeature(feature)` - Check if user has a specific feature
+- `requireVoyaiAuth()` - Redirect to login if not authenticated
+- `requireVoyaiBundle()` - Redirect to subscribe if no bundle
+
 ## Recent Changes
 
+- 2026-01-24: Implemented server-to-server Voyai session handshake (replaces broken redirect auth)
+- 2026-01-24: Added Voyai session endpoints for reliable authentication
+- 2026-01-24: Added frontend auth UI with login/logout and bundle status display
 - 2026-01-22: Added Voyai authentication check - redirects to voyai.org/login if not authenticated
 - 2026-01-22: Added Quack task receiving endpoint (`/api/task`) and my-inbox endpoint
 - 2026-01-20: Enhanced Control Room with Quick Actions, Activity Feed, Active Workflows panel

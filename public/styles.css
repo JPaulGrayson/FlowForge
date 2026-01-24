@@ -49,6 +49,66 @@ body {
   transform: scale(1.1);
 }
 
+/* Auth Status Styles */
+.auth-status {
+  position: absolute;
+  top: 20px;
+  left: 20px;
+}
+
+.auth-status .user-info {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.auth-status .user-name {
+  color: #e0e0e0;
+  font-size: 14px;
+}
+
+.auth-status .bundle-badge {
+  font-size: 11px;
+  padding: 3px 8px;
+  border-radius: 12px;
+  font-weight: 600;
+}
+
+.auth-status .bundle-badge.active {
+  background: linear-gradient(135deg, #00d9ff, #a855f7);
+  color: #fff;
+}
+
+.auth-status .bundle-badge.inactive {
+  background: rgba(255, 255, 255, 0.1);
+  color: #888;
+}
+
+.auth-status .btn-small {
+  padding: 4px 10px;
+  font-size: 12px;
+}
+
+.feature-locked {
+  opacity: 0.5;
+  pointer-events: none;
+  position: relative;
+}
+
+.feature-locked::after {
+  content: "Bundle Required";
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  background: rgba(0, 0, 0, 0.8);
+  color: #00d9ff;
+  padding: 8px 16px;
+  border-radius: 8px;
+  font-size: 12px;
+  white-space: nowrap;
+}
+
 .help-modal {
   position: fixed;
   top: 0;

@@ -1,4 +1,116 @@
-document.addEventListener('DOMContentLoaded', () => {
+// ===== VOYAI AUTHENTICATION =====
+
+let voyaiUser = null;
+
+async function checkVoyaiAuth() {
+  const params = new URLSearchParams(window.location.search);
+  const sessionId = params.get('session');
+  
+  if (sessionId) {
+    try {
+      // Claim the session from Voyai
+      const response = await fetch(`/api/voyai/claim-session?session=${sessionId}`);
+      const data = await response.json();
+      
+      if (data.success && data.user) {
+        // Store user in localStorage
+        localStorage.setItem('voyai_user', JSON.stringify(data.user));
+        voyaiUser = data.user;
+        
+        // Clean URL - remove session param
+        const url = new URL(window.location.href);
+        url.searchParams.delete('session');
+        window.history.replaceState({}, '', url.toString());
+        
+        console.log('[Auth] User authenticated:', data.user.email);
+        console.log('[Auth] Has Orchestrate bundle:', data.user.hasBundle);
+      } else {
+        console.error('[Auth] Failed to claim session:', data.error);
+      }
+    } catch (err) {
+      console.error('[Auth] Voyai auth error:', err);
+    }
+  } else {
+    // Check localStorage for existing session
+    const stored = localStorage.getItem('voyai_user');
+    if (stored) {
+      try {
+        voyaiUser = JSON.parse(stored);
+        console.log('[Auth] Loaded user from storage:', voyaiUser.email);
+      } catch (e) {
+        localStorage.removeItem('voyai_user');
+      }
+    }
+  }
+  
+  updateAuthUI();
+}
+
+function updateAuthUI() {
+  const authContainer = document.getElementById('auth-status');
+  if (!authContainer) return;
+  
+  if (voyaiUser) {
+    const displayName = voyaiUser.displayName || voyaiUser.email;
+    const bundleStatus = voyaiUser.hasBundle ? 
+      '<span class="bundle-badge active">Bundle Active</span>' : 
+      '<span class="bundle-badge inactive">Free</span>';
+    
+    authContainer.innerHTML = `
+      <div class="user-info">
+        <span class="user-name">${displayName}</span>
+        ${bundleStatus}
+        <button class="btn-secondary btn-small" onclick="voyaiLogout()">Logout</button>
+      </div>
+    `;
+  } else {
+    authContainer.innerHTML = `
+      <button class="btn-primary" onclick="voyaiLogin()">Log in with Voyai</button>
+    `;
+  }
+}
+
+window.voyaiLogin = function() {
+  const returnUrl = encodeURIComponent(window.location.origin);
+  window.location.href = `https://voyai.org/login?return_to=${returnUrl}&app=orchestrate`;
+};
+
+window.voyaiLogout = function() {
+  localStorage.removeItem('voyai_user');
+  voyaiUser = null;
+  updateAuthUI();
+};
+
+window.hasVoyaiFeature = function(feature) {
+  return voyaiUser?.features?.[feature] === true;
+};
+
+window.getVoyaiUser = function() {
+  return voyaiUser;
+};
+
+window.requireVoyaiAuth = function() {
+  if (!voyaiUser) {
+    voyaiLogin();
+    return false;
+  }
+  return true;
+};
+
+window.requireVoyaiBundle = function() {
+  if (!voyaiUser) {
+    voyaiLogin();
+    return false;
+  }
+  if (!voyaiUser.hasBundle) {
+    window.location.href = 'https://voyai.org/subscribe?app=orchestrate';
+    return false;
+  }
+  return true;
+};
+
+document.addEventListener('DOMContentLoaded', async () => {
+  await checkVoyaiAuth();
   initTabs();
   loadTools();
   loadWorkflows();
@@ -1913,41 +2025,3 @@ async function loadControlRoom() {
 window.refreshControlRoom = async function() {
   await loadControlRoom();
 };
-
-// Voyai authentication check
-let voyaiStatus = null;
-
-async function checkVoyaiAuth() {
-  try {
-    const res = await fetch("https://voyai.org/api/orchestrate/status", {
-      credentials: "include"
-    });
-    if (!res.ok) {
-      const returnUrl = encodeURIComponent(window.location.href);
-      window.location.href = `https://voyai.org/login?return_to=${returnUrl}`;
-      return null;
-    }
-    return await res.json();
-  } catch (e) {
-    const returnUrl = encodeURIComponent(window.location.href);
-    window.location.href = `https://voyai.org/login?return_to=${returnUrl}`;
-    return null;
-  }
-}
-
-// Initialize on load
-document.addEventListener('DOMContentLoaded', async () => {
-  // Check Voyai authentication first
-  voyaiStatus = await checkVoyaiAuth();
-  if (!voyaiStatus) return; // Will redirect to login
-  
-  // User is authenticated, proceed with app initialization
-  loadSettings();
-  
-  // Set default tab from settings
-  const defaultTab = settings.defaultTab || 'workflows';
-  const tabBtn = document.querySelector(`[data-tab="${defaultTab}"]`);
-  if (tabBtn) {
-    tabBtn.click();
-  }
-});
