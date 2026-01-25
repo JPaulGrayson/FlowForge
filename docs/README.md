@@ -2,6 +2,8 @@
 
 Visual workflow orchestration powered by AI. Design workflows in natural language, execute with Claude tools, visualize with LogicArt.
 
+![Orchestrate Architecture](../public/images/architecture.png)
+
 ## Table of Contents
 
 - [Quick Start](#quick-start)
@@ -49,6 +51,9 @@ Create workflows from natural language descriptions. Orchestrate uses AI to desi
 Every workflow can be visualized as an interactive flowchart via LogicArt. Get shareable URLs instantly.
 
 ### AI Council
+
+![AI Council - Multi-Model Consensus](../public/images/ai-council.png)
+
 Query multiple AI models (Claude, GPT-4, Gemini) simultaneously and get consensus or comparative responses.
 
 ### Persistence
@@ -265,6 +270,8 @@ interface Workflow {
 ```
 
 ### Node Types
+
+![Workflow Node Types](../public/images/workflow-nodes.png)
 
 | Type | Description |
 |------|-------------|
