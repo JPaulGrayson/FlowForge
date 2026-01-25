@@ -5,23 +5,23 @@ let voyaiUser = null;
 async function checkVoyaiAuth() {
   const params = new URLSearchParams(window.location.search);
   const sessionId = params.get('session');
-  
+
   if (sessionId) {
     try {
       // Claim the session from Voyai
       const response = await fetch(`/api/voyai/claim-session?session=${sessionId}`);
       const data = await response.json();
-      
+
       if (data.success && data.user) {
         // Store user in localStorage
         localStorage.setItem('voyai_user', JSON.stringify(data.user));
         voyaiUser = data.user;
-        
+
         // Clean URL - remove session param
         const url = new URL(window.location.href);
         url.searchParams.delete('session');
         window.history.replaceState({}, '', url.toString());
-        
+
         console.log('[Auth] User authenticated:', data.user.email);
         console.log('[Auth] Has Orchestrate bundle:', data.user.hasBundle);
       } else {
@@ -42,20 +42,20 @@ async function checkVoyaiAuth() {
       }
     }
   }
-  
+
   updateAuthUI();
 }
 
 function updateAuthUI() {
   const authContainer = document.getElementById('auth-status');
   if (!authContainer) return;
-  
+
   if (voyaiUser) {
     const displayName = voyaiUser.displayName || voyaiUser.email;
-    const bundleStatus = voyaiUser.hasBundle ? 
-      '<span class="bundle-badge active">Bundle Active</span>' : 
+    const bundleStatus = voyaiUser.hasBundle ?
+      '<span class="bundle-badge active">Bundle Active</span>' :
       '<span class="bundle-badge inactive">Free</span>';
-    
+
     authContainer.innerHTML = `
       <div class="user-info">
         <span class="user-name">${displayName}</span>
@@ -70,26 +70,26 @@ function updateAuthUI() {
   }
 }
 
-window.voyaiLogin = function() {
+window.voyaiLogin = function () {
   const returnUrl = window.location.host; // Just the domain, e.g., orchestrate.us.com
   window.location.href = `https://voyai.org/login?return_to=${returnUrl}&app=orchestrate`;
 };
 
-window.voyaiLogout = function() {
+window.voyaiLogout = function () {
   localStorage.removeItem('voyai_user');
   voyaiUser = null;
   updateAuthUI();
 };
 
-window.hasVoyaiFeature = function(feature) {
+window.hasVoyaiFeature = function (feature) {
   return voyaiUser?.features?.[feature] === true;
 };
 
-window.getVoyaiUser = function() {
+window.getVoyaiUser = function () {
   return voyaiUser;
 };
 
-window.requireVoyaiAuth = function() {
+window.requireVoyaiAuth = function () {
   if (!voyaiUser) {
     voyaiLogin();
     return false;
@@ -97,7 +97,7 @@ window.requireVoyaiAuth = function() {
   return true;
 };
 
-window.requireVoyaiBundle = function() {
+window.requireVoyaiBundle = function () {
   if (!voyaiUser) {
     voyaiLogin();
     return false;
@@ -124,10 +124,10 @@ function initTabs() {
   navBtns.forEach(btn => {
     btn.addEventListener('click', () => {
       const tabId = btn.dataset.tab;
-      
+
       navBtns.forEach(b => b.classList.remove('active'));
       tabContents.forEach(t => t.classList.remove('active'));
-      
+
       btn.classList.add('active');
       document.getElementById(tabId).classList.add('active');
     });
@@ -136,21 +136,21 @@ function initTabs() {
 
 async function loadTools() {
   const container = document.getElementById('tools-list');
-  
+
   try {
     const response = await fetch('/api/mcp/tools');
     const data = await response.json();
-    
+
     if (data.tools && data.tools.length > 0) {
       container.innerHTML = data.tools.map(tool => `
         <div class="tool-card">
           <h3>${tool.name}</h3>
           <p>${tool.description}</p>
-          ${tool.inputSchema && tool.inputSchema.required ? 
-            `<div class="tool-params">
+          ${tool.inputSchema && tool.inputSchema.required ?
+          `<div class="tool-params">
               ${tool.inputSchema.required.map(p => `<span class="tag">${p}</span>`).join('')}
             </div>` : ''
-          }
+        }
         </div>
       `).join('');
     } else {
@@ -163,7 +163,7 @@ async function loadTools() {
 
 async function loadWorkflows() {
   const container = document.getElementById('workflows-list');
-  
+
   try {
     const response = await fetch('/api/mcp/call', {
       method: 'POST',
@@ -171,15 +171,15 @@ async function loadWorkflows() {
       body: JSON.stringify({ tool: 'list_workflows', params: {} })
     });
     const data = await response.json();
-    
+
     if (data.result && data.result.length > 0) {
       container.innerHTML = data.result.map(workflow => `
         <div class="workflow-card">
           <h3>${workflow.name || workflow.id}</h3>
           <p>${workflow.description || 'No description'}</p>
-          ${workflow.metadata && workflow.metadata.tags ? 
-            workflow.metadata.tags.map(t => `<span class="tag">${t}</span>`).join('') : ''
-          }
+          ${workflow.metadata && workflow.metadata.tags ?
+          workflow.metadata.tags.map(t => `<span class="tag">${t}</span>`).join('') : ''
+        }
           <div class="workflow-actions">
             <button class="btn-secondary" onclick="visualizeWorkflow('${workflow.id}')">
               Visualize
@@ -208,13 +208,13 @@ async function loadWorkflows() {
   }
 }
 
-window.refreshWorkflows = async function() {
+window.refreshWorkflows = async function () {
   const container = document.getElementById('workflows-list');
   container.innerHTML = '<p class="loading">Loading workflows...</p>';
   await loadWorkflows();
 };
 
-window.visualizeWorkflow = async function(id) {
+window.visualizeWorkflow = async function (id) {
   try {
     const loadResponse = await fetch('/api/mcp/call', {
       method: 'POST',
@@ -222,7 +222,7 @@ window.visualizeWorkflow = async function(id) {
       body: JSON.stringify({ tool: 'load_workflow', params: { id } })
     });
     const loadData = await loadResponse.json();
-    
+
     if (loadData.result) {
       const vizResponse = await fetch('/api/mcp/call', {
         method: 'POST',
@@ -230,7 +230,7 @@ window.visualizeWorkflow = async function(id) {
         body: JSON.stringify({ tool: 'visualize_workflow', params: { workflow: loadData.result } })
       });
       const vizData = await vizResponse.json();
-      
+
       if (vizData.result && vizData.result.url) {
         window.open(vizData.result.url, '_blank');
       }
@@ -240,7 +240,7 @@ window.visualizeWorkflow = async function(id) {
   }
 };
 
-window.loadWorkflow = async function(id) {
+window.loadWorkflow = async function (id) {
   try {
     const response = await fetch('/api/mcp/call', {
       method: 'POST',
@@ -248,7 +248,7 @@ window.loadWorkflow = async function(id) {
       body: JSON.stringify({ tool: 'load_workflow', params: { id } })
     });
     const data = await response.json();
-    
+
     if (data.result) {
       showWorkflowDetail(data.result);
     }
@@ -260,14 +260,14 @@ window.loadWorkflow = async function(id) {
 function showWorkflowDetail(workflow) {
   const existing = document.getElementById('workflow-modal');
   if (existing) existing.remove();
-  
+
   const modal = document.createElement('div');
   modal.id = 'workflow-modal';
   modal.style.cssText = 'position:fixed;top:0;left:0;right:0;bottom:0;background:rgba(0,0,0,0.8);display:flex;align-items:center;justify-content:center;z-index:1000;';
-  
+
   const nodes = workflow.nodes || [];
   const edges = workflow.edges || [];
-  
+
   modal.innerHTML = `
     <div style="background:#1a1a2e;border-radius:16px;padding:30px;max-width:600px;width:90%;max-height:80vh;overflow-y:auto;color:#e0e0e0;">
       <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:20px;">
@@ -292,28 +292,28 @@ function showWorkflowDetail(workflow) {
       </div>
     </div>
   `;
-  
+
   modal.addEventListener('click', (e) => {
     if (e.target === modal) modal.remove();
   });
-  
+
   document.body.appendChild(modal);
 }
 
-window.copyWorkflowJson = function(encoded) {
+window.copyWorkflowJson = function (encoded) {
   const json = decodeURIComponent(encoded);
   navigator.clipboard.writeText(JSON.stringify(JSON.parse(json), null, 2));
   alert('Workflow JSON copied to clipboard!');
 };
 
-window.openHelpModal = function() {
+window.openHelpModal = function () {
   const existing = document.getElementById('help-modal');
   if (existing) existing.remove();
-  
+
   const modal = document.createElement('div');
   modal.id = 'help-modal';
   modal.className = 'help-modal';
-  
+
   modal.innerHTML = `
     <div class="help-modal-content">
       <div class="help-modal-header">
@@ -332,6 +332,10 @@ window.openHelpModal = function() {
       
       <div class="help-content">
         <div class="help-panel active" id="help-overview">
+          <div style="text-align:center;margin-bottom:20px;">
+            <img src="/images/architecture.png" alt="Orchestrate Architecture" style="max-width:100%;border-radius:12px;box-shadow:0 4px 20px rgba(168,85,247,0.3);">
+          </div>
+          
           <h3>What is Orchestrate?</h3>
           <p>Orchestrate is a visual workflow orchestration platform powered by AI. Design workflows in natural language, execute them with Claude tools, and visualize them with LogicArt.</p>
           
@@ -403,6 +407,9 @@ window.openHelpModal = function() {
           <div class="tool-item">
             <h4>council_query</h4>
             <p>Query multiple AI models for consensus.</p>
+            <div style="text-align:center;margin:12px 0;">
+              <img src="/images/ai-council.png" alt="AI Council: Claude + GPT-4 + Gemini" style="max-width:200px;border-radius:8px;">
+            </div>
             <pre><code>{ "query": "Best API design practices", "models": ["claude", "gpt4", "gemini"] }</code></pre>
           </div>
           
@@ -461,6 +468,9 @@ window.openHelpModal = function() {
 }</code></pre>
           
           <h3>Node Types</h3>
+          <div style="text-align:center;margin:15px 0;">
+            <img src="/images/workflow-nodes.png" alt="Workflow Node Types" style="max-width:280px;border-radius:8px;box-shadow:0 4px 16px rgba(0,0,0,0.3);">
+          </div>
           <table class="help-table">
             <tr><td><code>start</code></td><td>Entry point</td></tr>
             <tr><td><code>end</code></td><td>Exit point</td></tr>
@@ -493,14 +503,14 @@ window.openHelpModal = function() {
           </ul>
           
           <div class="help-links" style="margin-top: 20px;">
-            <a href="/docs.html" target="_blank" class="help-link">Full Documentation</a>
             <a href="https://logic.art" target="_blank" class="help-link">LogicArt Editor</a>
+            <a href="https://wizardofquack.com" target="_blank" class="help-link">Wizard of Quack Suite</a>
           </div>
         </div>
       </div>
     </div>
   `;
-  
+
   modal.querySelectorAll('.help-nav-btn').forEach(btn => {
     btn.addEventListener('click', () => {
       modal.querySelectorAll('.help-nav-btn').forEach(b => b.classList.remove('active'));
@@ -509,20 +519,20 @@ window.openHelpModal = function() {
       modal.querySelector('#help-' + btn.dataset.section).classList.add('active');
     });
   });
-  
+
   modal.addEventListener('click', (e) => {
     if (e.target === modal) closeHelpModal();
   });
-  
+
   document.body.appendChild(modal);
 }
 
-window.closeHelpModal = function() {
+window.closeHelpModal = function () {
   const modal = document.getElementById('help-modal');
   if (modal) modal.remove();
 };
 
-window.loadExample = async function(name) {
+window.loadExample = async function (name) {
   try {
     const response = await fetch(`/api/examples/${name}`);
     if (!response.ok) throw new Error('Example not found');
@@ -536,15 +546,15 @@ window.loadExample = async function(name) {
 function showExampleDetail(workflow) {
   const existing = document.getElementById('example-modal');
   if (existing) existing.remove();
-  
+
   const modal = document.createElement('div');
   modal.id = 'example-modal';
   modal.className = 'help-modal';
-  
+
   const nodes = workflow.nodes || [];
   const edges = workflow.edges || [];
   const tags = (workflow.metadata && workflow.metadata.tags) || [];
-  
+
   modal.innerHTML = `
     <div class="help-modal-content">
       <div class="help-modal-header">
@@ -596,21 +606,21 @@ function showExampleDetail(workflow) {
       </div>
     </div>
   `;
-  
+
   modal.addEventListener('click', (e) => {
     if (e.target === modal) modal.remove();
   });
-  
+
   document.body.appendChild(modal);
 }
 
-window.copyExampleJson = function(encoded) {
+window.copyExampleJson = function (encoded) {
   const json = decodeURIComponent(encoded);
   navigator.clipboard.writeText(JSON.stringify(JSON.parse(json), null, 2));
   alert('Workflow JSON copied to clipboard!');
 };
 
-window.visualizeInLogicArt = async function(encoded) {
+window.visualizeInLogicArt = async function (encoded) {
   const workflow = JSON.parse(decodeURIComponent(encoded));
   try {
     const response = await fetch('/api/mcp/call', {
@@ -629,7 +639,7 @@ window.visualizeInLogicArt = async function(encoded) {
   }
 };
 
-window.visualizeInLogiProcess = async function(encoded) {
+window.visualizeInLogiProcess = async function (encoded) {
   const workflow = JSON.parse(decodeURIComponent(encoded));
   try {
     const response = await fetch('/api/mcp/call', {
@@ -654,23 +664,23 @@ let controlRoomData = { inboxes: [] };
 let selectedInbox = null;
 let selectedMessage = null;
 
-window.loadControlRoom = async function() {
+window.loadControlRoom = async function () {
   const container = document.getElementById('agent-tiles');
   try {
     const response = await fetch('/api/quack/inboxes');
     const data = await response.json();
     controlRoomData = data;
-    
+
     const inboxes = data.inboxes || [];
-    
+
     // Update stats
     const totalMessages = inboxes.reduce((sum, i) => sum + (i.messages?.length || 0), 0);
     const totalPending = inboxes.reduce((sum, i) => sum + i.pendingCount, 0);
-    
+
     document.getElementById('stat-inboxes').textContent = inboxes.length;
     document.getElementById('stat-messages').textContent = totalMessages;
     document.getElementById('stat-pending').textContent = totalPending;
-    
+
     if (inboxes.length > 0) {
       container.innerHTML = inboxes.map(inbox => {
         const latestMsg = inbox.messages?.[0];
@@ -701,16 +711,16 @@ window.loadControlRoom = async function() {
   }
 };
 
-window.refreshControlRoom = async function() {
+window.refreshControlRoom = async function () {
   const container = document.getElementById('agent-tiles');
   container.innerHTML = '<p class="loading">Refreshing...</p>';
   await loadControlRoom();
 };
 
-window.selectInbox = function(name) {
+window.selectInbox = function (name) {
   const inbox = controlRoomData.inboxes?.find(i => i.name === name);
   if (!inbox) return;
-  
+
   selectedInbox = inbox;
   showInboxSidebar(inbox);
 };
@@ -718,11 +728,11 @@ window.selectInbox = function(name) {
 function showInboxSidebar(inbox) {
   const existing = document.getElementById('inbox-sidebar');
   if (existing) existing.remove();
-  
+
   const sidebar = document.createElement('div');
   sidebar.id = 'inbox-sidebar';
   sidebar.className = 'message-sidebar';
-  
+
   sidebar.innerHTML = `
     <div class="message-sidebar-header">
       <span class="message-sidebar-title">/${inbox.name}</span>
@@ -741,29 +751,29 @@ function showInboxSidebar(inbox) {
       `).join('') : '<p style="color:#888;text-align:center;padding:20px;">No messages</p>'}
     </div>
   `;
-  
+
   document.body.appendChild(sidebar);
 }
 
-window.closeInboxSidebar = function() {
+window.closeInboxSidebar = function () {
   const sidebar = document.getElementById('inbox-sidebar');
   if (sidebar) sidebar.remove();
   selectedInbox = null;
 };
 
-window.showMessageDetail = function(messageId) {
+window.showMessageDetail = function (messageId) {
   const message = selectedInbox?.messages?.find(m => m.id === messageId);
   if (!message) return;
-  
+
   selectedMessage = message;
-  
+
   const existing = document.getElementById('message-detail-modal');
   if (existing) existing.remove();
-  
+
   const modal = document.createElement('div');
   modal.id = 'message-detail-modal';
   modal.className = 'message-detail-modal';
-  
+
   modal.innerHTML = `
     <div class="message-detail-content">
       <div class="help-modal-header">
@@ -813,21 +823,21 @@ window.showMessageDetail = function(messageId) {
       </div>
     </div>
   `;
-  
+
   modal.addEventListener('click', (e) => {
     if (e.target === modal) closeMessageDetail();
   });
-  
+
   document.body.appendChild(modal);
 };
 
-window.closeMessageDetail = function() {
+window.closeMessageDetail = function () {
   const modal = document.getElementById('message-detail-modal');
   if (modal) modal.remove();
   selectedMessage = null;
 };
 
-window.approveMessage = async function(id) {
+window.approveMessage = async function (id) {
   try {
     await fetch(`/api/quack/approve/${id}`, { method: 'POST' });
     closeMessageDetail();
@@ -838,7 +848,7 @@ window.approveMessage = async function(id) {
   }
 };
 
-window.startWork = async function(id) {
+window.startWork = async function (id) {
   try {
     await fetch(`/api/quack/status/${id}`, {
       method: 'POST',
@@ -853,7 +863,7 @@ window.startWork = async function(id) {
   }
 };
 
-window.completeMessage = async function(id) {
+window.completeMessage = async function (id) {
   try {
     await fetch(`/api/quack/status/${id}`, {
       method: 'POST',
@@ -868,7 +878,7 @@ window.completeMessage = async function(id) {
   }
 };
 
-window.failMessage = async function(id) {
+window.failMessage = async function (id) {
   try {
     await fetch(`/api/quack/status/${id}`, {
       method: 'POST',
@@ -903,17 +913,17 @@ const NODE_TYPES = {
 function initNodeEditor() {
   const canvas = document.getElementById('node-canvas');
   const paletteNodes = document.querySelectorAll('.palette-node');
-  
+
   paletteNodes.forEach(node => {
     node.addEventListener('dragstart', (e) => {
       e.dataTransfer.setData('nodeType', node.dataset.type);
     });
   });
-  
+
   canvas.addEventListener('dragover', (e) => {
     e.preventDefault();
   });
-  
+
   canvas.addEventListener('drop', (e) => {
     e.preventDefault();
     const nodeType = e.dataTransfer.getData('nodeType');
@@ -924,7 +934,7 @@ function initNodeEditor() {
       addNodeToCanvas(nodeType, x, y);
     }
   });
-  
+
   canvas.addEventListener('click', (e) => {
     if (e.target === canvas || e.target.classList.contains('canvas-placeholder')) {
       deselectNode();
@@ -936,10 +946,10 @@ function addNodeToCanvas(type, x, y) {
   const canvas = document.getElementById('node-canvas');
   const placeholder = canvas.querySelector('.canvas-placeholder');
   if (placeholder) placeholder.style.display = 'none';
-  
+
   const nodeId = 'node-' + nodeIdCounter++;
   const nodeInfo = NODE_TYPES[type];
-  
+
   const node = {
     id: nodeId,
     type: type,
@@ -951,9 +961,9 @@ function addNodeToCanvas(type, x, y) {
     agent: type === 'ai-agent' ? 'claude' : undefined,
     output: 'result'
   };
-  
+
   workflowNodes.push(node);
-  
+
   const nodeEl = document.createElement('div');
   nodeEl.className = 'workflow-node';
   nodeEl.id = nodeId;
@@ -969,12 +979,12 @@ function addNodeToCanvas(type, x, y) {
     <div class="node-body">${getNodeDescription(node)}</div>
     <div class="node-connector output"></div>
   `;
-  
+
   nodeEl.addEventListener('click', (e) => {
     e.stopPropagation();
     selectNode(nodeId);
   });
-  
+
   makeNodeDraggable(nodeEl);
   canvas.appendChild(nodeEl);
   selectNode(nodeId);
@@ -994,7 +1004,7 @@ function getNodeDescription(node) {
 function makeNodeDraggable(nodeEl) {
   let isDragging = false;
   let startX, startY, origX, origY;
-  
+
   nodeEl.addEventListener('mousedown', (e) => {
     if (e.target.classList.contains('node-connector')) return;
     isDragging = true;
@@ -1004,21 +1014,21 @@ function makeNodeDraggable(nodeEl) {
     origY = nodeEl.offsetTop;
     nodeEl.style.zIndex = 1000;
   });
-  
+
   document.addEventListener('mousemove', (e) => {
     if (!isDragging) return;
     const dx = e.clientX - startX;
     const dy = e.clientY - startY;
     nodeEl.style.left = (origX + dx) + 'px';
     nodeEl.style.top = (origY + dy) + 'px';
-    
+
     const node = workflowNodes.find(n => n.id === nodeEl.id);
     if (node) {
       node.position.x = origX + dx;
       node.position.y = origY + dy;
     }
   });
-  
+
   document.addEventListener('mouseup', () => {
     isDragging = false;
     nodeEl.style.zIndex = '';
@@ -1029,7 +1039,7 @@ function selectNode(nodeId) {
   document.querySelectorAll('.workflow-node').forEach(n => n.classList.remove('selected'));
   const nodeEl = document.getElementById(nodeId);
   if (nodeEl) nodeEl.classList.add('selected');
-  
+
   selectedNode = workflowNodes.find(n => n.id === nodeId);
   showNodeConfig(selectedNode);
 }
@@ -1044,12 +1054,12 @@ function showNodeConfig(node) {
   const panel = document.getElementById('node-config-panel');
   const content = document.getElementById('node-config-content');
   panel.style.display = 'block';
-  
+
   let html = `<div class="config-field">
     <label>Node Type</label>
     <input type="text" value="${NODE_TYPES[node.type].name}" readonly>
   </div>`;
-  
+
   if (node.type === 'ai-agent') {
     html += `
       <div class="config-field">
@@ -1081,17 +1091,17 @@ function showNodeConfig(node) {
       </div>
     `;
   }
-  
+
   html += `<div class="config-field">
     <label>Output Path</label>
     <input type="text" value="${node.output || 'result'}" onchange="updateNodeConfig('output', this.value)">
   </div>
   <button class="btn-secondary" style="width:100%;margin-top:10px;color:#ef4444;" onclick="deleteNode('${node.id}')">Delete Node</button>`;
-  
+
   content.innerHTML = html;
 }
 
-window.updateNodeConfig = function(key, value) {
+window.updateNodeConfig = function (key, value) {
   if (selectedNode) {
     selectedNode[key] = value;
     const nodeEl = document.getElementById(selectedNode.id);
@@ -1101,32 +1111,32 @@ window.updateNodeConfig = function(key, value) {
   }
 };
 
-window.setInputSource = function(inputKey, source) {
+window.setInputSource = function (inputKey, source) {
   if (selectedNode && selectedNode.inputs) {
     selectedNode.inputs[inputKey] = { source, label: '', value: '' };
     showNodeConfig(selectedNode);
   }
 };
 
-window.updateInputLabel = function(inputKey, label) {
+window.updateInputLabel = function (inputKey, label) {
   if (selectedNode && selectedNode.inputs) {
     selectedNode.inputs[inputKey].label = label;
   }
 };
 
-window.updateInputValue = function(inputKey, value) {
+window.updateInputValue = function (inputKey, value) {
   if (selectedNode && selectedNode.inputs) {
     selectedNode.inputs[inputKey].value = value;
   }
 };
 
-window.deleteNode = function(nodeId) {
+window.deleteNode = function (nodeId) {
   workflowNodes = workflowNodes.filter(n => n.id !== nodeId);
   workflowEdges = workflowEdges.filter(e => e.from !== nodeId && e.to !== nodeId);
   const nodeEl = document.getElementById(nodeId);
   if (nodeEl) nodeEl.remove();
   deselectNode();
-  
+
   if (workflowNodes.length === 0) {
     const canvas = document.getElementById('node-canvas');
     const placeholder = canvas.querySelector('.canvas-placeholder');
@@ -1134,13 +1144,13 @@ window.deleteNode = function(nodeId) {
   }
 };
 
-window.clearCanvas = function() {
+window.clearCanvas = function () {
   workflowNodes = [];
   workflowEdges = [];
   nodeIdCounter = 1;
   selectedNode = null;
   currentWorkflow = null;
-  
+
   const canvas = document.getElementById('node-canvas');
   canvas.querySelectorAll('.workflow-node').forEach(n => n.remove());
   const placeholder = canvas.querySelector('.canvas-placeholder');
@@ -1148,10 +1158,10 @@ window.clearCanvas = function() {
   document.getElementById('node-config-panel').style.display = 'none';
 };
 
-window.saveCurrentWorkflow = async function() {
+window.saveCurrentWorkflow = async function () {
   const name = prompt('Workflow name:');
   if (!name) return;
-  
+
   const workflow = {
     id: 'workflow-' + Date.now(),
     name: name,
@@ -1159,7 +1169,7 @@ window.saveCurrentWorkflow = async function() {
     nodes: workflowNodes,
     edges: workflowEdges
   };
-  
+
   try {
     const response = await fetch('/api/mcp/call', {
       method: 'POST',
@@ -1177,12 +1187,12 @@ window.saveCurrentWorkflow = async function() {
   }
 };
 
-window.testRunWorkflow = function() {
+window.testRunWorkflow = function () {
   if (workflowNodes.length === 0) {
     alert('Add some nodes first!');
     return;
   }
-  
+
   document.querySelector('[data-tab="cowork"]').click();
   setTimeout(() => {
     const select = document.getElementById('cowork-workflow-select');
@@ -1203,7 +1213,7 @@ async function loadCoworkWorkflows() {
     const response = await fetch('/api/workflows');
     const data = await response.json();
     coworkWorkflows = data.workflows || [];
-    
+
     const select = document.getElementById('cowork-workflow-select');
     select.innerHTML = '<option value="">-- Choose a workflow --</option>';
     coworkWorkflows.forEach(wf => {
@@ -1214,15 +1224,15 @@ async function loadCoworkWorkflows() {
   }
 }
 
-window.loadWorkflowForRun = async function() {
+window.loadWorkflowForRun = async function () {
   const select = document.getElementById('cowork-workflow-select');
   const workflowId = select.value;
-  
+
   if (!workflowId) {
     document.getElementById('cowork-form').innerHTML = '<p class="empty-state">Select a workflow to see its input form</p>';
     return;
   }
-  
+
   try {
     const response = await fetch('/api/mcp/call', {
       method: 'POST',
@@ -1241,16 +1251,16 @@ window.loadWorkflowForRun = async function() {
 
 function generateCoworkForm() {
   const form = document.getElementById('cowork-form');
-  
+
   if (!selectedWorkflow && workflowNodes.length > 0) {
     selectedWorkflow = { nodes: workflowNodes, edges: workflowEdges };
   }
-  
+
   if (!selectedWorkflow) {
     form.innerHTML = '<p class="empty-state">No workflow selected</p>';
     return;
   }
-  
+
   const runtimeInputs = [];
   (selectedWorkflow.nodes || []).forEach((node, idx) => {
     if (node.inputs) {
@@ -1266,7 +1276,7 @@ function generateCoworkForm() {
       });
     }
   });
-  
+
   if (runtimeInputs.length === 0) {
     form.innerHTML = `
       <p style="color:#888;margin-bottom:20px;">This workflow has no runtime inputs - it will run with fixed values.</p>
@@ -1274,7 +1284,7 @@ function generateCoworkForm() {
     `;
     return;
   }
-  
+
   let html = '';
   runtimeInputs.forEach((input, idx) => {
     html += `
@@ -1284,17 +1294,17 @@ function generateCoworkForm() {
       </div>
     `;
   });
-  
+
   html += '<button class="run-workflow-btn" onclick="runWorkflow()">Run Workflow</button>';
   form.innerHTML = html;
 }
 
-window.runWorkflow = async function() {
+window.runWorkflow = async function () {
   const executionDiv = document.getElementById('cowork-execution');
   executionDiv.style.display = 'block';
-  
+
   const nodes = selectedWorkflow?.nodes || workflowNodes;
-  
+
   let html = '<h3 style="margin-bottom:20px;">Execution Progress</h3>';
   nodes.forEach((node, idx) => {
     const nodeInfo = NODE_TYPES[node.type] || { icon: '?', name: node.type };
@@ -1309,24 +1319,24 @@ window.runWorkflow = async function() {
     `;
   });
   executionDiv.innerHTML = html;
-  
+
   for (let i = 0; i < nodes.length; i++) {
     const node = nodes[i];
     const stepEl = document.getElementById(`exec-${node.id}`);
-    
+
     stepEl.classList.remove('pending');
     stepEl.classList.add('in-progress');
     stepEl.querySelector('.execution-step-icon').textContent = '🔄';
     stepEl.querySelector('.execution-step-status').textContent = 'Running...';
-    
+
     if (node.type === 'ai-agent') {
       const runtimeData = document.getElementById(`runtime-${node.id}-data`)?.value || '';
       const runtimeInstructions = document.getElementById(`runtime-${node.id}-instructions`)?.value || '';
-      
-      const task = node.inputs?.instructions?.source === 'runtime' 
-        ? runtimeInstructions 
+
+      const task = node.inputs?.instructions?.source === 'runtime'
+        ? runtimeInstructions
         : node.inputs?.instructions?.value || 'Process the data';
-      
+
       try {
         await fetch('/api/quack/send', {
           method: 'POST',
@@ -1348,14 +1358,14 @@ window.runWorkflow = async function() {
       stepEl.querySelector('.execution-step-status').textContent = 'Waiting for approval...';
       break;
     }
-    
+
     await new Promise(r => setTimeout(r, 1000));
-    
+
     stepEl.classList.remove('in-progress');
     stepEl.classList.add('completed');
     stepEl.querySelector('.execution-step-icon').textContent = '✅';
     stepEl.querySelector('.execution-step-status').textContent = 'Completed';
-    
+
     if (i < nodes.length - 1) {
       const nextEl = document.getElementById(`exec-${nodes[i + 1].id}`);
       if (nextEl) {
@@ -1421,20 +1431,20 @@ const TEMPLATES = {
   }
 };
 
-window.loadTemplate = function(templateId) {
+window.loadTemplate = function (templateId) {
   const template = TEMPLATES[templateId];
   if (!template) return;
-  
+
   clearCanvas();
-  
+
   const canvas = document.getElementById('node-canvas');
   const placeholder = canvas.querySelector('.canvas-placeholder');
   if (placeholder) placeholder.style.display = 'none';
-  
+
   workflowNodes = JSON.parse(JSON.stringify(template.nodes));
   workflowEdges = JSON.parse(JSON.stringify(template.edges));
   nodeIdCounter = workflowNodes.length + 1;
-  
+
   workflowNodes.forEach(node => {
     const nodeInfo = NODE_TYPES[node.type];
     const nodeEl = document.createElement('div');
@@ -1452,16 +1462,16 @@ window.loadTemplate = function(templateId) {
       <div class="node-body">${getNodeDescription(node)}</div>
       <div class="node-connector output"></div>
     `;
-    
+
     nodeEl.addEventListener('click', (e) => {
       e.stopPropagation();
       selectNode(node.id);
     });
-    
+
     makeNodeDraggable(nodeEl);
     canvas.appendChild(nodeEl);
   });
-  
+
   document.querySelector('[data-tab="logic-process"]').click();
   currentWorkflow = { id: 'template-' + templateId, name: template.name, nodes: workflowNodes, edges: workflowEdges };
 };
@@ -1507,19 +1517,19 @@ function applySettings() {
     document.getElementById('theme-select').value = settings.theme || 'dark';
     document.getElementById('default-tab').value = settings.defaultTab || 'control-room';
   }
-  
+
   if (refreshInterval) clearInterval(refreshInterval);
   refreshInterval = setInterval(refreshControlRoom, (settings.refreshInterval || 8) * 1000);
 }
 
-window.openSettings = function() {
+window.openSettings = function () {
   document.querySelectorAll('.tab-content').forEach(t => t.classList.remove('active'));
   document.querySelectorAll('.nav-btn').forEach(b => b.classList.remove('active'));
   document.getElementById('settings').classList.add('active');
   applySettings();
 };
 
-window.saveSettings = function() {
+window.saveSettings = function () {
   settings = {
     apiKeys: {
       anthropic: document.getElementById('api-anthropic').value,
@@ -1539,14 +1549,14 @@ window.saveSettings = function() {
     theme: document.getElementById('theme-select').value,
     defaultTab: document.getElementById('default-tab').value
   };
-  
+
   localStorage.setItem('orchestrate-settings', JSON.stringify(settings));
   applySettings();
   showToast('Settings saved!');
   document.querySelector('[data-tab="control-room"]').click();
 };
 
-window.resetSettings = function() {
+window.resetSettings = function () {
   localStorage.removeItem('orchestrate-settings');
   settings = {
     apiKeys: { anthropic: '', openai: '', google: '' },
@@ -1560,7 +1570,7 @@ window.resetSettings = function() {
   showToast('Settings reset to defaults');
 };
 
-window.testApiKey = async function(provider) {
+window.testApiKey = async function (provider) {
   const keyEl = document.getElementById('api-' + provider);
   if (!keyEl.value) {
     showToast('Please enter an API key first', 'error');
@@ -1569,12 +1579,12 @@ window.testApiKey = async function(provider) {
   showToast('Testing ' + provider + ' API key...');
 };
 
-window.clearApiKey = function(provider) {
+window.clearApiKey = function (provider) {
   document.getElementById('api-' + provider).value = '';
   showToast(provider + ' API key cleared');
 };
 
-window.testWebhook = async function(type) {
+window.testWebhook = async function (type) {
   const urlEl = document.getElementById('webhook-' + type);
   if (!urlEl.value) {
     showToast('Please enter a webhook URL first', 'error');
@@ -1586,7 +1596,7 @@ window.testWebhook = async function(type) {
 function showToast(message, type = 'success') {
   const existing = document.querySelector('.toast');
   if (existing) existing.remove();
-  
+
   const toast = document.createElement('div');
   toast.className = 'toast';
   toast.style.cssText = `
@@ -1617,7 +1627,7 @@ function addActivity(type, title, body, actions = []) {
     logicart: '📊',
     message_approved: '✉️'
   };
-  
+
   activityEvents.unshift({
     id: 'evt-' + Date.now(),
     type,
@@ -1627,7 +1637,7 @@ function addActivity(type, title, body, actions = []) {
     actions,
     time: new Date()
   });
-  
+
   if (activityEvents.length > 50) activityEvents.pop();
   renderActivityFeed();
 }
@@ -1635,10 +1645,10 @@ function addActivity(type, title, body, actions = []) {
 function renderActivityFeed() {
   const feed = document.getElementById('activity-feed');
   if (!feed) return;
-  
+
   const filter = document.getElementById('activity-filter')?.value || 'all';
   let events = activityEvents;
-  
+
   if (filter !== 'all') {
     events = activityEvents.filter(e => {
       if (filter === 'quack') return e.type.includes('quack') || e.type.includes('message');
@@ -1647,18 +1657,18 @@ function renderActivityFeed() {
       return true;
     });
   }
-  
+
   if (events.length === 0) {
     feed.innerHTML = '<p class="empty-state-small">No recent activity</p>';
     return;
   }
-  
+
   feed.innerHTML = events.slice(0, 20).map(evt => {
     const timeAgo = getTimeAgo(evt.time);
-    const actionsHtml = evt.actions.map(a => 
+    const actionsHtml = evt.actions.map(a =>
       `<button onclick="${a.onclick}">${a.label}</button>`
     ).join('');
-    
+
     return `
       <div class="activity-item" data-type="${evt.type}">
         <div class="activity-header">
@@ -1675,7 +1685,7 @@ function renderActivityFeed() {
   }).join('');
 }
 
-window.filterActivity = function() {
+window.filterActivity = function () {
   renderActivityFeed();
 };
 
@@ -1691,18 +1701,18 @@ function getTimeAgo(date) {
 function renderActiveWorkflows() {
   const list = document.getElementById('active-workflows-list');
   if (!list) return;
-  
+
   document.getElementById('stat-workflows').textContent = activeWorkflows.length;
-  
+
   if (activeWorkflows.length === 0) {
     list.innerHTML = '<p class="empty-state-small">No active workflows</p>';
     return;
   }
-  
+
   list.innerHTML = activeWorkflows.map(wf => {
     const progress = Math.round((wf.currentStep / wf.totalSteps) * 100);
     const statusClass = wf.status.toLowerCase().replace(' ', '-');
-    
+
     let actionsHtml = '<button class="btn-view" onclick="viewWorkflow(\'' + wf.id + '\')">View</button>';
     if (wf.status === 'WAITING APPROVAL') {
       actionsHtml += '<button class="btn-review" onclick="reviewWorkflow(\'' + wf.id + '\')">Review Now</button>';
@@ -1710,7 +1720,7 @@ function renderActiveWorkflows() {
       actionsHtml += '<button class="btn-pause" onclick="pauseWorkflow(\'' + wf.id + '\')">Pause</button>';
     }
     actionsHtml += '<button class="btn-cancel" onclick="cancelWorkflow(\'' + wf.id + '\')">Cancel</button>';
-    
+
     return `
       <div class="active-workflow-item">
         <div class="active-workflow-header">
@@ -1727,11 +1737,11 @@ function renderActiveWorkflows() {
   }).join('');
 }
 
-window.viewWorkflow = function(id) {
+window.viewWorkflow = function (id) {
   document.querySelector('[data-tab="cowork"]').click();
 };
 
-window.reviewWorkflow = function(id) {
+window.reviewWorkflow = function (id) {
   const wf = activeWorkflows.find(w => w.id === id);
   if (wf) {
     wf.status = 'RUNNING';
@@ -1740,7 +1750,7 @@ window.reviewWorkflow = function(id) {
   }
 };
 
-window.pauseWorkflow = function(id) {
+window.pauseWorkflow = function (id) {
   const wf = activeWorkflows.find(w => w.id === id);
   if (wf) {
     wf.status = 'PAUSED';
@@ -1749,7 +1759,7 @@ window.pauseWorkflow = function(id) {
   }
 };
 
-window.cancelWorkflow = function(id) {
+window.cancelWorkflow = function (id) {
   activeWorkflows = activeWorkflows.filter(w => w.id !== id);
   addActivity('workflow_fail', 'Workflow cancelled', '');
   renderActiveWorkflows();
@@ -1757,7 +1767,7 @@ window.cancelWorkflow = function(id) {
 };
 
 // Send Quack Modal
-window.openSendQuackModal = function() {
+window.openSendQuackModal = function () {
   const modal = document.createElement('div');
   modal.id = 'send-quack-modal';
   modal.className = 'send-quack-modal';
@@ -1793,32 +1803,32 @@ window.openSendQuackModal = function() {
   document.body.appendChild(modal);
 };
 
-window.closeSendQuackModal = function() {
+window.closeSendQuackModal = function () {
   const modal = document.getElementById('send-quack-modal');
   if (modal) modal.remove();
 };
 
-window.sendQuackMessage = async function() {
+window.sendQuackMessage = async function () {
   const to = document.getElementById('quack-to').value;
   const task = document.getElementById('quack-task').value;
   const context = document.getElementById('quack-context').value;
-  
+
   if (!task) {
     showToast('Please enter a task', 'error');
     return;
   }
-  
+
   try {
     await fetch('/api/quack/send', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({ to, task, context })
     });
-    
+
     addActivity('quack', `Quack sent to /${to}`, task.substring(0, 60) + '...', []);
     closeSendQuackModal();
     showToast('Quack sent successfully!');
-    
+
     if (settings.notifications?.sound) {
       playQuackSound();
     }
@@ -1839,11 +1849,11 @@ function playQuackSound() {
     gain.gain.value = 0.1;
     osc.start();
     osc.stop(ctx.currentTime + 0.1);
-  } catch (e) {}
+  } catch (e) { }
 }
 
 // Analyze Code Modal
-window.openAnalyzeModal = function() {
+window.openAnalyzeModal = function () {
   const modal = document.createElement('div');
   modal.id = 'analyze-modal';
   modal.className = 'send-quack-modal';
@@ -1873,31 +1883,31 @@ window.openAnalyzeModal = function() {
   document.body.appendChild(modal);
 };
 
-window.closeAnalyzeModal = function() {
+window.closeAnalyzeModal = function () {
   const modal = document.getElementById('analyze-modal');
   if (modal) modal.remove();
 };
 
-window.analyzeCode = async function() {
+window.analyzeCode = async function () {
   const code = document.getElementById('analyze-code').value;
   const lang = document.getElementById('analyze-lang').value;
-  
+
   if (!code) {
     showToast('Please enter code to analyze', 'error');
     return;
   }
-  
+
   try {
     const response = await fetch('/api/mcp/call', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ 
-        tool: 'analyze_code', 
-        params: { code, language: lang } 
+      body: JSON.stringify({
+        tool: 'analyze_code',
+        params: { code, language: lang }
       })
     });
     const data = await response.json();
-    
+
     if (data.result && data.result.url) {
       addActivity('logicart', `LogicArt: analyzed ${lang} code`, 'Complexity: ' + (data.result.complexity || 'N/A'), [
         { label: 'View Flowchart', onclick: `window.open('${data.result.url}', '_blank')` }
@@ -1914,13 +1924,13 @@ window.analyzeCode = async function() {
 // Template Dropdown
 let templateDropdownEl = null;
 
-window.openTemplateDropdown = function(event) {
+window.openTemplateDropdown = function (event) {
   if (templateDropdownEl) {
     templateDropdownEl.remove();
     templateDropdownEl = null;
     return;
   }
-  
+
   const templates = [
     { id: 'content-pipeline', icon: '📝', name: 'Content Pipeline' },
     { id: 'code-review', icon: '🔍', name: 'Code Review' },
@@ -1928,23 +1938,23 @@ window.openTemplateDropdown = function(event) {
     { id: 'image-generation', icon: '🎨', name: 'Image Generation' },
     { id: 'email-processor', icon: '📧', name: 'Email Processor' }
   ];
-  
+
   const dropdown = document.createElement('div');
   dropdown.className = 'template-dropdown';
   dropdown.style.position = 'fixed';
   dropdown.style.top = (event.target.getBoundingClientRect().bottom + 5) + 'px';
   dropdown.style.left = event.target.getBoundingClientRect().left + 'px';
-  
+
   dropdown.innerHTML = templates.map(t => `
     <div class="template-dropdown-item" onclick="runTemplate('${t.id}')">
       <span>${t.icon}</span>
       <span>${t.name}</span>
     </div>
   `).join('');
-  
+
   document.body.appendChild(dropdown);
   templateDropdownEl = dropdown;
-  
+
   setTimeout(() => {
     document.addEventListener('click', closeTemplateDropdown, { once: true });
   }, 0);
@@ -1957,10 +1967,10 @@ function closeTemplateDropdown() {
   }
 }
 
-window.runTemplate = function(templateId) {
+window.runTemplate = function (templateId) {
   closeTemplateDropdown();
   loadTemplate(templateId);
-  
+
   const wf = {
     id: 'wf-' + Date.now(),
     name: templateId.replace(/-/g, ' ').replace(/\b\w/g, l => l.toUpperCase()),
@@ -1970,11 +1980,11 @@ window.runTemplate = function(templateId) {
     currentAction: 'Initializing...'
   };
   activeWorkflows.push(wf);
-  
+
   addActivity('workflow_start', `Workflow "${wf.name}" started`, 'Step 1/4: Initializing...', [
     { label: 'View Progress', onclick: `document.querySelector('[data-tab="cowork"]').click()` }
   ]);
-  
+
   renderActiveWorkflows();
   showToast('Template loaded - running workflow!');
 };
@@ -1982,19 +1992,19 @@ window.runTemplate = function(templateId) {
 // Enhanced Control Room refresh
 async function loadControlRoom() {
   loadSettings();
-  
+
   try {
     const response = await fetch('/api/quack/inboxes');
     const data = await response.json();
-    
+
     if (data.inboxes) {
       let totalMessages = 0;
       let totalPending = 0;
-      
+
       data.inboxes.forEach(inbox => {
         totalMessages += inbox.messages?.length || 0;
         totalPending += inbox.pendingCount || 0;
-        
+
         // Add to activity feed for new messages
         if (inbox.messages) {
           inbox.messages.slice(0, 2).forEach(msg => {
@@ -2007,21 +2017,21 @@ async function loadControlRoom() {
           });
         }
       });
-      
+
       document.getElementById('stat-inboxes').textContent = data.inboxes.length;
       document.getElementById('stat-messages').textContent = totalMessages;
       document.getElementById('stat-pending').textContent = totalPending;
-      
+
       renderAgentTiles(data.inboxes);
     }
   } catch (error) {
     console.error('Error loading control room:', error);
   }
-  
+
   renderActiveWorkflows();
   renderActivityFeed();
 }
 
-window.refreshControlRoom = async function() {
+window.refreshControlRoom = async function () {
   await loadControlRoom();
 };
