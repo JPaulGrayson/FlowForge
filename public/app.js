@@ -732,77 +732,79 @@ window.switchControlRoomTab = function(tabName) {
   if (tabName === 'widget') initQuackWidget();
 };
 
-window.initQuackWidget = async function() {
-  const container = document.getElementById('quack-widget');
-  container.innerHTML = '<p style="text-align:center;padding:20px;color:#888;">Loading inbox...</p>';
+window.initQuackWidget = function() {
+  if (quackWidgetInitialized) return;
   
-  try {
-    const res = await fetch('/api/quack/my-inbox');
-    const data = await res.json();
-    
-    if (!data.messages || data.messages.length === 0) {
+  const container = document.getElementById('quack-widget');
+  container.innerHTML = '<p style="text-align:center;padding:20px;color:#888;">Loading Quack Widget...</p>';
+  
+  // Load external widget script from Quack
+  if (typeof QuackWidget !== 'undefined') {
+    initQuackWidgetInstance();
+  } else {
+    const script = document.createElement('script');
+    script.src = 'https://quack.us.com/quack-widget.js';
+    script.onload = () => {
+      console.log('[Quack Widget] Script loaded from quack.us.com');
+      initQuackWidgetInstance();
+    };
+    script.onerror = () => {
+      console.error('[Quack Widget] Failed to load script');
       container.innerHTML = `
         <div class="widget-empty-state">
-          <p>No messages in inbox</p>
-          <p style="font-size:12px;color:#666;margin-top:8px;">Messages sent to replit/orchestrate will appear here</p>
+          <p>Could not load Quack Widget</p>
+          <p style="font-size:12px;color:#666;margin-top:8px;">The widget script at quack.us.com may be unavailable</p>
         </div>
       `;
-      return;
+    };
+    document.head.appendChild(script);
+  }
+};
+
+function initQuackWidgetInstance() {
+  if (typeof QuackWidget === 'undefined') {
+    console.error('[Quack Widget] QuackWidget not defined after script load');
+    return;
+  }
+  
+  QuackWidget.init({
+    container: "#quack-widget",
+    inbox: "replit/orchestrate",
+    pollInterval: 5000,
+    theme: "dark",
+    showThreads: true,
+    showApproveReject: true,
+    maxHeight: "480px",
+    onMessage: (msg) => {
+      console.log("[Quack Widget] New message:", msg.from);
+      showToast(`New message from ${msg.from}`);
+    },
+    onApprove: (msg) => {
+      console.log("[Quack Widget] Approved:", msg.id);
+      showToast("Message approved!");
+    },
+    onReject: (msg) => {
+      console.log("[Quack Widget] Rejected:", msg.id);
+      showToast("Message rejected");
+    },
+    onError: (err) => {
+      console.error("[Quack Widget] Error:", err);
     }
-    
-    const messagesHtml = data.messages.map(msg => `
-      <div class="widget-message ${msg.status}" data-id="${msg.id}">
-        <div class="widget-message-header">
-          <span class="widget-from">${msg.from || 'Unknown'}</span>
-          <span class="widget-status status-${msg.status}">${msg.status}</span>
-        </div>
-        <div class="widget-task">${msg.task ? msg.task.substring(0, 150) : 'No task'}${msg.task && msg.task.length > 150 ? '...' : ''}</div>
-        <div class="widget-time">${msg.created_at ? new Date(msg.created_at).toLocaleString() : ''}</div>
-        ${msg.status === 'pending' ? `
-          <div class="widget-actions">
-            <button class="btn-approve" onclick="widgetApprove('${msg.id}')">Approve</button>
-            <button class="btn-reject" onclick="widgetReject('${msg.id}')">Reject</button>
-          </div>
-        ` : ''}
-      </div>
-    `).join('');
-    
-    container.innerHTML = `<div class="widget-messages">${messagesHtml}</div>`;
-    quackWidgetInitialized = true;
-  } catch (err) {
-    console.error('[Widget] Error loading inbox:', err);
-    container.innerHTML = '<p style="text-align:center;padding:20px;color:#f66;">Error loading inbox</p>';
-  }
-};
-
-window.widgetApprove = async function(id) {
-  try {
-    await fetch(`/api/quack/approve/${id}`, { method: 'POST' });
-    showToast('Message approved!');
-    initQuackWidget();
-  } catch (err) {
-    showToast('Failed to approve');
-  }
-};
-
-window.widgetReject = async function(id) {
-  try {
-    await fetch(`/api/quack/status/${id}`, {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ status: 'rejected' })
-    });
-    showToast('Message rejected');
-    initQuackWidget();
-  } catch (err) {
-    showToast('Failed to reject');
-  }
-};
+  });
+  
+  quackWidgetInitialized = true;
+  console.log("[Quack Widget] Initialized with Quack's external script");
+}
 
 window.refreshQuackWidget = function() {
-  quackWidgetInitialized = false;
-  initQuackWidget();
-  showToast("Widget refreshed");
+  if (typeof QuackWidget !== 'undefined' && QuackWidget.refresh) {
+    QuackWidget.refresh();
+    showToast("Widget refreshed");
+  } else {
+    quackWidgetInitialized = false;
+    initQuackWidget();
+    showToast("Widget reloaded");
+  }
 };
 
 window.loadAuditLogs = async function() {
