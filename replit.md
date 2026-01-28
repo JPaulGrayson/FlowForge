@@ -159,6 +159,10 @@ Server-to-server session handshake for reliable authentication:
 
 ## Recent Changes
 
+- 2026-01-28: Enhanced Quack integration with audit trail, agent registry, and thread management
+- 2026-01-28: Added Control Room subtabs (Inboxes, Audit Trail, Agents, Threads)
+- 2026-01-28: Added priority badges and tags display on messages
+- 2026-01-28: New API endpoints: /api/quack/audit, /api/quack/agents, /api/quack/threads, /api/quack/archive
 - 2026-01-28: Added Grok (xAI) integration to AI Council - uses OpenAI-compatible API at api.x.ai
 - 2026-01-28: Added Grok API key field in BYOK Settings (xAI API Key)
 - 2026-01-24: Implemented server-to-server Voyai session handshake (replaces broken redirect auth)

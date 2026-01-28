@@ -91,6 +91,22 @@ export class QuackPoller {
             return false;
         }
     }
+    async rejectMessage(messageId) {
+        try {
+            const response = await fetch(`${QUACK_API_BASE}/reject/${messageId}`, {
+                method: 'POST'
+            });
+            const data = await response.json();
+            if (data.success) {
+                await this.checkAllInboxes();
+            }
+            return data.success || false;
+        }
+        catch (error) {
+            console.error('Error rejecting message:', error);
+            return false;
+        }
+    }
     async updateStatus(messageId, status) {
         try {
             const response = await fetch(`${QUACK_API_BASE}/status/${messageId}`, {
@@ -109,7 +125,7 @@ export class QuackPoller {
             return false;
         }
     }
-    async sendMessage(to, task, context) {
+    async sendMessage(to, task, context, options) {
         try {
             const response = await fetch(`${QUACK_API_BASE}/send`, {
                 method: 'POST',
@@ -118,7 +134,8 @@ export class QuackPoller {
                     to,
                     from: MY_INBOX,
                     task,
-                    context
+                    context,
+                    ...options
                 })
             });
             const data = await response.json();
@@ -127,6 +144,116 @@ export class QuackPoller {
         catch (error) {
             console.error('Error sending message:', error);
             return false;
+        }
+    }
+    async fetchAuditLogs(options) {
+        try {
+            const params = new URLSearchParams();
+            if (options?.limit)
+                params.set('limit', options.limit.toString());
+            if (options?.offset)
+                params.set('offset', options.offset.toString());
+            if (options?.action)
+                params.set('action', options.action);
+            if (options?.actor)
+                params.set('actor', options.actor);
+            if (options?.targetType)
+                params.set('targetType', options.targetType);
+            if (options?.targetId)
+                params.set('targetId', options.targetId);
+            if (options?.since)
+                params.set('since', options.since);
+            if (options?.until)
+                params.set('until', options.until);
+            const url = `${QUACK_API_BASE}/audit${params.toString() ? '?' + params.toString() : ''}`;
+            const response = await fetch(url);
+            const data = await response.json();
+            return data;
+        }
+        catch (error) {
+            console.error('Error fetching audit logs:', error);
+            return { logs: [], total: 0 };
+        }
+    }
+    async fetchAuditStats() {
+        try {
+            const response = await fetch(`${QUACK_API_BASE}/audit/stats`);
+            const data = await response.json();
+            return data;
+        }
+        catch (error) {
+            console.error('Error fetching audit stats:', error);
+            return { totalLogs: 0, byAction: {}, byActor: {}, recentActivity: 0 };
+        }
+    }
+    async fetchAgents() {
+        try {
+            const response = await fetch(`${QUACK_API_BASE}/agents`);
+            const data = await response.json();
+            return data.agents || [];
+        }
+        catch (error) {
+            console.error('Error fetching agents:', error);
+            return [];
+        }
+    }
+    async pingAgent(platform, name) {
+        try {
+            const response = await fetch(`${QUACK_API_BASE}/agents/${platform}/${name}/ping`, {
+                method: 'POST'
+            });
+            const data = await response.json();
+            return data.success || false;
+        }
+        catch (error) {
+            console.error('Error pinging agent:', error);
+            return false;
+        }
+    }
+    async fetchThreads() {
+        try {
+            const response = await fetch(`${QUACK_API_BASE}/threads`);
+            const data = await response.json();
+            return data.threads || [];
+        }
+        catch (error) {
+            console.error('Error fetching threads:', error);
+            return [];
+        }
+    }
+    async fetchThread(threadId) {
+        try {
+            const response = await fetch(`${QUACK_API_BASE}/thread/${threadId}`);
+            const data = await response.json();
+            return data;
+        }
+        catch (error) {
+            console.error('Error fetching thread:', error);
+            return null;
+        }
+    }
+    async archiveThread(threadId) {
+        try {
+            const response = await fetch(`${QUACK_API_BASE}/archive/${threadId}`, {
+                method: 'POST'
+            });
+            const data = await response.json();
+            return data.success || false;
+        }
+        catch (error) {
+            console.error('Error archiving thread:', error);
+            return false;
+        }
+    }
+    async fetchArchivedThreads() {
+        try {
+            const response = await fetch(`${QUACK_API_BASE}/archive`);
+            const data = await response.json();
+            return data.threads || [];
+        }
+        catch (error) {
+            console.error('Error fetching archived threads:', error);
+            return [];
         }
     }
 }

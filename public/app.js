@@ -717,6 +717,192 @@ window.refreshControlRoom = async function () {
   await loadControlRoom();
 };
 
+window.switchControlRoomTab = function(tabName) {
+  document.querySelectorAll('.subtab-btn').forEach(btn => btn.classList.remove('active'));
+  document.querySelectorAll('.control-room-subtab-content').forEach(content => content.classList.remove('active'));
+  
+  document.querySelector(`[data-subtab="${tabName}"]`)?.classList.add('active');
+  document.getElementById(`subtab-${tabName}`)?.classList.add('active');
+  
+  if (tabName === 'audit') loadAuditLogs();
+  if (tabName === 'agents') loadRegisteredAgents();
+  if (tabName === 'threads') loadThreads();
+};
+
+window.loadAuditLogs = async function() {
+  const container = document.getElementById('audit-logs');
+  const actionFilter = document.getElementById('audit-action-filter')?.value || '';
+  
+  try {
+    const params = new URLSearchParams();
+    params.set('limit', '50');
+    if (actionFilter) params.set('action', actionFilter);
+    
+    const [logsRes, statsRes] = await Promise.all([
+      fetch(`/api/quack/audit?${params}`),
+      fetch('/api/quack/audit/stats')
+    ]);
+    
+    const logsData = await logsRes.json();
+    const statsData = await statsRes.json();
+    
+    document.getElementById('audit-total').textContent = statsData.totalLogs || 0;
+    document.getElementById('audit-recent').textContent = statsData.recentActivity || 0;
+    
+    const logs = logsData.logs || [];
+    if (logs.length > 0) {
+      container.innerHTML = logs.map(log => {
+        const actionClass = log.action.includes('send') ? 'send' : 
+                           log.action.includes('approve') ? 'approve' :
+                           log.action.includes('reject') ? 'reject' :
+                           log.action.includes('complete') ? 'complete' : 'status';
+        const actionLabel = log.action.replace('message.', '').replace('_', ' ');
+        return `
+          <div class="audit-log-item">
+            <div>
+              <span class="audit-action-badge ${actionClass}">${actionLabel}</span>
+              <span class="audit-log-actor">${log.actor}</span>
+            </div>
+            <span class="audit-log-time">${new Date(log.timestamp).toLocaleString()}</span>
+          </div>
+        `;
+      }).join('');
+    } else {
+      container.innerHTML = '<p class="empty-state-small">No audit logs found</p>';
+    }
+  } catch (error) {
+    container.innerHTML = `<p class="empty-state-small">Error loading audit logs: ${error.message}</p>`;
+  }
+};
+
+window.loadRegisteredAgents = async function() {
+  const container = document.getElementById('registered-agents');
+  
+  try {
+    const response = await fetch('/api/quack/agents');
+    const data = await response.json();
+    const agents = data.agents || [];
+    
+    if (agents.length > 0) {
+      container.innerHTML = agents.map(agent => `
+        <div class="agent-card">
+          <div class="agent-card-header">
+            <span class="agent-card-name">${agent.displayName || agent.name}</span>
+            <span class="agent-status ${agent.status || 'unknown'}"></span>
+          </div>
+          <div class="agent-card-platform">${agent.platform}/${agent.name}</div>
+          <div class="agent-card-desc">${agent.description || 'No description'}</div>
+          ${agent.lastSeen ? `<div style="color:#666;font-size:11px;">Last seen: ${new Date(agent.lastSeen).toLocaleString()}</div>` : ''}
+          <div class="agent-card-actions">
+            <button class="btn-small" onclick="pingAgent('${agent.platform}', '${agent.name}')">Ping</button>
+            <button class="btn-small" onclick="sendToAgent('${agent.platform}/${agent.name}')">Send</button>
+          </div>
+        </div>
+      `).join('');
+    } else {
+      container.innerHTML = '<p class="empty-state-small">No registered agents found</p>';
+    }
+  } catch (error) {
+    container.innerHTML = `<p class="empty-state-small">Error loading agents: ${error.message}</p>`;
+  }
+};
+
+window.pingAgent = async function(platform, name) {
+  try {
+    const response = await fetch(`/api/quack/agents/${platform}/${name}/ping`, { method: 'POST' });
+    const data = await response.json();
+    showToast(data.success ? `${name} is online!` : `${name} did not respond`);
+    await loadRegisteredAgents();
+  } catch (error) {
+    showToast(`Error pinging agent: ${error.message}`, 'error');
+  }
+};
+
+window.sendToAgent = function(agentPath) {
+  openSendQuackModal();
+  setTimeout(() => {
+    const toField = document.getElementById('quack-to');
+    if (toField) toField.value = agentPath;
+  }, 100);
+};
+
+window.loadThreads = async function() {
+  const container = document.getElementById('threads-list');
+  
+  try {
+    const response = await fetch('/api/quack/threads');
+    const data = await response.json();
+    const threads = data.threads || [];
+    
+    if (threads.length > 0) {
+      container.innerHTML = threads.map(thread => `
+        <div class="thread-item" onclick="viewThread('${thread.threadId}')">
+          <div class="thread-header">
+            <span class="thread-id">${thread.threadId.substring(0, 8)}...</span>
+            <span class="thread-count">${thread.messages?.length || 0} messages</span>
+          </div>
+          <div class="thread-participants">${thread.participants?.join(', ') || 'Unknown'}</div>
+          <div class="thread-last-activity">Last activity: ${new Date(thread.lastActivity).toLocaleString()}</div>
+        </div>
+      `).join('');
+    } else {
+      container.innerHTML = '<p class="empty-state-small">No conversation threads found</p>';
+    }
+  } catch (error) {
+    container.innerHTML = `<p class="empty-state-small">Error loading threads: ${error.message}</p>`;
+  }
+};
+
+window.viewThread = async function(threadId) {
+  try {
+    const response = await fetch(`/api/quack/thread/${threadId}`);
+    const thread = await response.json();
+    
+    const modal = document.createElement('div');
+    modal.className = 'modal-overlay';
+    modal.onclick = (e) => { if (e.target === modal) modal.remove(); };
+    
+    modal.innerHTML = `
+      <div class="modal-content" style="max-width:600px;max-height:80vh;overflow-y:auto;">
+        <div class="modal-header">
+          <h3>Thread ${threadId.substring(0, 8)}...</h3>
+          <button class="modal-close" onclick="this.closest('.modal-overlay').remove()">&times;</button>
+        </div>
+        <div class="thread-messages" style="display:flex;flex-direction:column;gap:12px;padding:16px;">
+          ${(thread.messages || []).map(msg => `
+            <div style="padding:12px;background:rgba(255,255,255,0.03);border-radius:8px;border-left:3px solid ${msg.from?.includes('orchestrate') ? '#00d9ff' : '#a855f7'};">
+              <div style="display:flex;justify-content:space-between;margin-bottom:8px;">
+                <span style="color:#00d9ff;font-weight:500;">${msg.from}</span>
+                <span style="color:#666;font-size:11px;">${new Date(msg.timestamp).toLocaleString()}</span>
+              </div>
+              <p style="color:#ddd;font-size:14px;">${msg.task}</p>
+              ${msg.priority && msg.priority !== 'normal' ? `<span class="priority-badge ${msg.priority}">${msg.priority}</span>` : ''}
+            </div>
+          `).join('')}
+        </div>
+        <div style="padding:16px;border-top:1px solid rgba(255,255,255,0.1);">
+          <button class="btn-secondary" onclick="archiveThread('${threadId}');this.closest('.modal-overlay').remove();">Archive Thread</button>
+        </div>
+      </div>
+    `;
+    
+    document.body.appendChild(modal);
+  } catch (error) {
+    showToast(`Error loading thread: ${error.message}`, 'error');
+  }
+};
+
+window.archiveThread = async function(threadId) {
+  try {
+    const response = await fetch(`/api/quack/archive/${threadId}`, { method: 'POST' });
+    const data = await response.json();
+    showToast(data.success ? 'Thread archived!' : 'Failed to archive thread');
+    await loadThreads();
+  } catch (error) {
+    showToast(`Error archiving thread: ${error.message}`, 'error');
+  }
+};
+
 window.selectInbox = function (name) {
   const inbox = controlRoomData.inboxes?.find(i => i.name === name);
   if (!inbox) return;
@@ -744,9 +930,11 @@ function showInboxSidebar(inbox) {
           <div class="message-item-header">
             <span class="from" style="color:#00d9ff;">From: ${msg.from}</span>
             <span class="message-status ${msg.status}">${msg.status}</span>
+            ${msg.priority && msg.priority !== 'normal' ? `<span class="priority-badge ${msg.priority}">${msg.priority}</span>` : ''}
           </div>
           <p style="color:#ccc;font-size:13px;margin:6px 0;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;">${msg.task}</p>
           <p style="color:#666;font-size:11px;">${new Date(msg.timestamp).toLocaleString()}</p>
+          ${msg.tags?.length > 0 ? `<div class="message-tags">${msg.tags.map(t => `<span class="tag">${t}</span>`).join('')}</div>` : ''}
         </div>
       `).join('') : '<p style="color:#888;text-align:center;padding:20px;">No messages</p>'}
     </div>

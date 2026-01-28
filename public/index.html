@@ -180,12 +180,69 @@
           </div>
         </div>
         
-        <!-- Agent Tiles -->
-        <div class="panel-header" style="margin-top:20px;">
-          <h3>Agent Inboxes</h3>
+        <!-- Sub-tabs for Control Room views -->
+        <div class="control-room-subtabs">
+          <button class="subtab-btn active" data-subtab="inboxes" onclick="switchControlRoomTab('inboxes')">Inboxes</button>
+          <button class="subtab-btn" data-subtab="audit" onclick="switchControlRoomTab('audit')">Audit Trail</button>
+          <button class="subtab-btn" data-subtab="agents" onclick="switchControlRoomTab('agents')">Agents</button>
+          <button class="subtab-btn" data-subtab="threads" onclick="switchControlRoomTab('threads')">Threads</button>
         </div>
-        <div id="agent-tiles" class="agent-tiles-grid">
-          <p class="loading">Loading agent inboxes...</p>
+        
+        <!-- Inboxes View -->
+        <div id="subtab-inboxes" class="control-room-subtab-content active">
+          <div class="panel-header">
+            <h3>Agent Inboxes</h3>
+          </div>
+          <div id="agent-tiles" class="agent-tiles-grid">
+            <p class="loading">Loading agent inboxes...</p>
+          </div>
+        </div>
+        
+        <!-- Audit Trail View -->
+        <div id="subtab-audit" class="control-room-subtab-content">
+          <div class="panel-header">
+            <h3>Audit Trail</h3>
+            <div class="audit-filters">
+              <select id="audit-action-filter" onchange="loadAuditLogs()">
+                <option value="">All Actions</option>
+                <option value="message.send">Message Sent</option>
+                <option value="message.approve">Approved</option>
+                <option value="message.reject">Rejected</option>
+                <option value="message.complete">Completed</option>
+                <option value="message.status_change">Status Changed</option>
+              </select>
+              <button class="btn-small" onclick="loadAuditLogs()">Refresh</button>
+            </div>
+          </div>
+          <div class="audit-stats" id="audit-stats">
+            <div class="stat-mini"><span id="audit-total">0</span> Total</div>
+            <div class="stat-mini"><span id="audit-recent">0</span> Recent</div>
+          </div>
+          <div id="audit-logs" class="audit-logs-list">
+            <p class="loading">Loading audit trail...</p>
+          </div>
+        </div>
+        
+        <!-- Agents Registry View -->
+        <div id="subtab-agents" class="control-room-subtab-content">
+          <div class="panel-header">
+            <h3>Registered Agents</h3>
+            <button class="btn-small" onclick="loadRegisteredAgents()">Refresh</button>
+          </div>
+          <div id="registered-agents" class="registered-agents-grid">
+            <p class="loading">Loading agents...</p>
+          </div>
+        </div>
+        
+        <!-- Threads View -->
+        <div id="subtab-threads" class="control-room-subtab-content">
+          <div class="panel-header">
+            <h3>Conversation Threads</h3>
+            <button class="btn-small" onclick="loadThreads()">Refresh</button>
+          </div>
+          <div id="threads-list" class="threads-list">
+            <p class="loading">Loading threads...</p>
+          </div>
         </div>
       </section>
       

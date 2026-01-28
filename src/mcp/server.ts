@@ -462,8 +462,112 @@ app.post("/api/quack/status/:id", async (req, res) => {
 app.post("/api/quack/send", async (req, res) => {
   try {
     const poller = new QuackPoller();
-    const success = await poller.sendMessage(req.body.to, req.body.task, req.body.context);
+    const success = await poller.sendMessage(req.body.to, req.body.task, req.body.context, {
+      priority: req.body.priority,
+      tags: req.body.tags,
+      project: req.body.project,
+      replyTo: req.body.replyTo
+    });
     res.json({ success });
+  } catch (e: any) {
+    res.status(500).json({ error: e.message });
+  }
+});
+
+app.post("/api/quack/reject/:id", async (req, res) => {
+  try {
+    const poller = new QuackPoller();
+    const success = await poller.rejectMessage(req.params.id);
+    res.json({ success });
+  } catch (e: any) {
+    res.status(500).json({ error: e.message });
+  }
+});
+
+app.get("/api/quack/audit", async (req, res) => {
+  try {
+    const poller = new QuackPoller();
+    const result = await poller.fetchAuditLogs({
+      limit: req.query.limit ? parseInt(req.query.limit as string) : undefined,
+      offset: req.query.offset ? parseInt(req.query.offset as string) : undefined,
+      action: req.query.action as string,
+      actor: req.query.actor as string,
+      targetType: req.query.targetType as string,
+      targetId: req.query.targetId as string,
+      since: req.query.since as string,
+      until: req.query.until as string
+    });
+    res.json(result);
+  } catch (e: any) {
+    res.status(500).json({ error: e.message });
+  }
+});
+
+app.get("/api/quack/audit/stats", async (_, res) => {
+  try {
+    const poller = new QuackPoller();
+    const result = await poller.fetchAuditStats();
+    res.json(result);
+  } catch (e: any) {
+    res.status(500).json({ error: e.message });
+  }
+});
+
+app.get("/api/quack/agents", async (_, res) => {
+  try {
+    const poller = new QuackPoller();
+    const agents = await poller.fetchAgents();
+    res.json({ agents });
+  } catch (e: any) {
+    res.status(500).json({ error: e.message });
+  }
+});
+
+app.post("/api/quack/agents/:platform/:name/ping", async (req, res) => {
+  try {
+    const poller = new QuackPoller();
+    const success = await poller.pingAgent(req.params.platform, req.params.name);
+    res.json({ success });
+  } catch (e: any) {
+    res.status(500).json({ error: e.message });
+  }
+});
+
+app.get("/api/quack/threads", async (_, res) => {
+  try {
+    const poller = new QuackPoller();
+    const threads = await poller.fetchThreads();
+    res.json({ threads });
+  } catch (e: any) {
+    res.status(500).json({ error: e.message });
+  }
+});
+
+app.get("/api/quack/thread/:threadId", async (req, res) => {
+  try {
+    const poller = new QuackPoller();
+    const thread = await poller.fetchThread(req.params.threadId);
+    res.json(thread);
+  } catch (e: any) {
+    res.status(500).json({ error: e.message });
+  }
+});
+
+app.post("/api/quack/archive/:threadId", async (req, res) => {
+  try {
+    const poller = new QuackPoller();
+    const success = await poller.archiveThread(req.params.threadId);
+    res.json({ success });
+  } catch (e: any) {
+    res.status(500).json({ error: e.message });
+  }
+});
+
+app.get("/api/quack/archive", async (_, res) => {
+  try {
+    const poller = new QuackPoller();
+    const threads = await poller.fetchArchivedThreads();
+    res.json({ threads });
   } catch (e: any) {
     res.status(500).json({ error: e.message });
   }
