@@ -151,35 +151,6 @@
           </div>
         </div>
         
-        <div class="control-room-grid">
-          <!-- Active Workflows Panel -->
-          <div class="active-workflows-panel">
-            <div class="panel-header">
-              <h3>Active Workflows</h3>
-              <button class="btn-link" onclick="document.querySelector('[data-tab=&quot;cowork&quot;]').click()">View All</button>
-            </div>
-            <div id="active-workflows-list" class="active-workflows-list">
-              <p class="empty-state-small">No active workflows</p>
-            </div>
-          </div>
-          
-          <!-- Activity Feed -->
-          <div class="activity-feed-panel">
-            <div class="panel-header">
-              <h3>Recent Activity</h3>
-              <select id="activity-filter" onchange="filterActivity()">
-                <option value="all">All Events</option>
-                <option value="quack">Quack Messages</option>
-                <option value="workflow">Workflows</option>
-                <option value="logicart">LogicArt</option>
-              </select>
-            </div>
-            <div id="activity-feed" class="activity-feed">
-              <p class="empty-state-small">No recent activity</p>
-            </div>
-          </div>
-        </div>
-        
         <!-- Sub-tabs for Control Room views -->
         <div class="control-room-subtabs">
           <button class="subtab-btn active" data-subtab="inboxes" onclick="switchControlRoomTab('inboxes')">Inboxes</button>
