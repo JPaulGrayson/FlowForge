@@ -8,9 +8,36 @@ import { createLogicArtAdapter } from "../integration/logicart-adapter.js";
 import { council } from "../council/council.js";
 import { toolHandlers } from "../tools/handlers.js";
 import { saveWorkflow, loadWorkflow, listWorkflows } from "../tools/persistence.js";
-import { QuackPoller, MY_INBOX } from "../quack/poller.js";
+import { QuackPoller, MY_INBOX, InboxState } from "../quack/poller.js";
 
 const QUACK_URL = 'https://quack.us.com';
+
+// ===== AUTO-SYNCING QUACK POLLER =====
+
+let lastMessageCounts: Map<string, number> = new Map();
+
+const globalQuackPoller = new QuackPoller((inboxes: Map<string, InboxState>) => {
+  // Check for new messages
+  for (const [name, state] of inboxes.entries()) {
+    const lastCount = lastMessageCounts.get(name) || 0;
+    const currentCount = state.messages.length;
+    
+    if (currentCount > lastCount) {
+      const newMessages = state.messages.slice(0, currentCount - lastCount);
+      for (const msg of newMessages) {
+        console.log(`[Quack] New message in ${name}: ${msg.task.substring(0, 50)}... (from: ${msg.from}, priority: ${msg.priority || 'normal'})`);
+      }
+    }
+    
+    lastMessageCounts.set(name, currentCount);
+  }
+});
+
+// Start auto-syncing on server startup
+setTimeout(() => {
+  globalQuackPoller.start();
+  console.log('[Quack] Auto-sync started - polling every 5 seconds');
+}, 2000);
 
 // ===== VOYAI SERVER-TO-SERVER SESSION HANDSHAKE =====
 
@@ -737,6 +764,28 @@ app.get("/api/voyai/me", (req, res) => {
   res.json({ 
     authenticated: false, 
     message: 'Check client-side localStorage for voyai_user'
+  });
+});
+
+// Quack sync status endpoint
+app.get("/api/quack/sync-status", (_req, res) => {
+  const inboxes = globalQuackPoller.getInboxes();
+  const inboxList: any[] = [];
+  
+  for (const [name, state] of inboxes.entries()) {
+    inboxList.push({
+      name,
+      messageCount: state.messages.length,
+      pendingCount: state.pendingCount,
+      lastChecked: state.lastChecked
+    });
+  }
+  
+  res.json({
+    syncing: true,
+    pollInterval: 5000,
+    inboxes: inboxList,
+    lastMessageCounts: Object.fromEntries(lastMessageCounts)
   });
 });
 
