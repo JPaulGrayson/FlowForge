@@ -1735,6 +1735,118 @@ body {
   display: block;
 }
 
+/* Quack Widget Styles */
+.widget-empty-state {
+  text-align: center;
+  padding: 40px;
+  color: #888;
+}
+
+.widget-messages {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  max-height: 480px;
+  overflow-y: auto;
+}
+
+.widget-message {
+  background: rgba(255, 255, 255, 0.05);
+  border-radius: 8px;
+  padding: 12px;
+  border-left: 3px solid #555;
+}
+
+.widget-message.pending {
+  border-left-color: #f0c040;
+}
+
+.widget-message.approved, .widget-message.in_progress {
+  border-left-color: #4CAF50;
+}
+
+.widget-message.completed {
+  border-left-color: #2196F3;
+}
+
+.widget-message.rejected, .widget-message.failed {
+  border-left-color: #f44;
+}
+
+.widget-message-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 8px;
+}
+
+.widget-from {
+  font-weight: 600;
+  color: #00d4ff;
+}
+
+.widget-status {
+  font-size: 11px;
+  padding: 2px 8px;
+  border-radius: 10px;
+  text-transform: uppercase;
+}
+
+.widget-status.status-pending { background: rgba(240, 192, 64, 0.2); color: #f0c040; }
+.widget-status.status-approved, .widget-status.status-in_progress { background: rgba(76, 175, 80, 0.2); color: #4CAF50; }
+.widget-status.status-completed { background: rgba(33, 150, 243, 0.2); color: #2196F3; }
+.widget-status.status-rejected, .widget-status.status-failed { background: rgba(255, 68, 68, 0.2); color: #f44; }
+
+.widget-task {
+  color: #ccc;
+  font-size: 14px;
+  line-height: 1.4;
+  margin-bottom: 8px;
+}
+
+.widget-time {
+  font-size: 11px;
+  color: #666;
+}
+
+.widget-actions {
+  display: flex;
+  gap: 8px;
+  margin-top: 10px;
+}
+
+.widget-actions .btn-approve {
+  background: #4CAF50;
+  color: white;
+  border: none;
+  padding: 6px 16px;
+  border-radius: 4px;
+  cursor: pointer;
+  font-size: 12px;
+}
+
+.widget-actions .btn-approve:hover {
+  background: #45a049;
+}
+
+.widget-actions .btn-reject {
+  background: transparent;
+  color: #f44;
+  border: 1px solid #f44;
+  padding: 6px 16px;
+  border-radius: 4px;
+  cursor: pointer;
+  font-size: 12px;
+}
+
+.widget-actions .btn-reject:hover {
+  background: rgba(255, 68, 68, 0.1);
+}
+
+.quack-widget-wrapper {
+  min-height: 200px;
+}
+
 /* Audit Trail Styles */
 .audit-filters {
   display: flex;
