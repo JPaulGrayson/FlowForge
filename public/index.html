@@ -183,6 +183,7 @@
         <!-- Sub-tabs for Control Room views -->
         <div class="control-room-subtabs">
           <button class="subtab-btn active" data-subtab="inboxes" onclick="switchControlRoomTab('inboxes')">Inboxes</button>
+          <button class="subtab-btn" data-subtab="widget" onclick="switchControlRoomTab('widget')">Quack Widget</button>
           <button class="subtab-btn" data-subtab="audit" onclick="switchControlRoomTab('audit')">Audit Trail</button>
           <button class="subtab-btn" data-subtab="agents" onclick="switchControlRoomTab('agents')">Agents</button>
           <button class="subtab-btn" data-subtab="threads" onclick="switchControlRoomTab('threads')">Threads</button>
@@ -195,6 +196,20 @@
           </div>
           <div id="agent-tiles" class="agent-tiles-grid">
             <p class="loading">Loading agent inboxes...</p>
+          </div>
+        </div>
+        
+        <!-- Quack Widget View -->
+        <div id="subtab-widget" class="control-room-subtab-content">
+          <div class="panel-header">
+            <h3>Quack Widget</h3>
+            <div class="widget-controls">
+              <button class="btn-small" onclick="refreshQuackWidget()">Refresh</button>
+              <span id="widget-sync-status" class="sync-status">Auto-syncing</span>
+            </div>
+          </div>
+          <div id="quack-widget-container" class="quack-widget-wrapper">
+            <div id="quack-widget"></div>
           </div>
         </div>
         
@@ -441,6 +456,7 @@
     </footer>
   </div>
 
+  <script src="https://quack.us.com/quack-widget.js"></script>
   <script src="/app.js"></script>
 </body>
 </html>

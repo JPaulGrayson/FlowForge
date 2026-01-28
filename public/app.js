@@ -717,6 +717,8 @@ window.refreshControlRoom = async function () {
   await loadControlRoom();
 };
 
+let quackWidgetInitialized = false;
+
 window.switchControlRoomTab = function(tabName) {
   document.querySelectorAll('.subtab-btn').forEach(btn => btn.classList.remove('active'));
   document.querySelectorAll('.control-room-subtab-content').forEach(content => content.classList.remove('active'));
@@ -727,6 +729,54 @@ window.switchControlRoomTab = function(tabName) {
   if (tabName === 'audit') loadAuditLogs();
   if (tabName === 'agents') loadRegisteredAgents();
   if (tabName === 'threads') loadThreads();
+  if (tabName === 'widget') initQuackWidget();
+};
+
+window.initQuackWidget = function() {
+  if (quackWidgetInitialized) return;
+  
+  if (typeof QuackWidget !== 'undefined') {
+    QuackWidget.init({
+      container: "#quack-widget",
+      inbox: "replit/orchestrate",
+      pollInterval: 5000,
+      theme: "dark",
+      showThreads: true,
+      showApproveReject: true,
+      maxHeight: "480px",
+      onMessage: (msg) => {
+        console.log("[Quack Widget] New message:", msg.from, msg.task.substring(0, 50));
+        showToast(`New message from ${msg.from}`);
+      },
+      onApprove: (msg) => {
+        console.log("[Quack Widget] Approved:", msg.id);
+        showToast("Message approved!");
+      },
+      onReject: (msg) => {
+        console.log("[Quack Widget] Rejected:", msg.id);
+        showToast("Message rejected");
+      },
+      onError: (err) => {
+        console.error("[Quack Widget] Error:", err);
+      }
+    });
+    quackWidgetInitialized = true;
+    console.log("[Quack Widget] Initialized");
+  } else {
+    document.getElementById('quack-widget').innerHTML = `
+      <div style="text-align:center;padding:40px;color:#888;">
+        <p>Quack Widget loading...</p>
+        <p style="font-size:12px;margin-top:10px;">If this persists, the widget script may not be available.</p>
+      </div>
+    `;
+  }
+};
+
+window.refreshQuackWidget = function() {
+  if (typeof QuackWidget !== 'undefined' && QuackWidget.refresh) {
+    QuackWidget.refresh();
+    showToast("Widget refreshed");
+  }
 };
 
 window.loadAuditLogs = async function() {

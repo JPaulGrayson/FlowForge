@@ -1952,3 +1952,44 @@ body {
   border-radius: 10px;
   font-size: 11px;
 }
+
+/* Quack Widget Styles */
+.quack-widget-wrapper {
+  background: rgba(0, 0, 0, 0.3);
+  border-radius: 12px;
+  padding: 16px;
+  min-height: 500px;
+  margin-top: 12px;
+}
+
+#quack-widget {
+  min-height: 480px;
+}
+
+.widget-controls {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+
+.sync-status {
+  font-size: 12px;
+  color: #10b981;
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.sync-status::before {
+  content: '';
+  width: 8px;
+  height: 8px;
+  background: #10b981;
+  border-radius: 50%;
+  animation: pulse 2s infinite;
+}
+
+@keyframes pulse {
+  0%, 100% { opacity: 1; }
+  50% { opacity: 0.5; }
+}

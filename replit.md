@@ -159,8 +159,10 @@ Server-to-server session handshake for reliable authentication:
 
 ## Recent Changes
 
+- 2026-01-28: Added embedded Quack Widget tab in Control Room with auto-sync
+- 2026-01-28: Added server-side auto-polling (every 5 seconds) with /api/quack/sync-status endpoint
 - 2026-01-28: Enhanced Quack integration with audit trail, agent registry, and thread management
-- 2026-01-28: Added Control Room subtabs (Inboxes, Audit Trail, Agents, Threads)
+- 2026-01-28: Added Control Room subtabs (Inboxes, Quack Widget, Audit Trail, Agents, Threads)
 - 2026-01-28: Added priority badges and tags display on messages
 - 2026-01-28: New API endpoints: /api/quack/audit, /api/quack/agents, /api/quack/threads, /api/quack/archive
 - 2026-01-28: Added Grok (xAI) integration to AI Council - uses OpenAI-compatible API at api.x.ai
