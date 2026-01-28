@@ -44,7 +44,7 @@ Orchestrate is an MCP (Model Context Protocol) server that enables Claude Deskto
 3. **MCP Protocol Support**: Full JSON-RPC 2.0 over SSE for Claude Desktop/Cowork
 4. **Quack Control Room**: Agent-to-agent messaging with workflow actions
 5. **Template Library**: Pre-built workflows (Content Pipeline, Code Review, Data Analysis, etc.)
-6. **AI Council**: Query Claude, GPT-4, Gemini simultaneously
+6. **AI Council**: Query Claude, GPT-4, Gemini, Grok simultaneously
 7. **LogicArt Integration**: Generate visual flowchart URLs
 8. **Persistence**: Save/load workflow definitions
 
@@ -159,6 +159,8 @@ Server-to-server session handshake for reliable authentication:
 
 ## Recent Changes
 
+- 2026-01-28: Added Grok (xAI) integration to AI Council - uses OpenAI-compatible API at api.x.ai
+- 2026-01-28: Added Grok API key field in BYOK Settings (xAI API Key)
 - 2026-01-24: Implemented server-to-server Voyai session handshake (replaces broken redirect auth)
 - 2026-01-24: Added Voyai session endpoints for reliable authentication
 - 2026-01-24: Added frontend auth UI with login/logout and bundle status display

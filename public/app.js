@@ -1487,7 +1487,7 @@ let activityEvents = [];
 let activeWorkflows = [];
 let refreshInterval = null;
 let settings = {
-  apiKeys: { anthropic: '', openai: '', google: '' },
+  apiKeys: { anthropic: '', openai: '', google: '', grok: '' },
   webhooks: { replit: '', completion: '' },
   notifications: { sound: true, toast: true, email: false },
   refreshInterval: 8,
@@ -1508,6 +1508,7 @@ function applySettings() {
     document.getElementById('api-anthropic').value = settings.apiKeys?.anthropic || '';
     document.getElementById('api-openai').value = settings.apiKeys?.openai || '';
     document.getElementById('api-google').value = settings.apiKeys?.google || '';
+    document.getElementById('api-grok').value = settings.apiKeys?.grok || '';
     document.getElementById('webhook-replit').value = settings.webhooks?.replit || '';
     document.getElementById('webhook-completion').value = settings.webhooks?.completion || '';
     document.getElementById('notify-sound').checked = settings.notifications?.sound ?? true;
@@ -1534,7 +1535,8 @@ window.saveSettings = function () {
     apiKeys: {
       anthropic: document.getElementById('api-anthropic').value,
       openai: document.getElementById('api-openai').value,
-      google: document.getElementById('api-google').value
+      google: document.getElementById('api-google').value,
+      grok: document.getElementById('api-grok').value
     },
     webhooks: {
       replit: document.getElementById('webhook-replit').value,
@@ -1559,7 +1561,7 @@ window.saveSettings = function () {
 window.resetSettings = function () {
   localStorage.removeItem('orchestrate-settings');
   settings = {
-    apiKeys: { anthropic: '', openai: '', google: '' },
+    apiKeys: { anthropic: '', openai: '', google: '', grok: '' },
     webhooks: { replit: '', completion: '' },
     notifications: { sound: true, toast: true, email: false },
     refreshInterval: 8,
