@@ -247,6 +247,10 @@ The Template Gallery provides 12 pre-built agent templates based on common use c
 
 ## Recent Changes
 
+- 2026-01-29: Updated Control Room UI to more closely match Quack's design language
+- 2026-01-29: Added "Test Agent" button in Control Room for testing agent workflow dispatch
+- 2026-01-29: Improved error handling for agent workflow timeouts with clearer messages
+- 2026-01-29: Added `agent/autonomous` to monitored inboxes for visibility
 - 2026-01-29: Added Agent Template Gallery with 12 templates (Compute Broker, Table Broker, Research Agent, etc.)
 - 2026-01-29: Added /api/process/import endpoint for LogiProcess to send edited templates (secured with shared secret)
 - 2026-01-29: Added /api/templates endpoint to fetch template definitions via API
