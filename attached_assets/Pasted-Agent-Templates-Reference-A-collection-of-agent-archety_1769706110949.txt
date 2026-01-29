@@ -1,0 +1,322 @@
+Agent Templates Reference
+
+A collection of agent archetypes for the Quack/Orchestrate ecosystem. Each template serves as a starting point for building specialized autonomous agents.
+
+Brokerage / Marketplace Agents
+
+Compute Broker Agent
+
+Purpose: Aggregate GPU compute prices across providers and route jobs to the cheapest option.
+
+Complexity: Medium
+
+Commands:
+
+price [gpu-model] - Get current prices for a GPU across providers
+route [job-spec] - Find and execute on cheapest available provider
+compare - Show price comparison table
+status [job-id] - Check job status
+Integrations:
+
+Vast.ai API
+TensorDock API
+RunPod API
+Akash Network
+Sample Workflow:
+
+User: "Train my model on cheapest H100"
+  → Compute Broker queries 4 providers
+  → Returns: "RunPod has H100 at $2.49/hr (cheapest)"
+  → User confirms → Agent provisions and monitors
+Table Broker Agent
+
+Purpose: Find and book restaurant reservations based on preferences (time, location, party size, view).
+
+Complexity: Medium
+
+Commands:
+
+find [preferences] - Search for available tables
+book [reservation-id] - Confirm booking
+cancel [reservation-id] - Cancel existing reservation
+availability [restaurant] - Check specific restaurant
+Integrations:
+
+OpenTable API
+Resy API
+Tock API
+Tablz (premium tables)
+Sample Workflow:
+
+User: "Window table for 4, Italian, Saturday 7pm, budget $200"
+  → Table Broker searches 3 platforms
+  → Returns: "Found 3 options with window seating"
+  → User selects → Agent books and confirms
+Prediction Trader Agent
+
+Purpose: Monitor prediction markets, identify arbitrage opportunities, execute trades.
+
+Complexity: High
+
+Commands:
+
+odds [event] - Get current odds for an event
+compare [event] - Cross-platform price comparison
+arbitrage - Find current arbitrage opportunities
+forecast [question] - AI-enhanced probability estimate
+portfolio - Show current positions
+Integrations:
+
+Polymarket API
+Kalshi API
+Manifold Markets API
+News/sentiment APIs
+Sample Workflow:
+
+User: "What are the odds Bitcoin hits $100K by March?"
+  → Prediction Agent queries Polymarket + Kalshi
+  → Runs sentiment analysis on recent news
+  → Returns: "Polymarket: 34%, Kalshi: 31%, AI estimate: 38%"
+Utility / Task Agents
+
+Echo Agent (Reference Implementation)
+
+Purpose: Simple request/response demonstration. The current autonomous agent.
+
+Complexity: Low
+
+Commands:
+
+ping - Returns "pong"
+echo [message] - Echoes back message
+status - Shows agent status
+time - Current server time
+help - Lists commands
+Use Case: Template for understanding webhook flow and direct messaging.
+
+Research Agent
+
+Purpose: Web search, gather information, summarize findings.
+
+Complexity: Medium
+
+Commands:
+
+search [query] - Search and summarize results
+deep [topic] - Multi-source deep research
+compare [a] vs [b] - Comparative analysis
+cite [topic] - Find sources with citations
+Integrations:
+
+Web search APIs (Google, Bing, DuckDuckGo)
+News APIs
+Academic databases (optional)
+Sample Workflow:
+
+User: "Research latest developments in quantum computing"
+  → Research Agent searches 5 sources
+  → Synthesizes findings
+  → Returns: Summary + key points + sources
+Data Transform Agent
+
+Purpose: Accept data in one format, clean/convert, return in another format.
+
+Complexity: Low-Medium
+
+Commands:
+
+convert [format] to [format] - Format conversion
+clean [data] - Normalize and clean data
+validate [schema] - Check data against schema
+extract [pattern] - Extract matching data
+Supported Formats:
+
+JSON, CSV, XML, YAML
+Markdown tables
+SQL inserts
+Sample Workflow:
+
+User: "Convert this CSV to JSON and remove empty rows"
+  → Data Transform Agent parses CSV
+  → Filters empty rows
+  → Returns: Clean JSON array
+Coordination Agents
+
+Scheduler Agent
+
+Purpose: Manage calendars, find mutual availability, book meetings.
+
+Complexity: Medium
+
+Commands:
+
+available [date-range] - Show available slots
+find-time [participants] - Find mutual availability
+book [meeting-details] - Schedule meeting
+reschedule [meeting-id] - Move existing meeting
+Integrations:
+
+Google Calendar API
+Microsoft Graph API
+Calendly API
+Sample Workflow:
+
+User: "Find 30 min slot with Alice and Bob next week"
+  → Scheduler queries both calendars
+  → Returns: "Tuesday 2pm or Thursday 10am available"
+  → User confirms → Agent sends invites
+Moderator Agent
+
+Purpose: Review content, flag issues, enforce community guidelines.
+
+Complexity: Medium
+
+Commands:
+
+review [content] - Check content against rules
+flag [content-id] - Mark for human review
+approve [content-id] - Mark as acceptable
+report - Summary of moderation activity
+Integrations:
+
+Content moderation APIs (Perspective, OpenAI)
+Platform-specific APIs
+Sample Workflow:
+
+Content submitted → Moderator Agent analyzes
+  → Safe: Auto-approve
+  → Questionable: Flag for human review
+  → Violation: Auto-reject with reason
+Orchestrator Agent
+
+Purpose: Break complex tasks into subtasks, delegate to specialized agents, aggregate results.
+
+Complexity: High
+
+Commands:
+
+plan [task] - Break task into steps
+delegate [step] to [agent] - Assign subtask
+status [task-id] - Check overall progress
+aggregate [task-id] - Combine results
+Integrations:
+
+Orchestrate.us.com
+Agent Registry
+All other agent types
+Sample Workflow:
+
+User: "Analyze competitor and create report"
+  → Orchestrator creates plan:
+    1. Research Agent: Gather competitor info
+    2. Data Transform: Structure findings
+    3. Summary Agent: Generate report
+  → Delegates each step → Aggregates results
+Domain-Specific Agents
+
+Code Review Agent
+
+Purpose: Analyze code, identify issues, suggest improvements.
+
+Complexity: Medium
+
+Commands:
+
+review [code/url] - Full code review
+security [code] - Security-focused analysis
+style [code] - Style and formatting check
+explain [code] - Explain what code does
+Integrations:
+
+GitHub API
+GitLab API
+LLM APIs for analysis
+Sample Workflow:
+
+User: "Review this PR for security issues"
+  → Code Review Agent fetches diff
+  → Analyzes for common vulnerabilities
+  → Returns: Findings with severity + recommendations
+Meeting Summarizer Agent
+
+Purpose: Process meeting transcripts, extract key points and action items.
+
+Complexity: Medium
+
+Commands:
+
+summarize [transcript] - Generate meeting summary
+actions [transcript] - Extract action items
+decisions [transcript] - List decisions made
+followup [meeting-id] - Generate follow-up email
+Integrations:
+
+Transcription APIs (Otter, Rev)
+Calendar APIs
+Email APIs
+Sample Workflow:
+
+Meeting ends → Transcript sent to agent
+  → Returns: 
+    - 3 paragraph summary
+    - 5 action items with owners
+    - 2 key decisions
+    - Draft follow-up email
+Price Monitor Agent
+
+Purpose: Track prices across sources, alert on thresholds.
+
+Complexity: Low
+
+Commands:
+
+watch [item] [threshold] - Start monitoring
+unwatch [item] - Stop monitoring
+prices [item] - Current prices across sources
+alerts - List active alerts
+Integrations:
+
+E-commerce APIs (Amazon, eBay)
+Price tracking APIs
+Notification services
+Sample Workflow:
+
+User: "Alert me when RTX 4090 drops below $1500"
+  → Price Monitor adds to watchlist
+  → Checks prices every hour
+  → Price drops → Sends alert with purchase link
+Template Structure
+
+Each agent template should include:
+
+Component	Description
+README.md	Purpose, setup, usage examples
+agent.ts	Core logic and command handlers
+routes.ts	API endpoints (webhook, direct, custom)
+schema.ts	Type definitions
+integrations/	API client wrappers
+tests/	Example test cases
+Integration with Orchestrate
+
+All templates are designed to work with Orchestrate.us.com:
+
+Registration - Agents register with Quack on startup
+Discovery - Orchestrate's Control Room finds agents by capability
+Delegation - Workflows route tasks to appropriate agents
+Reporting - Agents report results back through Quack
+Getting Started
+
+Choose a template that matches your use case
+Clone the base agent structure
+Customize commands and integrations
+Register with Quack using your agent identity
+Test with the Command Tester dashboard
+Contributing Templates
+
+To add a new template:
+
+Follow the existing structure
+Include working code examples
+Document all commands and integrations
+Add sample workflows
+Submit for review
