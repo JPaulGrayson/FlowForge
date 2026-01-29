@@ -1,0 +1,158 @@
+# Quack Autonomous Agent - Capabilities Document
+
+## Overview
+
+This is an autonomous agent service that connects to the Quack messaging network. It's designed to receive tasks, process them automatically, and return responses - all without human intervention.
+
+**Agent Identity:** `agent/autonomous`  
+**Platform:** Replit  
+**Status:** Online and registered with Quack
+
+---
+
+## Current Capabilities
+
+### Message Handling
+- Receives webhook notifications from Quack in real-time
+- Processes incoming messages and generates automatic responses
+- Supports both relayed (via Quack) and direct agent-to-agent communication
+- Maintains message history and activity logs
+
+### Built-in Commands
+| Command | Description | Example Response |
+|---------|-------------|------------------|
+| `ping` | Health check | `pong` |
+| `echo [message]` | Echoes back any message | `Echo: [message]` |
+| `status` | Returns agent status and uptime | Status JSON with uptime, message counts |
+| `help` | Lists available commands | Command list |
+| `time` | Returns current server time | ISO timestamp |
+
+### Direct Messaging (Agent-to-Agent)
+- Accepts direct messages at `/direct` endpoint, bypassing Quack for lower latency
+- Automatically discovers and caches other agents' webhook URLs
+- Maintains an Agent Directory with latency tracking per agent
+- Falls back to Quack relay if direct messaging fails
+
+### Security
+- HMAC-SHA256 signature verification for webhooks
+- URL validation to prevent SSRF attacks (blocks private IPs, localhost, internal addresses)
+- Only accepts HTTPS webhook URLs
+
+### Monitoring Dashboard
+- Real-time status display (online/offline/connecting)
+- Message log with direct vs relayed indicators
+- Activity feed showing all agent events
+- Stats tracking: total messages, direct count, relayed count, average response time
+- Agent Directory showing known agents with latency
+
+---
+
+## API Endpoints
+
+| Endpoint | Method | Description |
+|----------|--------|-------------|
+| `/webhook` | POST | Receive Quack relay messages |
+| `/direct` | POST | Receive direct agent-to-agent messages |
+| `/health` | GET | Health check |
+| `/api/status` | GET | Agent status and uptime |
+| `/api/messages` | GET | Message history |
+| `/api/activity` | GET | Activity log |
+| `/api/stats` | GET | Message statistics |
+| `/api/agents` | GET | List known agents |
+| `/api/send-direct` | POST | Send direct message to known agent |
+
+---
+
+## Integration Ideas for Orchestrate
+
+### How This Agent Could Participate in Workflows
+
+1. **As a Workflow Step Executor**
+   - Orchestrate assigns a workflow step to this agent via Quack
+   - Agent processes the task and returns structured results
+   - Orchestrate passes results to the next workflow step
+
+2. **Task Distribution Format**
+   Orchestrate could send tasks in a structured format:
+   ```json
+   {
+     "from": "orchestrate/workflow",
+     "to": "agent/autonomous",
+     "task": "process_step",
+     "payload": {
+       "workflow_id": "wf_123",
+       "step_id": "step_2",
+       "instruction": "Summarize the following text...",
+       "input_data": { ... },
+       "expected_output": "json"
+     }
+   }
+   ```
+
+3. **Status Reporting**
+   Agent could report progress back to Orchestrate:
+   - `in_progress` - Task started
+   - `completed` - Task finished with results
+   - `failed` - Task failed with error details
+
+4. **Capability Advertisement**
+   Agent could register its capabilities with Orchestrate so workflows know what agents can do:
+   ```json
+   {
+     "agent_id": "agent/autonomous",
+     "capabilities": ["text_processing", "echo", "status_check"],
+     "max_task_duration": "60s",
+     "accepts_direct": true
+   }
+   ```
+
+### Potential Workflow Patterns
+
+**Sequential Processing:**
+```
+Orchestrate → Agent A (step 1) → Agent B (step 2) → Agent C (step 3) → Result
+```
+
+**Parallel Fan-Out:**
+```
+Orchestrate → Agent A ─┐
+           → Agent B ─┼→ Collect Results → Next Step
+           → Agent C ─┘
+```
+
+**Conditional Routing:**
+```
+Orchestrate → Agent A → [if X] → Agent B
+                      → [if Y] → Agent C
+```
+
+---
+
+## What This Agent Needs from Orchestrate
+
+1. **Task Format Specification** - What format should workflow steps use?
+2. **Result Expectations** - How should agents return results to continue the workflow?
+3. **Status Update Endpoints** - Where should agents report progress?
+4. **Agent Registration** - How do agents advertise their capabilities?
+
+---
+
+## Technical Details
+
+- **Runtime:** Node.js on Replit
+- **Framework:** Express.js + TypeScript
+- **Frontend:** React + Vite + TailwindCSS
+- **Storage:** In-memory (can be upgraded to persistent)
+- **Quack Registration:** Automatic on startup with health ping every 30 seconds
+
+---
+
+## Next Steps
+
+Once we understand Orchestrate's workflow step format and expectations, this agent can be enhanced to:
+1. Parse and execute natural language task instructions
+2. Return results in Orchestrate-compatible formats
+3. Report status updates during task execution
+4. Handle multi-step conversations within a single workflow
+
+The goal is to be a reliable worker node in Orchestrate's distributed workflow system
