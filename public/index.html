@@ -383,44 +383,20 @@
 
       <section id="templates" class="tab-content">
         <div class="section-header">
-          <h2>Template Library</h2>
+          <h2>Agent Template Gallery</h2>
+          <div class="header-actions">
+            <button class="btn-secondary" onclick="refreshTemplateGallery()">Refresh</button>
+          </div>
         </div>
-        <div class="template-cards">
-          <div class="template-card" onclick="loadTemplate('content-pipeline')">
-            <div class="template-icon">📝</div>
-            <h3>Content Pipeline</h3>
-            <p>Topics → Outlines → Articles → Review</p>
-            <span class="tag">content</span>
-            <span class="tag">writing</span>
-          </div>
-          <div class="template-card" onclick="loadTemplate('code-review')">
-            <div class="template-icon">🔍</div>
-            <h3>Code Review</h3>
-            <p>Upload code → Analysis → Suggestions</p>
-            <span class="tag">code</span>
-            <span class="tag">review</span>
-          </div>
-          <div class="template-card" onclick="loadTemplate('data-analysis')">
-            <div class="template-icon">📊</div>
-            <h3>Data Analysis</h3>
-            <p>CSV → Insights → Report</p>
-            <span class="tag">data</span>
-            <span class="tag">analysis</span>
-          </div>
-          <div class="template-card" onclick="loadTemplate('image-generation')">
-            <div class="template-icon">🎨</div>
-            <h3>Image Generation</h3>
-            <p>Prompts → Images → QA</p>
-            <span class="tag">images</span>
-            <span class="tag">creative</span>
-          </div>
-          <div class="template-card" onclick="loadTemplate('email-processor')">
-            <div class="template-icon">📧</div>
-            <h3>Email Processor</h3>
-            <p>Emails → Categorize → Draft replies</p>
-            <span class="tag">email</span>
-            <span class="tag">automation</span>
-          </div>
+        <div class="template-filters">
+          <button class="filter-btn active" data-category="all" onclick="filterTemplates('all')">All</button>
+          <button class="filter-btn" data-category="brokerage" onclick="filterTemplates('brokerage')">💹 Brokerage</button>
+          <button class="filter-btn" data-category="utility" onclick="filterTemplates('utility')">🔧 Utility</button>
+          <button class="filter-btn" data-category="coordination" onclick="filterTemplates('coordination')">🎯 Coordination</button>
+          <button class="filter-btn" data-category="domain" onclick="filterTemplates('domain')">🎨 Domain</button>
+        </div>
+        <div id="template-gallery" class="template-cards">
+          <p class="loading">Loading agent templates...</p>
         </div>
       </section>
 

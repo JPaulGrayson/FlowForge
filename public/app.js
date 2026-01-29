@@ -2380,3 +2380,170 @@ async function loadControlRoom() {
 window.refreshControlRoom = async function () {
   await loadControlRoom();
 };
+
+// ===== TEMPLATE GALLERY =====
+
+let agentTemplates = { templates: [], categories: {} };
+let currentTemplateFilter = 'all';
+
+window.loadTemplateGallery = async function() {
+  const container = document.getElementById('template-gallery');
+  try {
+    const response = await fetch('/agent-templates.json');
+    agentTemplates = await response.json();
+    renderTemplateGallery();
+  } catch (error) {
+    container.innerHTML = `<p class="empty-state">Error loading templates: ${error.message}</p>`;
+  }
+};
+
+window.refreshTemplateGallery = function() {
+  loadTemplateGallery();
+};
+
+window.filterTemplates = function(category) {
+  currentTemplateFilter = category;
+  document.querySelectorAll('.filter-btn').forEach(btn => {
+    btn.classList.toggle('active', btn.dataset.category === category);
+  });
+  renderTemplateGallery();
+};
+
+function renderTemplateGallery() {
+  const container = document.getElementById('template-gallery');
+  const templates = agentTemplates.templates.filter(t => 
+    currentTemplateFilter === 'all' || t.category === currentTemplateFilter
+  );
+  
+  if (templates.length === 0) {
+    container.innerHTML = '<p class="empty-state">No templates in this category</p>';
+    return;
+  }
+  
+  const complexityColors = {
+    low: '#22c55e',
+    medium: '#eab308', 
+    high: '#ef4444'
+  };
+  
+  container.innerHTML = templates.map(template => {
+    const cat = agentTemplates.categories[template.category] || {};
+    return `
+      <div class="template-card agent-template" data-template-id="${template.id}">
+        <div class="template-header">
+          <span class="template-icon">${cat.icon || '🤖'}</span>
+          <span class="complexity-badge" style="background:${complexityColors[template.complexity]}">${template.complexity}</span>
+        </div>
+        <h3>${template.name}</h3>
+        <p class="template-description">${template.description}</p>
+        <div class="template-meta">
+          <div class="template-commands">
+            <strong>Commands:</strong> ${template.commands.slice(0, 2).join(', ')}${template.commands.length > 2 ? '...' : ''}
+          </div>
+          <div class="template-integrations">
+            ${template.integrations.slice(0, 2).map(i => `<span class="integration-tag">${i}</span>`).join('')}
+            ${template.integrations.length > 2 ? `<span class="integration-more">+${template.integrations.length - 2}</span>` : ''}
+          </div>
+        </div>
+        <div class="template-actions">
+          <button class="btn-secondary" onclick="previewTemplate('${template.id}')">Preview</button>
+          <button class="btn-primary" onclick="editInLogiProcess('${template.id}')">Edit in LogiProcess</button>
+        </div>
+      </div>
+    `;
+  }).join('');
+}
+
+window.previewTemplate = function(templateId) {
+  const template = agentTemplates.templates.find(t => t.id === templateId);
+  if (!template) return;
+  
+  const cat = agentTemplates.categories[template.category] || {};
+  const modal = document.createElement('div');
+  modal.className = 'modal-overlay';
+  modal.innerHTML = `
+    <div class="modal template-preview-modal">
+      <div class="modal-header">
+        <h2>${cat.icon || '🤖'} ${template.name}</h2>
+        <button class="modal-close" onclick="this.closest('.modal-overlay').remove()">&times;</button>
+      </div>
+      <div class="modal-body">
+        <p class="template-desc">${template.description}</p>
+        
+        <div class="preview-section">
+          <h4>Complexity</h4>
+          <span class="complexity-badge complexity-${template.complexity}">${template.complexity.toUpperCase()}</span>
+        </div>
+        
+        <div class="preview-section">
+          <h4>Commands</h4>
+          <div class="command-list">
+            ${template.commands.map(c => `<code>${c}</code>`).join('')}
+          </div>
+        </div>
+        
+        <div class="preview-section">
+          <h4>Integrations</h4>
+          <div class="integration-list">
+            ${template.integrations.length ? template.integrations.map(i => `<span class="integration-tag">${i}</span>`).join('') : '<em>None required</em>'}
+          </div>
+        </div>
+        
+        <div class="preview-section">
+          <h4>Workflow Structure</h4>
+          <div class="workflow-preview">
+            ${template.nodes.map(n => `<span class="node-preview node-${n.type}">${n.label}</span>`).join(' → ')}
+          </div>
+        </div>
+        
+        <div class="preview-section">
+          <h4>Agent Configuration</h4>
+          <pre class="agent-config">${JSON.stringify(template.agentConfig, null, 2)}</pre>
+        </div>
+      </div>
+      <div class="modal-footer">
+        <button class="btn-secondary" onclick="this.closest('.modal-overlay').remove()">Close</button>
+        <button class="btn-primary" onclick="editInLogiProcess('${template.id}'); this.closest('.modal-overlay').remove();">Edit in LogiProcess</button>
+      </div>
+    </div>
+  `;
+  document.body.appendChild(modal);
+};
+
+window.editInLogiProcess = async function(templateId) {
+  const template = agentTemplates.templates.find(t => t.id === templateId);
+  if (!template) {
+    showToast('Template not found', 'error');
+    return;
+  }
+  
+  try {
+    const templateData = btoa(JSON.stringify(template));
+    const url = `https://logic.art/process?template=${templateData}`;
+    window.open(url, '_blank');
+    showToast(`Opening ${template.name} in LogiProcess...`);
+  } catch (error) {
+    showToast('Error opening LogiProcess: ' + error.message, 'error');
+  }
+};
+
+// Load templates when Templates tab is activated
+const originalSwitchTab = window.switchTab;
+if (originalSwitchTab) {
+  window.switchTab = function(tabName) {
+    originalSwitchTab(tabName);
+    if (tabName === 'templates' && agentTemplates.templates.length === 0) {
+      loadTemplateGallery();
+    }
+  };
+} else {
+  document.addEventListener('DOMContentLoaded', () => {
+    document.querySelectorAll('.nav-btn').forEach(btn => {
+      btn.addEventListener('click', () => {
+        if (btn.dataset.tab === 'templates' && agentTemplates.templates.length === 0) {
+          loadTemplateGallery();
+        }
+      });
+    });
+  });
+}

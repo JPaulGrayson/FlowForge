@@ -188,6 +188,11 @@ Orchestrate can dispatch workflow steps to external agents via Quack:
 
 ## Recent Changes
 
+- 2026-01-29: Added Agent Template Gallery with 12 templates (Compute Broker, Table Broker, Research Agent, etc.)
+- 2026-01-29: Added /api/process/import endpoint for LogiProcess to send edited templates (secured with shared secret)
+- 2026-01-29: Added /api/templates endpoint to fetch template definitions via API
+- 2026-01-29: Added category filters, complexity badges, preview modals to Template Gallery UI
+- 2026-01-29: Added "Edit in LogiProcess" button that passes template via base64 URL param
 - 2026-01-29: Added agent node type for distributed workflow execution via Quack
 - 2026-01-29: Enhanced WorkflowExecutor with Quack dispatch for AI agent steps
 - 2026-01-29: Added /api/workflow-callback endpoint for agent response handling

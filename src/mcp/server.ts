@@ -446,6 +446,108 @@ app.get("/api/examples", async (_, res) => {
   }
 });
 
+const LOGIPROCESS_SECRET = process.env.LOGIPROCESS_SECRET || 'orchestrate-logiprocess-shared-key';
+const MAX_TEMPLATE_SIZE = 50000;
+
+function validateTemplateSchema(template: any): { valid: boolean; error?: string } {
+  if (!template || typeof template !== 'object') {
+    return { valid: false, error: 'Template must be an object' };
+  }
+  if (!template.id || typeof template.id !== 'string' || template.id.length > 100) {
+    return { valid: false, error: 'Template ID required (string, max 100 chars)' };
+  }
+  if (!template.name || typeof template.name !== 'string' || template.name.length > 200) {
+    return { valid: false, error: 'Template name required (string, max 200 chars)' };
+  }
+  if (!Array.isArray(template.nodes)) {
+    return { valid: false, error: 'Template nodes must be an array' };
+  }
+  if (!Array.isArray(template.edges)) {
+    return { valid: false, error: 'Template edges must be an array' };
+  }
+  const allowedFields = ['id', 'name', 'description', 'category', 'complexity', 'commands', 'integrations', 'nodes', 'edges', 'swimlanes', 'agentConfig'];
+  const sanitized: any = {};
+  for (const key of allowedFields) {
+    if (template[key] !== undefined) {
+      sanitized[key] = template[key];
+    }
+  }
+  return { valid: true };
+}
+
+let templateWriteLock = false;
+
+app.post("/api/process/import", async (req, res) => {
+  try {
+    const authHeader = req.headers['x-logiprocess-secret'] || req.headers['authorization'];
+    if (authHeader !== LOGIPROCESS_SECRET && authHeader !== `Bearer ${LOGIPROCESS_SECRET}`) {
+      return res.status(401).json({ error: "Unauthorized: Invalid or missing secret" });
+    }
+    
+    const contentLength = parseInt(req.headers['content-length'] || '0', 10);
+    if (contentLength > MAX_TEMPLATE_SIZE) {
+      return res.status(413).json({ error: `Payload too large (max ${MAX_TEMPLATE_SIZE} bytes)` });
+    }
+    
+    const template = req.body;
+    const validation = validateTemplateSchema(template);
+    if (!validation.valid) {
+      return res.status(400).json({ error: validation.error });
+    }
+    
+    if (templateWriteLock) {
+      return res.status(429).json({ error: "Template write in progress, try again" });
+    }
+    
+    templateWriteLock = true;
+    try {
+      const fs = await import("fs/promises");
+      const templatesPath = path.join(__dirname, "../../public/agent-templates.json");
+      const data = await fs.readFile(templatesPath, "utf-8");
+      const templates = JSON.parse(data);
+      
+      const allowedFields = ['id', 'name', 'description', 'category', 'complexity', 'commands', 'integrations', 'nodes', 'edges', 'swimlanes', 'agentConfig'];
+      const sanitizedTemplate: any = {};
+      for (const key of allowedFields) {
+        if (template[key] !== undefined) {
+          sanitizedTemplate[key] = template[key];
+        }
+      }
+      
+      const existingIndex = templates.templates.findIndex((t: any) => t.id === template.id);
+      if (existingIndex >= 0) {
+        templates.templates[existingIndex] = sanitizedTemplate;
+      } else {
+        templates.templates.push(sanitizedTemplate);
+      }
+      
+      const tempPath = templatesPath + '.tmp';
+      await fs.writeFile(tempPath, JSON.stringify(templates, null, 2));
+      await fs.rename(tempPath, templatesPath);
+      
+      console.log(`[LogiProcess] Imported template: ${template.name}`);
+      res.json({ success: true, message: `Template ${template.name} imported` });
+    } finally {
+      templateWriteLock = false;
+    }
+  } catch (e: any) {
+    templateWriteLock = false;
+    console.error("[LogiProcess] Import error:", e);
+    res.status(500).json({ error: e.message });
+  }
+});
+
+app.get("/api/templates", async (_, res) => {
+  try {
+    const fs = await import("fs/promises");
+    const templatesPath = path.join(__dirname, "../../public/agent-templates.json");
+    const data = await fs.readFile(templatesPath, "utf-8");
+    res.json(JSON.parse(data));
+  } catch (e: any) {
+    res.status(500).json({ error: e.message });
+  }
+});
+
 app.post("/api/mcp/call", async (req, res) => {
   const { tool, params } = req.body;
   try {

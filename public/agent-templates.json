@@ -1,0 +1,403 @@
+{
+  "version": "1.0",
+  "templates": [
+    {
+      "id": "compute-broker",
+      "name": "Compute Broker Agent",
+      "description": "Aggregate GPU compute prices across providers and route jobs to the cheapest option.",
+      "category": "brokerage",
+      "complexity": "medium",
+      "commands": ["price [gpu-model]", "route [job-spec]", "compare", "status [job-id]"],
+      "integrations": ["Vast.ai API", "TensorDock API", "RunPod API", "Akash Network"],
+      "nodes": [
+        { "id": "trigger", "type": "event", "label": "User Request", "x": 100, "y": 150 },
+        { "id": "query", "type": "task", "label": "Query Providers", "x": 300, "y": 150 },
+        { "id": "compare", "type": "task", "label": "Compare Prices", "x": 500, "y": 150 },
+        { "id": "confirm", "type": "gateway", "label": "User Confirm?", "x": 700, "y": 150 },
+        { "id": "provision", "type": "task", "label": "Provision & Monitor", "x": 900, "y": 100 },
+        { "id": "cancel", "type": "event", "label": "Cancelled", "x": 900, "y": 200 }
+      ],
+      "edges": [
+        { "source": "trigger", "target": "query" },
+        { "source": "query", "target": "compare" },
+        { "source": "compare", "target": "confirm" },
+        { "source": "confirm", "target": "provision", "label": "Yes" },
+        { "source": "confirm", "target": "cancel", "label": "No" }
+      ],
+      "swimlanes": [
+        { "id": "user", "label": "User" },
+        { "id": "broker", "label": "Compute Broker" }
+      ],
+      "agentConfig": {
+        "agentId": "compute-broker",
+        "capabilities": ["price-compare", "job-routing", "provider-query"],
+        "inputSchema": { "type": "object", "properties": { "gpu": { "type": "string" }, "jobSpec": { "type": "object" } } },
+        "outputSchema": { "type": "object", "properties": { "provider": { "type": "string" }, "price": { "type": "number" }, "jobId": { "type": "string" } } }
+      }
+    },
+    {
+      "id": "table-broker",
+      "name": "Table Broker Agent",
+      "description": "Find and book restaurant reservations based on preferences (time, location, party size, view).",
+      "category": "brokerage",
+      "complexity": "medium",
+      "commands": ["find [preferences]", "book [reservation-id]", "cancel [reservation-id]", "availability [restaurant]"],
+      "integrations": ["OpenTable API", "Resy API", "Tock API", "Tablz"],
+      "nodes": [
+        { "id": "request", "type": "event", "label": "Reservation Request", "x": 100, "y": 150 },
+        { "id": "search", "type": "task", "label": "Search Platforms", "x": 300, "y": 150 },
+        { "id": "filter", "type": "task", "label": "Filter by Preferences", "x": 500, "y": 150 },
+        { "id": "select", "type": "gateway", "label": "User Selection", "x": 700, "y": 150 },
+        { "id": "book", "type": "task", "label": "Book & Confirm", "x": 900, "y": 150 }
+      ],
+      "edges": [
+        { "source": "request", "target": "search" },
+        { "source": "search", "target": "filter" },
+        { "source": "filter", "target": "select" },
+        { "source": "select", "target": "book" }
+      ],
+      "swimlanes": [
+        { "id": "user", "label": "User" },
+        { "id": "broker", "label": "Table Broker" }
+      ],
+      "agentConfig": {
+        "agentId": "table-broker",
+        "capabilities": ["reservation-search", "booking", "availability-check"],
+        "inputSchema": { "type": "object", "properties": { "date": { "type": "string" }, "time": { "type": "string" }, "partySize": { "type": "number" }, "preferences": { "type": "object" } } },
+        "outputSchema": { "type": "object", "properties": { "reservationId": { "type": "string" }, "restaurant": { "type": "string" }, "confirmed": { "type": "boolean" } } }
+      }
+    },
+    {
+      "id": "prediction-trader",
+      "name": "Prediction Trader Agent",
+      "description": "Monitor prediction markets, identify arbitrage opportunities, execute trades.",
+      "category": "brokerage",
+      "complexity": "high",
+      "commands": ["odds [event]", "compare [event]", "arbitrage", "forecast [question]", "portfolio"],
+      "integrations": ["Polymarket API", "Kalshi API", "Manifold Markets API", "News/sentiment APIs"],
+      "nodes": [
+        { "id": "query", "type": "event", "label": "Market Query", "x": 100, "y": 150 },
+        { "id": "fetch", "type": "task", "label": "Fetch Odds", "x": 300, "y": 150 },
+        { "id": "analyze", "type": "task", "label": "Sentiment Analysis", "x": 500, "y": 150 },
+        { "id": "arb", "type": "gateway", "label": "Arbitrage Found?", "x": 700, "y": 150 },
+        { "id": "execute", "type": "task", "label": "Execute Trade", "x": 900, "y": 100 },
+        { "id": "report", "type": "task", "label": "Report Only", "x": 900, "y": 200 }
+      ],
+      "edges": [
+        { "source": "query", "target": "fetch" },
+        { "source": "fetch", "target": "analyze" },
+        { "source": "analyze", "target": "arb" },
+        { "source": "arb", "target": "execute", "label": "Yes" },
+        { "source": "arb", "target": "report", "label": "No" }
+      ],
+      "swimlanes": [
+        { "id": "user", "label": "User" },
+        { "id": "trader", "label": "Prediction Trader" }
+      ],
+      "agentConfig": {
+        "agentId": "prediction-trader",
+        "capabilities": ["odds-fetch", "arbitrage-detection", "trade-execution", "sentiment-analysis"],
+        "inputSchema": { "type": "object", "properties": { "event": { "type": "string" }, "action": { "type": "string" } } },
+        "outputSchema": { "type": "object", "properties": { "odds": { "type": "object" }, "recommendation": { "type": "string" } } }
+      }
+    },
+    {
+      "id": "echo-agent",
+      "name": "Echo Agent",
+      "description": "Simple request/response demonstration. Reference implementation for understanding webhook flow.",
+      "category": "utility",
+      "complexity": "low",
+      "commands": ["ping", "echo [message]", "status", "time", "help"],
+      "integrations": [],
+      "nodes": [
+        { "id": "input", "type": "event", "label": "Receive Message", "x": 100, "y": 150 },
+        { "id": "process", "type": "task", "label": "Process Command", "x": 300, "y": 150 },
+        { "id": "respond", "type": "event", "label": "Send Response", "x": 500, "y": 150 }
+      ],
+      "edges": [
+        { "source": "input", "target": "process" },
+        { "source": "process", "target": "respond" }
+      ],
+      "swimlanes": [
+        { "id": "agent", "label": "Echo Agent" }
+      ],
+      "agentConfig": {
+        "agentId": "echo-agent",
+        "capabilities": ["ping", "echo", "status"],
+        "inputSchema": { "type": "object", "properties": { "command": { "type": "string" }, "message": { "type": "string" } } },
+        "outputSchema": { "type": "object", "properties": { "response": { "type": "string" } } }
+      }
+    },
+    {
+      "id": "research-agent",
+      "name": "Research Agent",
+      "description": "Web search, gather information, summarize findings from multiple sources.",
+      "category": "utility",
+      "complexity": "medium",
+      "commands": ["search [query]", "deep [topic]", "compare [a] vs [b]", "cite [topic]"],
+      "integrations": ["Web search APIs", "News APIs", "Academic databases"],
+      "nodes": [
+        { "id": "query", "type": "event", "label": "Research Query", "x": 100, "y": 150 },
+        { "id": "search", "type": "task", "label": "Multi-Source Search", "x": 300, "y": 150 },
+        { "id": "synthesize", "type": "task", "label": "Synthesize Findings", "x": 500, "y": 150 },
+        { "id": "cite", "type": "task", "label": "Add Citations", "x": 700, "y": 150 },
+        { "id": "output", "type": "event", "label": "Return Summary", "x": 900, "y": 150 }
+      ],
+      "edges": [
+        { "source": "query", "target": "search" },
+        { "source": "search", "target": "synthesize" },
+        { "source": "synthesize", "target": "cite" },
+        { "source": "cite", "target": "output" }
+      ],
+      "swimlanes": [
+        { "id": "agent", "label": "Research Agent" }
+      ],
+      "agentConfig": {
+        "agentId": "research-agent",
+        "capabilities": ["web-search", "summarization", "citation"],
+        "inputSchema": { "type": "object", "properties": { "query": { "type": "string" }, "depth": { "type": "string" } } },
+        "outputSchema": { "type": "object", "properties": { "summary": { "type": "string" }, "sources": { "type": "array" } } }
+      }
+    },
+    {
+      "id": "data-transform",
+      "name": "Data Transform Agent",
+      "description": "Accept data in one format, clean/convert, return in another format.",
+      "category": "utility",
+      "complexity": "low",
+      "commands": ["convert [format] to [format]", "clean [data]", "validate [schema]", "extract [pattern]"],
+      "integrations": [],
+      "nodes": [
+        { "id": "input", "type": "event", "label": "Receive Data", "x": 100, "y": 150 },
+        { "id": "parse", "type": "task", "label": "Parse Input", "x": 300, "y": 150 },
+        { "id": "transform", "type": "task", "label": "Transform", "x": 500, "y": 150 },
+        { "id": "validate", "type": "gateway", "label": "Valid?", "x": 700, "y": 150 },
+        { "id": "output", "type": "event", "label": "Return Data", "x": 900, "y": 100 },
+        { "id": "error", "type": "event", "label": "Return Error", "x": 900, "y": 200 }
+      ],
+      "edges": [
+        { "source": "input", "target": "parse" },
+        { "source": "parse", "target": "transform" },
+        { "source": "transform", "target": "validate" },
+        { "source": "validate", "target": "output", "label": "Yes" },
+        { "source": "validate", "target": "error", "label": "No" }
+      ],
+      "swimlanes": [
+        { "id": "agent", "label": "Data Transform" }
+      ],
+      "agentConfig": {
+        "agentId": "data-transform",
+        "capabilities": ["format-conversion", "data-cleaning", "validation"],
+        "inputSchema": { "type": "object", "properties": { "data": { "type": "string" }, "fromFormat": { "type": "string" }, "toFormat": { "type": "string" } } },
+        "outputSchema": { "type": "object", "properties": { "data": { "type": "string" }, "format": { "type": "string" } } }
+      }
+    },
+    {
+      "id": "scheduler-agent",
+      "name": "Scheduler Agent",
+      "description": "Manage calendars, find mutual availability, book meetings.",
+      "category": "coordination",
+      "complexity": "medium",
+      "commands": ["available [date-range]", "find-time [participants]", "book [meeting-details]", "reschedule [meeting-id]"],
+      "integrations": ["Google Calendar API", "Microsoft Graph API", "Calendly API"],
+      "nodes": [
+        { "id": "request", "type": "event", "label": "Meeting Request", "x": 100, "y": 150 },
+        { "id": "fetch", "type": "task", "label": "Fetch Calendars", "x": 300, "y": 150 },
+        { "id": "find", "type": "task", "label": "Find Mutual Slots", "x": 500, "y": 150 },
+        { "id": "confirm", "type": "gateway", "label": "User Confirms?", "x": 700, "y": 150 },
+        { "id": "book", "type": "task", "label": "Book & Notify", "x": 900, "y": 150 }
+      ],
+      "edges": [
+        { "source": "request", "target": "fetch" },
+        { "source": "fetch", "target": "find" },
+        { "source": "find", "target": "confirm" },
+        { "source": "confirm", "target": "book" }
+      ],
+      "swimlanes": [
+        { "id": "user", "label": "Requester" },
+        { "id": "scheduler", "label": "Scheduler Agent" }
+      ],
+      "agentConfig": {
+        "agentId": "scheduler-agent",
+        "capabilities": ["calendar-access", "availability-check", "meeting-booking"],
+        "inputSchema": { "type": "object", "properties": { "participants": { "type": "array" }, "duration": { "type": "number" }, "dateRange": { "type": "object" } } },
+        "outputSchema": { "type": "object", "properties": { "meetingId": { "type": "string" }, "datetime": { "type": "string" }, "attendees": { "type": "array" } } }
+      }
+    },
+    {
+      "id": "moderator-agent",
+      "name": "Moderator Agent",
+      "description": "Review content, flag issues, enforce community guidelines.",
+      "category": "coordination",
+      "complexity": "medium",
+      "commands": ["review [content]", "flag [content-id]", "approve [content-id]", "report"],
+      "integrations": ["Perspective API", "OpenAI Moderation", "Platform APIs"],
+      "nodes": [
+        { "id": "submit", "type": "event", "label": "Content Submitted", "x": 100, "y": 150 },
+        { "id": "analyze", "type": "task", "label": "Analyze Content", "x": 300, "y": 150 },
+        { "id": "decide", "type": "gateway", "label": "Content Safe?", "x": 500, "y": 150 },
+        { "id": "approve", "type": "task", "label": "Auto-Approve", "x": 700, "y": 50 },
+        { "id": "flag", "type": "task", "label": "Flag for Review", "x": 700, "y": 150 },
+        { "id": "reject", "type": "task", "label": "Auto-Reject", "x": 700, "y": 250 }
+      ],
+      "edges": [
+        { "source": "submit", "target": "analyze" },
+        { "source": "analyze", "target": "decide" },
+        { "source": "decide", "target": "approve", "label": "Safe" },
+        { "source": "decide", "target": "flag", "label": "Unclear" },
+        { "source": "decide", "target": "reject", "label": "Violation" }
+      ],
+      "swimlanes": [
+        { "id": "content", "label": "Content Pipeline" },
+        { "id": "moderator", "label": "Moderator Agent" }
+      ],
+      "agentConfig": {
+        "agentId": "moderator-agent",
+        "capabilities": ["content-analysis", "moderation", "flagging"],
+        "inputSchema": { "type": "object", "properties": { "content": { "type": "string" }, "contentType": { "type": "string" } } },
+        "outputSchema": { "type": "object", "properties": { "decision": { "type": "string" }, "reason": { "type": "string" }, "confidence": { "type": "number" } } }
+      }
+    },
+    {
+      "id": "orchestrator-agent",
+      "name": "Orchestrator Agent",
+      "description": "Break complex tasks into subtasks, delegate to specialized agents, aggregate results.",
+      "category": "coordination",
+      "complexity": "high",
+      "commands": ["plan [task]", "delegate [step] to [agent]", "status [task-id]", "aggregate [task-id]"],
+      "integrations": ["Orchestrate.us.com", "Agent Registry", "All agent types"],
+      "nodes": [
+        { "id": "task", "type": "event", "label": "Complex Task", "x": 100, "y": 150 },
+        { "id": "plan", "type": "task", "label": "Create Plan", "x": 300, "y": 150 },
+        { "id": "delegate1", "type": "task", "label": "Delegate Step 1", "x": 500, "y": 50 },
+        { "id": "delegate2", "type": "task", "label": "Delegate Step 2", "x": 500, "y": 150 },
+        { "id": "delegate3", "type": "task", "label": "Delegate Step 3", "x": 500, "y": 250 },
+        { "id": "aggregate", "type": "task", "label": "Aggregate Results", "x": 700, "y": 150 },
+        { "id": "complete", "type": "event", "label": "Return Result", "x": 900, "y": 150 }
+      ],
+      "edges": [
+        { "source": "task", "target": "plan" },
+        { "source": "plan", "target": "delegate1" },
+        { "source": "plan", "target": "delegate2" },
+        { "source": "plan", "target": "delegate3" },
+        { "source": "delegate1", "target": "aggregate" },
+        { "source": "delegate2", "target": "aggregate" },
+        { "source": "delegate3", "target": "aggregate" },
+        { "source": "aggregate", "target": "complete" }
+      ],
+      "swimlanes": [
+        { "id": "orchestrator", "label": "Orchestrator" },
+        { "id": "agents", "label": "Specialized Agents" }
+      ],
+      "agentConfig": {
+        "agentId": "orchestrator-agent",
+        "capabilities": ["task-decomposition", "delegation", "aggregation"],
+        "inputSchema": { "type": "object", "properties": { "task": { "type": "string" }, "constraints": { "type": "object" } } },
+        "outputSchema": { "type": "object", "properties": { "result": { "type": "object" }, "steps": { "type": "array" } } }
+      }
+    },
+    {
+      "id": "code-review",
+      "name": "Code Review Agent",
+      "description": "Analyze code, identify issues, suggest improvements.",
+      "category": "domain",
+      "complexity": "medium",
+      "commands": ["review [code/url]", "security [code]", "style [code]", "explain [code]"],
+      "integrations": ["GitHub API", "GitLab API", "LLM APIs"],
+      "nodes": [
+        { "id": "submit", "type": "event", "label": "Code Submitted", "x": 100, "y": 150 },
+        { "id": "fetch", "type": "task", "label": "Fetch Code/Diff", "x": 300, "y": 150 },
+        { "id": "analyze", "type": "task", "label": "Analyze Code", "x": 500, "y": 150 },
+        { "id": "findings", "type": "task", "label": "Generate Findings", "x": 700, "y": 150 },
+        { "id": "report", "type": "event", "label": "Return Report", "x": 900, "y": 150 }
+      ],
+      "edges": [
+        { "source": "submit", "target": "fetch" },
+        { "source": "fetch", "target": "analyze" },
+        { "source": "analyze", "target": "findings" },
+        { "source": "findings", "target": "report" }
+      ],
+      "swimlanes": [
+        { "id": "reviewer", "label": "Code Review Agent" }
+      ],
+      "agentConfig": {
+        "agentId": "code-review",
+        "capabilities": ["code-analysis", "security-scan", "style-check"],
+        "inputSchema": { "type": "object", "properties": { "code": { "type": "string" }, "language": { "type": "string" }, "focus": { "type": "string" } } },
+        "outputSchema": { "type": "object", "properties": { "issues": { "type": "array" }, "suggestions": { "type": "array" }, "severity": { "type": "string" } } }
+      }
+    },
+    {
+      "id": "meeting-summarizer",
+      "name": "Meeting Summarizer Agent",
+      "description": "Process meeting transcripts, extract key points and action items.",
+      "category": "domain",
+      "complexity": "medium",
+      "commands": ["summarize [transcript]", "actions [transcript]", "decisions [transcript]", "followup [meeting-id]"],
+      "integrations": ["Otter.ai", "Rev API", "Calendar APIs", "Email APIs"],
+      "nodes": [
+        { "id": "receive", "type": "event", "label": "Transcript Received", "x": 100, "y": 150 },
+        { "id": "parse", "type": "task", "label": "Parse Transcript", "x": 300, "y": 150 },
+        { "id": "extract", "type": "task", "label": "Extract Key Points", "x": 500, "y": 100 },
+        { "id": "actions", "type": "task", "label": "Identify Actions", "x": 500, "y": 200 },
+        { "id": "compile", "type": "task", "label": "Compile Summary", "x": 700, "y": 150 },
+        { "id": "output", "type": "event", "label": "Return Summary", "x": 900, "y": 150 }
+      ],
+      "edges": [
+        { "source": "receive", "target": "parse" },
+        { "source": "parse", "target": "extract" },
+        { "source": "parse", "target": "actions" },
+        { "source": "extract", "target": "compile" },
+        { "source": "actions", "target": "compile" },
+        { "source": "compile", "target": "output" }
+      ],
+      "swimlanes": [
+        { "id": "summarizer", "label": "Meeting Summarizer" }
+      ],
+      "agentConfig": {
+        "agentId": "meeting-summarizer",
+        "capabilities": ["transcript-processing", "action-extraction", "summary-generation"],
+        "inputSchema": { "type": "object", "properties": { "transcript": { "type": "string" }, "format": { "type": "string" } } },
+        "outputSchema": { "type": "object", "properties": { "summary": { "type": "string" }, "actionItems": { "type": "array" }, "decisions": { "type": "array" } } }
+      }
+    },
+    {
+      "id": "price-monitor",
+      "name": "Price Monitor Agent",
+      "description": "Track prices across sources, alert on thresholds.",
+      "category": "domain",
+      "complexity": "low",
+      "commands": ["watch [item] [threshold]", "unwatch [item]", "prices [item]", "alerts"],
+      "integrations": ["E-commerce APIs", "Price tracking APIs", "Notification services"],
+      "nodes": [
+        { "id": "setup", "type": "event", "label": "Set Watch", "x": 100, "y": 150 },
+        { "id": "monitor", "type": "task", "label": "Monitor Prices", "x": 300, "y": 150 },
+        { "id": "check", "type": "gateway", "label": "Below Threshold?", "x": 500, "y": 150 },
+        { "id": "alert", "type": "task", "label": "Send Alert", "x": 700, "y": 100 },
+        { "id": "continue", "type": "task", "label": "Continue Monitoring", "x": 700, "y": 200 }
+      ],
+      "edges": [
+        { "source": "setup", "target": "monitor" },
+        { "source": "monitor", "target": "check" },
+        { "source": "check", "target": "alert", "label": "Yes" },
+        { "source": "check", "target": "continue", "label": "No" },
+        { "source": "continue", "target": "monitor" }
+      ],
+      "swimlanes": [
+        { "id": "monitor", "label": "Price Monitor" }
+      ],
+      "agentConfig": {
+        "agentId": "price-monitor",
+        "capabilities": ["price-tracking", "alerting", "multi-source-compare"],
+        "inputSchema": { "type": "object", "properties": { "item": { "type": "string" }, "threshold": { "type": "number" }, "sources": { "type": "array" } } },
+        "outputSchema": { "type": "object", "properties": { "currentPrice": { "type": "number" }, "source": { "type": "string" }, "alertTriggered": { "type": "boolean" } } }
+      }
+    }
+  ],
+  "categories": {
+    "brokerage": { "name": "Brokerage / Marketplace", "icon": "💹", "description": "Agents that compare and transact across providers" },
+    "utility": { "name": "Utility / Task", "icon": "🔧", "description": "General-purpose workhorses for common tasks" },
+    "coordination": { "name": "Coordination", "icon": "🎯", "description": "Agents that manage other agents or resources" },
+    "domain": { "name": "Domain-Specific", "icon": "🎨", "description": "Specialized agents for specific industries" }
+  }
+}
