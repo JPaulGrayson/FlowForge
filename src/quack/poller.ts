@@ -94,7 +94,7 @@ export class QuackPoller {
       return this.monitoredInboxes;
     } catch (error) {
       console.error('Error fetching inboxes list:', error);
-      return ['claude', 'replit', 'cursor', 'gpt', 'gemini', 'grok', 'copilot', 'antigravity'];
+      return ['claude', 'replit', 'cursor', 'gpt', 'gemini', 'grok', 'copilot', 'antigravity', 'agent/autonomous'];
     }
   }
 

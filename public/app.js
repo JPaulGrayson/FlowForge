@@ -769,14 +769,20 @@ window.testAgentWorkflow = async function() {
     const result = await response.json();
     console.log('[Test] Workflow result:', result);
     
-    if (result.error) {
-      showToast('Workflow error: ' + result.error, 'error');
-    } else if (result.status === 'completed') {
+    const execResult = result.result || result;
+    
+    if (result.error || execResult.error) {
+      const errMsg = result.error || execResult.error?.message || 'Unknown error';
+      showToast('Workflow error: ' + errMsg, 'error');
+    } else if (execResult.status === 'completed') {
       showToast('Agent workflow completed successfully!', 'success');
-    } else if (result.status === 'running') {
+    } else if (execResult.status === 'running') {
       showToast('Workflow dispatched - waiting for agent response...', 'info');
+    } else if (execResult.status === 'failed') {
+      const failMsg = execResult.error?.message || 'Agent did not respond (timeout)';
+      showToast('Workflow failed: ' + failMsg, 'warning');
     } else {
-      showToast('Workflow status: ' + result.status);
+      showToast('Workflow status: ' + (execResult.status || 'unknown'));
     }
     
     // Refresh to see updated state
