@@ -3,7 +3,7 @@ import path from "path";
 import crypto from "crypto";
 import { fileURLToPath } from "url";
 import { generator } from "../generator/workflow-generator.js";
-import { createExecutor as _createExecutor } from "../executor/workflow-executor.js";
+import { createExecutor as _createExecutor, getExecutorByMessageId } from "../executor/workflow-executor.js";
 import { createLogicArtAdapter } from "../integration/logicart-adapter.js";
 import { council } from "../council/council.js";
 import { toolHandlers } from "../tools/handlers.js";
@@ -634,6 +634,43 @@ app.get("/api/quack/my-inbox", async (_, res) => {
     res.json({ inbox: MY_INBOX, ...data });
   } catch (e: any) {
     res.status(500).json({ error: e.message });
+  }
+});
+
+// Workflow callback endpoint - agents call this when they complete a task
+app.post("/api/workflow-callback", async (req, res) => {
+  const { message_id, execution_id, node_id, status, response, error } = req.body;
+  
+  console.log(`📬 Workflow callback received for message ${message_id}`);
+  console.log(`   Execution: ${execution_id}, Node: ${node_id}, Status: ${status}`);
+  
+  try {
+    const executor = getExecutorByMessageId(message_id);
+    
+    if (executor) {
+      executor.handleAgentCallback(message_id, response, status);
+      console.log(`✅ Callback routed to active executor`);
+    } else {
+      console.log(`⚠️ No active executor found for message ${message_id}`);
+    }
+    
+    if (status === 'completed') {
+      console.log(`✅ Agent completed task successfully`);
+    } else if (status === 'failed') {
+      console.log(`❌ Agent task failed: ${error}`);
+    }
+    
+    res.json({ 
+      success: true, 
+      message: 'Callback received',
+      message_id,
+      execution_id,
+      node_id,
+      routed: !!executor
+    });
+  } catch (e: any) {
+    console.error('Error processing workflow callback:', e);
+    res.status(500).json({ success: false, error: e.message });
   }
 });
 

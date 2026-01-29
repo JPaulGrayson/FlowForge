@@ -3,7 +3,14 @@ export interface WorkflowConfig { timeout?: number; maxParallelism?: number; con
 export interface WorkflowMetadata { author?: string; createdAt: string; updatedAt: string; tags?: string[]; visibility: 'private' | 'team' | 'public'; }
 export interface WorkflowInput { name: string; label: string; type: string; required: boolean; defaultValue?: any; }
 export interface WorkflowOutput { name: string; label: string; type: string; sourceNodeId: string; }
-export type NodeType = 'start' | 'end' | 'tool' | 'decision' | 'loop' | 'parallel' | 'join' | 'human' | 'council';
+export type NodeType = 'start' | 'end' | 'tool' | 'decision' | 'loop' | 'parallel' | 'join' | 'human' | 'council' | 'agent';
+
+export interface AgentNodeConfig {
+  agentInbox: string;
+  prompt: string;
+  timeout?: number;
+  directMessage?: boolean;
+}
 export interface WorkflowNode { id: string; type: NodeType; label: string; description?: string; config: any; position?: { x: number; y: number }; }
 export interface WorkflowEdge { id: string; sourceNodeId: string; targetNodeId: string; label?: string; condition?: BranchCondition; }
 export interface BranchCondition { operator: 'equals' | 'notEquals' | 'contains' | 'greaterThan' | 'lessThan' | 'isEmpty' | 'isNotEmpty' | 'isTrue' | 'isFalse'; value?: any; }

@@ -157,8 +157,42 @@ Server-to-server session handshake for reliable authentication:
 - `requireVoyaiAuth()` - Redirect to login if not authenticated
 - `requireVoyaiBundle()` - Redirect to subscribe if no bundle
 
+## Agent Dispatch (Distributed Workflow Execution)
+
+Orchestrate can dispatch workflow steps to external agents via Quack:
+
+1. **Agent Node Type**: Workflows can include `agent` nodes that send prompts to Internet agents
+2. **Quack Dispatch**: When executing an agent node, Orchestrate sends the prompt to the target agent's inbox via Quack
+3. **Response Handling**: Uses polling + callback to wait for agent completion
+4. **Callback Endpoint**: `/api/workflow-callback` receives agent responses
+
+**Agent Node Config**:
+```json
+{
+  "type": "agent",
+  "config": {
+    "agentInbox": "agent/autonomous",
+    "prompt": "Summarize this document: {{input}}",
+    "timeout": 60000
+  }
+}
+```
+
+**Execution Flow**:
+1. WorkflowExecutor detects agent node
+2. Sends prompt to agent via Quack API
+3. Polls for response or waits for callback
+4. Passes result to next node in workflow
+
+**External Widget**: Quack Widget loads from `quack.us.com/quack-widget.js` at runtime, ensuring Orchestrate automatically gets Quack updates without redeployment.
+
 ## Recent Changes
 
+- 2026-01-29: Added agent node type for distributed workflow execution via Quack
+- 2026-01-29: Enhanced WorkflowExecutor with Quack dispatch for AI agent steps
+- 2026-01-29: Added /api/workflow-callback endpoint for agent response handling
+- 2026-01-29: Switched to external Quack widget (loads from quack.us.com at runtime)
+- 2026-01-29: Repositioned Control Room subtabs for better visibility
 - 2026-01-28: Added embedded Quack Widget tab in Control Room with auto-sync
 - 2026-01-28: Added server-side auto-polling (every 5 seconds) with /api/quack/sync-status endpoint
 - 2026-01-28: Enhanced Quack integration with audit trail, agent registry, and thread management
