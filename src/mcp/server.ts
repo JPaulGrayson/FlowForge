@@ -159,6 +159,18 @@ const MCP_TOOLS = [
     }
   },
   {
+    name: "execute_workflow",
+    description: "Execute a workflow with optional inputs",
+    inputSchema: {
+      type: "object",
+      properties: { 
+        workflow: { type: "object", description: "Workflow definition with nodes and edges" },
+        inputs: { type: "object", description: "Input values for the workflow" }
+      },
+      required: ["workflow"]
+    }
+  },
+  {
     name: "quack_check_inbox",
     description: "Check a Quack inbox for pending messages",
     inputSchema: {
@@ -243,6 +255,11 @@ async function executeTool(name: string, args: any): Promise<any> {
       return await toolHandlers.web_search(args);
     case "summarize":
       return await toolHandlers.summarize(args);
+    case "execute_workflow":
+      const { createExecutor } = await import("../executor/workflow-executor.js");
+      const executor = createExecutor();
+      const execution = await executor.execute(args.workflow, args.inputs || {});
+      return execution;
     case "quack_check_inbox":
       const quackPoller = new QuackPoller();
       return await quackPoller.checkInbox(args.inbox);

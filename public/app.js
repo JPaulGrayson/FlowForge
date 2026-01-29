@@ -717,6 +717,77 @@ window.refreshControlRoom = async function () {
   await loadControlRoom();
 };
 
+window.testAgentWorkflow = async function() {
+  showToast('Starting agent workflow test...');
+  
+  const testWorkflow = {
+    id: 'test-agent-' + Date.now(),
+    name: 'Agent Test Workflow',
+    description: 'Test dispatching a task to an agent via Quack',
+    version: '1.0',
+    config: { timeout: 60000 },
+    inputs: [],
+    outputs: [],
+    startNodeId: 'start',
+    metadata: { 
+      createdAt: new Date().toISOString(), 
+      updatedAt: new Date().toISOString(), 
+      visibility: 'private' 
+    },
+    nodes: [
+      { id: 'start', type: 'start', label: 'Start', config: {} },
+      { 
+        id: 'agent1', 
+        type: 'agent', 
+        label: 'Ping Agent', 
+        config: {
+          agentInbox: 'agent/autonomous',
+          prompt: 'ping',
+          timeout: 30000
+        }
+      },
+      { id: 'end', type: 'end', label: 'End', config: {} }
+    ],
+    edges: [
+      { id: 'e1', sourceNodeId: 'start', targetNodeId: 'agent1' },
+      { id: 'e2', sourceNodeId: 'agent1', targetNodeId: 'end' }
+    ]
+  };
+  
+  try {
+    console.log('[Test] Sending agent workflow:', testWorkflow.name);
+    
+    const response = await fetch('/api/mcp/call', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        tool: 'execute_workflow',
+        params: { workflow: testWorkflow, inputs: {} }
+      })
+    });
+    
+    const result = await response.json();
+    console.log('[Test] Workflow result:', result);
+    
+    if (result.error) {
+      showToast('Workflow error: ' + result.error, 'error');
+    } else if (result.status === 'completed') {
+      showToast('Agent workflow completed successfully!', 'success');
+    } else if (result.status === 'running') {
+      showToast('Workflow dispatched - waiting for agent response...', 'info');
+    } else {
+      showToast('Workflow status: ' + result.status);
+    }
+    
+    // Refresh to see updated state
+    await refreshControlRoom();
+    
+  } catch (err) {
+    console.error('[Test] Error:', err);
+    showToast('Test failed: ' + err.message, 'error');
+  }
+};
+
 let quackWidgetInitialized = false;
 
 window.switchControlRoomTab = function(tabName) {
