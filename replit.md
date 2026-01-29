@@ -30,7 +30,8 @@ Orchestrate is an MCP (Model Context Protocol) server that enables Claude Deskto
 ├── public/                # Dashboard static files
 │   ├── index.html
 │   ├── styles.css
-│   └── app.js
+│   ├── app.js
+│   └── agent-templates.json  # Agent template definitions
 ├── docs/                  # Documentation
 │   ├── README.md
 │   └── COWORK_GUIDE.md
@@ -43,7 +44,7 @@ Orchestrate is an MCP (Model Context Protocol) server that enables Claude Deskto
 2. **CoWork (Run Mode)**: Simplified UI for end users to run workflows with their own data
 3. **MCP Protocol Support**: Full JSON-RPC 2.0 over SSE for Claude Desktop/Cowork
 4. **Quack Control Room**: Agent-to-agent messaging with workflow actions
-5. **Template Library**: Pre-built workflows (Content Pipeline, Code Review, Data Analysis, etc.)
+5. **Agent Template Gallery**: 12 pre-built agent templates with categories, complexity ratings, and LogiProcess integration
 6. **AI Council**: Query Claude, GPT-4, Gemini, Grok simultaneously
 7. **LogicArt Integration**: Generate visual flowchart URLs
 8. **Persistence**: Save/load workflow definitions
@@ -69,6 +70,9 @@ Orchestrate is an MCP (Model Context Protocol) server that enables Claude Deskto
 | `/api/voyai/session` | POST | Server-to-server session creation (Voyai calls this) |
 | `/api/voyai/claim-session` | GET | Frontend claims session with `?session=<id>` |
 | `/api/voyai/me` | GET | Check current auth status |
+| `/api/templates` | GET | Get all agent templates |
+| `/api/process/import` | POST | Receive edited templates from LogiProcess (requires secret) |
+| `/api/workflow-callback` | POST | Receive agent responses for workflows |
 
 ## Quack Integration
 
@@ -185,6 +189,61 @@ Orchestrate can dispatch workflow steps to external agents via Quack:
 4. Passes result to next node in workflow
 
 **External Widget**: Quack Widget loads from `quack.us.com/quack-widget.js` at runtime, ensuring Orchestrate automatically gets Quack updates without redeployment.
+
+## Agent Template Gallery
+
+The Template Gallery provides 12 pre-built agent templates based on common use cases:
+
+### Categories
+
+| Category | Icon | Description |
+|----------|------|-------------|
+| Brokerage | 💹 | Agents that compare and transact across providers |
+| Utility | 🔧 | General-purpose workhorses for common tasks |
+| Coordination | 🎯 | Agents that manage other agents or resources |
+| Domain | 🎨 | Specialized agents for specific industries |
+
+### Available Templates
+
+| Template | Category | Complexity | Description |
+|----------|----------|------------|-------------|
+| Compute Broker | Brokerage | Medium | Aggregate GPU compute prices, route jobs to cheapest provider |
+| Table Broker | Brokerage | Medium | Find and book restaurant reservations |
+| Prediction Trader | Brokerage | High | Monitor prediction markets, identify arbitrage |
+| Echo Agent | Utility | Low | Simple ping/pong reference implementation |
+| Research Agent | Utility | Medium | Web search, gather info, summarize findings |
+| Data Transform | Utility | Low | Convert data between formats (JSON, CSV, XML) |
+| Scheduler Agent | Coordination | Medium | Manage calendars, find mutual availability |
+| Moderator Agent | Coordination | Medium | Review content, flag issues, enforce guidelines |
+| Orchestrator Agent | Coordination | High | Break tasks into subtasks, delegate to agents |
+| Code Review | Domain | Medium | Analyze code, identify issues, suggest improvements |
+| Meeting Summarizer | Domain | Medium | Process transcripts, extract action items |
+| Price Monitor | Domain | Low | Track prices, alert on thresholds |
+
+### Template Schema (BPMN-compatible)
+
+```json
+{
+  "id": "template-id",
+  "name": "Template Name",
+  "description": "What it does",
+  "category": "brokerage|utility|coordination|domain",
+  "complexity": "low|medium|high",
+  "commands": ["cmd1", "cmd2"],
+  "integrations": ["API1", "API2"],
+  "nodes": [{ "id": "...", "type": "event|task|gateway", "label": "...", "x": 0, "y": 0 }],
+  "edges": [{ "source": "...", "target": "...", "label": "..." }],
+  "swimlanes": [{ "id": "...", "label": "..." }],
+  "agentConfig": { "agentId": "...", "capabilities": [], "inputSchema": {}, "outputSchema": {} }
+}
+```
+
+### LogiProcess Integration
+
+- **Edit in LogiProcess**: Click button to open template in LogicArt's visual editor
+- **URL Format**: `https://logic.art/process?template=<base64EncodedJSON>`
+- **Import Endpoint**: `POST /api/process/import` (requires `x-logiprocess-secret` header)
+- **Environment Variable**: `LOGIPROCESS_SECRET` (default: `orchestrate-logiprocess-shared-key`)
 
 ## Recent Changes
 
