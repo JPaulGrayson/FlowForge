@@ -50,11 +50,22 @@ Create workflows from natural language descriptions. Orchestrate uses AI to desi
 ### LogicArt Visualization
 Every workflow can be visualized as an interactive flowchart via LogicArt. Get shareable URLs instantly.
 
-### AI Council
+### 🧠 AI Council
 
-![AI Council - Multi-Model Consensus](../public/images/ai-council.png)
+<div align="center">
+  <img src="../public/images/ai-council-consensus.png" alt="AI Council - Multi-Model Consensus" width="400">
+</div>
 
-Query multiple AI models (Claude, GPT-4, Gemini) simultaneously and get consensus or comparative responses.
+Query multiple AI models (Claude, GPT-4, Gemini) simultaneously and get **consensus** or comparative responses.
+
+| Pattern | Description |
+|---------|-------------|
+| `consensus` | Synthesize unified answer from all models |
+| `vote` | Majority wins for discrete choices |
+| `compare` | Side-by-side analysis |
+| `debate` | Models critique each other |
+
+📄 **[Full AI Council Documentation →](AI_COUNCIL.md)**
 
 ### Persistence
 Save and load workflows for later use. Build up a library of reusable automation templates.

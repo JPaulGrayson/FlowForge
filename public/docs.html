@@ -325,21 +325,51 @@
 }</code></pre>
       </div>
 
-      <div class="tool-card">
-        <h4>council_query</h4>
-        <p>Query multiple AI models (Claude, GPT-4, Gemini) for consensus.</p>
+      <div class="tool-card"
+        style="background: linear-gradient(135deg, rgba(255, 193, 7, 0.1) 0%, rgba(200, 150, 0, 0.05) 100%); border: 1px solid rgba(255, 193, 7, 0.3);">
+        <h4>🧠 council_query</h4>
+        <p>Query multiple AI models (Claude, GPT-4, Gemini) for <strong>consensus</strong>. Get unified answers backed
+          by collective intelligence.</p>
+
         <!-- AI Council Visualization -->
         <div style="text-align: center; margin: 1rem 0;">
-          <img src="/images/ai-council.png" alt="AI Council: Claude, GPT-4, and Gemini reaching consensus"
-            style="max-width: 300px; border-radius: 12px;">
+          <img src="/images/ai-council-consensus.png" alt="AI Council: Claude, GPT-4, and Gemini reaching consensus"
+            style="max-width: 350px; border-radius: 12px; box-shadow: 0 4px 20px rgba(255, 193, 7, 0.2);">
         </div>
+
+        <h5 style="color: #ffc107; margin-top: 1rem;">Consensus Patterns</h5>
+        <table style="width: 100%; margin: 0.5rem 0; font-size: 0.9rem;">
+          <tr style="border-bottom: 1px solid rgba(255,255,255,0.1);">
+            <td style="padding: 0.5rem;"><code>consensus</code></td>
+            <td style="padding: 0.5rem; color: #aaa;">Synthesize unified answer from all models</td>
+          </tr>
+          <tr style="border-bottom: 1px solid rgba(255,255,255,0.1);">
+            <td style="padding: 0.5rem;"><code>vote</code></td>
+            <td style="padding: 0.5rem; color: #aaa;">Majority wins for discrete choices</td>
+          </tr>
+          <tr style="border-bottom: 1px solid rgba(255,255,255,0.1);">
+            <td style="padding: 0.5rem;"><code>compare</code></td>
+            <td style="padding: 0.5rem; color: #aaa;">Side-by-side analysis</td>
+          </tr>
+          <tr>
+            <td style="padding: 0.5rem;"><code>debate</code></td>
+            <td style="padding: 0.5rem; color: #aaa;">Models critique each other</td>
+          </tr>
+        </table>
+
+        <h5 style="color: #ffc107; margin-top: 1rem;">Example</h5>
         <pre><code>{
   "name": "council_query",
   "arguments": {
     "query": "What are the best practices for REST API design?",
-    "models": ["claude", "gpt4", "gemini"]
+    "models": ["claude", "gpt4", "gemini"],
+    "pattern": "consensus"
   }
 }</code></pre>
+
+        <p style="margin-top: 1rem; color: #aaa; font-size: 0.85rem;">
+          📄 <a href="/docs/AI_COUNCIL.md" style="color: #ffc107;">Full AI Council Documentation →</a>
+        </p>
       </div>
 
       <div class="tool-card">
