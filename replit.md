@@ -2,9 +2,11 @@
 
 ## Overview
 
-Orchestrate is an MCP (Model Context Protocol) server designed to empower AI agents with visual workflow orchestration capabilities. It allows users to design and execute complex workflows using natural language, visualize them through LogicArt/LogiProcess, and manage inter-agent communication via Quack Control Room. The platform aims to streamline AI-driven task automation, enabling seamless integration and coordination across various AI models and services.
+Orchestrate is an MCP (Model Context Protocol) server designed to empower AI agents with visual workflow orchestration capabilities. It allows users to design and execute complex workflows using natural language, visualize them through LogicArt/LogiProcess, and manage inter-agent communication via Quack (quack.us.com). The platform aims to streamline AI-driven task automation, enabling seamless integration and coordination across various AI models and services.
 
-Key capabilities include generating workflows from natural language prompts, visualizing workflow logic, managing agent messages, querying multiple AI models simultaneously, and persisting workflow definitions. It supports a "Build Mode" for visual workflow design and a "Run Mode" for end-user execution.
+**Critical Design Principle:** The Quack suite is designed for developers working in dev windows with AI agents (like Replit Agent) doing the heavy lifting - not for autonomous background automation. Wake-up action is always required for Replit Agents (human user or CoWork programmatically).
+
+Key capabilities include generating workflows from natural language prompts, visualizing workflow logic, querying multiple AI models simultaneously, and persisting workflow definitions. It supports a "Build Mode" for visual workflow design and a "Run Mode" for end-user execution.
 
 ## User Preferences
 
@@ -19,12 +21,12 @@ Orchestrate functions as an MCP server utilizing SSE/JSON-RPC for communication 
 *   **Workflow Generation and Execution**: Workflows are generated from natural language prompts, defined using TypeScript, and executed by a dedicated engine. The system supports `Trigger`, `AI Agent`, `Transform`, `Condition`, `Human Review`, and `Output` node types for comprehensive workflow logic.
 *   **Visual Workflow Design (LogicProcess Build Mode)**: Provides a visual node editor for creating and editing workflow templates with drag-and-drop functionality. Templates are BPMN-compatible JSON schemas.
 *   **User-friendly Workflow Execution (CoWork Run Mode)**: Offers a simplified UI for end-users to run pre-defined workflows by filling out forms generated from runtime inputs.
-*   **Inter-Agent Communication (Quack Integration)**: Features a robust system for agent-to-agent messaging and workflow actions. This includes a dedicated inbox for Orchestrate, monitoring of other agent inboxes, and a defined message workflow (pending → approved → in\_progress → completed/failed).
+*   **Inter-Agent Communication (Quack Integration)**: Features a robust system for developer-to-developer coordination with AI agents in dev windows. Agent messaging and workflow management is handled at quack.us.com - Orchestrate sends messages via Quack API but does not duplicate Quack's native inbox/control room functionality.
 *   **Multi-AI Model Querying (AI Council)**: Designed to query multiple AI models concurrently, allowing for comparative analysis or diversified task execution.
 *   **Workflow Persistence**: Workflows can be saved, loaded, and listed for reuse and management.
 *   **Distributed Workflow Execution**: Workflows can dispatch steps to external agents via Quack, with a defined mechanism for sending prompts, polling for responses, and handling callbacks.
 *   **Authentication (Voyai)**: Implements a secure server-to-server session handshake for user authentication, integrating with Voyai for login and feature access.
-*   **UI/UX (Control Room)**: A unified dashboard provides a real-time activity feed, active workflow monitoring, quick actions (Send Quack, New Workflow, Analyze Code, Run Template), and comprehensive settings for API keys, webhooks, notifications, and appearance.
+*   **UI/UX**: The Orchestrate dashboard provides tabs for Workflows, LogicProcess (visual editor), CoWork (run mode), Templates gallery, and Tools. Control Room functionality has been removed as it duplicates Quack's native features at quack.us.com.
 *   **Agent Template Gallery**: Provides a curated collection of pre-built agent templates categorized by type (Brokerage, Utility, Coordination, Domain) and complexity, with LogiProcess integration for editing.
 *   **Ralph Wiggum Mode**: A workflow pattern integrated via LogiProcess for persistent AI coding loops, utilizing `PROMPT.md`, `plan.md`, and `progress.md` artifacts to structure AI agent tasks.
 
