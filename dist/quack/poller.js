@@ -2,12 +2,12 @@ const QUACK_API_BASE = 'https://quack.us.com/api';
 const QUACK_URL = 'https://quack.us.com';
 export const MY_INBOX = 'replit/orchestrate';
 export class QuackPoller {
-    inboxes = new Map();
-    pollInterval = 5000;
-    intervalId = null;
-    onUpdate = null;
-    monitoredInboxes = [];
     constructor(onUpdate) {
+        this.inboxes = new Map();
+        this.pollInterval = 5000;
+        this.intervalId = null;
+        this.onUpdate = null;
+        this.monitoredInboxes = [];
         this.onUpdate = onUpdate || null;
     }
     async fetchAvailableInboxes() {
@@ -21,7 +21,7 @@ export class QuackPoller {
         }
         catch (error) {
             console.error('Error fetching inboxes list:', error);
-            return ['claude', 'replit', 'cursor', 'gpt', 'gemini', 'grok', 'copilot', 'antigravity'];
+            return ['claude', 'replit', 'cursor', 'gpt', 'gemini', 'grok', 'copilot', 'antigravity', 'agent/autonomous'];
         }
     }
     async checkInbox(inboxName) {

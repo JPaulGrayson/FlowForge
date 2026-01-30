@@ -12,12 +12,70 @@ import { QuackPoller, MY_INBOX, InboxState } from "../quack/poller.js";
 
 const QUACK_URL = 'https://quack.us.com';
 
-// ===== AUTO-SYNCING QUACK POLLER =====
+// ===== AUTO-SYNCING QUACK POLLER WITH GROK AGENT =====
 
 let lastMessageCounts: Map<string, number> = new Map();
+const processedGrokMessages: Set<string> = new Set();
+const GROK_PUBLIC_INBOX = 'grok/main';
+
+async function mirrorToPublicGrokInbox(task: string, context: string, replyTo?: string): Promise<void> {
+  try {
+    const response = await fetch(`${QUACK_URL}/api/send`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        to: GROK_PUBLIC_INBOX,
+        from: MY_INBOX,
+        task: task,
+        context: context.substring(0, 500),
+        replyTo: replyTo,
+        priority: 'normal'
+      })
+    });
+    const data = await response.json() as { success?: boolean };
+    
+    if (data.success) {
+      console.log(`[Agent] Mirrored reply to public ${GROK_PUBLIC_INBOX} for Grok polling`);
+    }
+  } catch (error) {
+    console.error('[Agent] Error mirroring to public inbox:', error);
+  }
+}
+
+async function handleGrokMessage(msg: any): Promise<void> {
+  if (processedGrokMessages.has(msg.id)) return;
+  processedGrokMessages.add(msg.id);
+  
+  console.log(`[Agent] Processing Grok message: ${msg.task.substring(0, 50)}...`);
+  
+  const replyTask = `RE: ${msg.task.substring(0, 40)}... - Acknowledged`;
+  const replyContext = `Message received from ${msg.from}.\n\nTask: ${msg.task}\n\nStatus: Acknowledged by Orchestrate Agent`;
+  
+  try {
+    const response = await fetch(`${QUACK_URL}/api/send`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        to: msg.from,
+        from: MY_INBOX,
+        task: replyTask,
+        context: replyContext,
+        replyTo: msg.id,
+        priority: 'normal'
+      })
+    });
+    const data = await response.json() as { success?: boolean; messageId?: string };
+    
+    if (data.success) {
+      console.log(`[Agent] Replied to ${msg.from}`);
+      await mirrorToPublicGrokInbox(replyTask, replyContext, msg.id);
+    }
+  } catch (error) {
+    console.error('[Agent] Error replying to Grok:', error);
+  }
+}
 
 const globalQuackPoller = new QuackPoller((inboxes: Map<string, InboxState>) => {
-  // Check for new messages
   for (const [name, state] of inboxes.entries()) {
     const lastCount = lastMessageCounts.get(name) || 0;
     const currentCount = state.messages.length;
@@ -26,6 +84,10 @@ const globalQuackPoller = new QuackPoller((inboxes: Map<string, InboxState>) => 
       const newMessages = state.messages.slice(0, currentCount - lastCount);
       for (const msg of newMessages) {
         console.log(`[Quack] New message in ${name}: ${msg.task.substring(0, 50)}... (from: ${msg.from}, priority: ${msg.priority || 'normal'})`);
+        
+        if (name === MY_INBOX && (msg.from.startsWith('grok/') || msg.from.includes('xai'))) {
+          handleGrokMessage(msg).catch(console.error);
+        }
       }
     }
     
